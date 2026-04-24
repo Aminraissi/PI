@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
 
@@ -11,7 +12,18 @@ import { AuthService } from '../../services/auth/auth.service';
 export class InventoryLayoutComponent {
   activeTab: 'inventory' | 'animals' | 'statistics' | 'boutique' = 'inventory';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {
+    this.route.queryParamMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab === 'inventory' || tab === 'animals' || tab === 'statistics' || tab === 'boutique') {
+        this.activeTab = tab;
+      }
+    });
+  }
 
   get user() { return this.auth.getCurrentUser(); }
 
@@ -22,5 +34,10 @@ export class InventoryLayoutComponent {
 
  setTab(tab: 'inventory' | 'animals' | 'statistics' | 'boutique') {
     this.activeTab = tab;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
   }
 }
