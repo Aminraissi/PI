@@ -1,0 +1,308 @@
+<app-navbar></app-navbar>
+
+<section class="hero-events">
+  <div class="hero-overlay"></div>
+  <div class="hero-leaves">
+    <span class="leaf leaf-1">🌿</span>
+    <span class="leaf leaf-2">🍃</span>
+    <span class="leaf leaf-3">🌱</span>
+  </div>
+  <div class="hero-content">
+    <span class="hero-badge">Discover & Participate</span>
+    <h1>Our <span class="h1-accent">Events</span></h1>
+    <p class="hero-sub">Explore agriculture events and unlock new learning opportunities.</p>
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="/">Home</a>
+      <span class="sep"> › </span>
+      <span style="color:#31b600;font-weight:bold;">Events</span>
+    </nav>
+  </div>
+</section>
+
+<div class="org-page">
+
+  <div class="org-header">
+    <div class="org-header-left">
+      <h1 class="org-title">My Events</h1>
+      <span class="org-count">{{ events.length }} event{{ events.length !== 1 ? 's' : '' }}</span>
+    </div>
+    <button class="btn-add" (click)="goToAdd()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New Event
+    </button>
+  </div>
+
+  <div class="toast toast-success" *ngIf="showSuccess">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M20 6L9 17l-5-5"/>
+    </svg>
+    {{ message }}
+  </div>
+
+  <div class="events-grid" *ngIf="events.length > 0">
+    <div class="event-card" *ngFor="let ev of events">
+
+      <div class="card-img-wrap">
+        <img [src]="ev.image ? 'assets/images/' + ev.image : 'assets/images/placeholder.jpg'"
+             [alt]="ev.titre" class="card-img" />
+        <div class="card-img-overlay"></div>
+        <span class="card-type-pill">{{ ev.type }}</span>
+        <span class="card-statut" [ngClass]="{
+          'statut-planned':   ev.statut === 'PLANNED',
+          'statut-ongoing':   ev.statut === 'ONGOING',
+          'statut-completed': ev.statut === 'COMPLETED',
+          'statut-cancelled': ev.statut === 'CANCELLED',
+          'statut-postponed': ev.statut === 'POSTPONED'
+        }">{{ ev.statut }}</span>
+      </div>
+
+      <div class="card-body">
+        <h3 class="card-title">{{ ev.titre }}</h3>
+        <p class="card-desc">{{ ev.description | slice:0:90 }}{{ ev.description.length > 90 ? '…' : '' }}</p>
+
+        <div class="card-meta">
+          <div class="meta-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>
+            </svg>
+            <span>{{ ev.dateDebut | date:'MMM d, yyyy' }}</span>
+          </div>
+          <div class="meta-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span>{{ ev.lieu }}, {{ ev.region }}</span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="card-seats">
+            <div class="seats-track">
+              <div class="seats-fill" [style.width.%]="(ev.inscrits / ev.capaciteMax) * 100"></div>
+            </div>
+            <span class="seats-txt">{{ ev.inscrits }}/{{ ev.capaciteMax }} registered</span>
+          </div>
+          <span *ngIf="ev.montant === 0" class="free-badge">Free</span>
+          <span *ngIf="ev.montant > 0"  class="price-badge">{{ ev.montant }} DT</span>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-edit" (click)="goToEdit(ev)" [disabled]="ev.statut === 'CANCELLED' || ev.statut === 'COMPLETED'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Edit
+          </button>
+
+          <button class="btn-delete" (click)="onDelete(ev.id)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+            </svg>
+            Delete
+          </button>
+
+          <button class="btn-cancel-ev"
+                  [disabled]="ev.statut === 'CANCELLED'"
+                  (click)="openCancelConfirm(ev.id)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            Cancel Event
+          </button>
+
+          <button class="btn-delay-ev"
+                  [disabled]="ev.statut === 'CANCELLED' || ev.statut === 'COMPLETED'"
+                  (click)="openDelayModal(ev.id)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Delay Event
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <div class="empty-state" *ngIf="events.length === 0">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+      <line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>
+    </svg>
+    <p>No events yet.</p>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" *ngIf="showCancelConfirm" (click)="closeCancelConfirm()"></div>
+
+<div class="modal-box" *ngIf="showCancelConfirm">
+  <div class="modal-header modal-header--danger">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="15" y1="9" x2="9" y2="15"/>
+      <line x1="9" y1="9" x2="15" y2="15"/>
+    </svg>
+    <h2>Cancel Event</h2>
+  </div>
+
+  <div class="modal-body">
+    <p class="modal-warning">
+      This action is <strong>irreversible</strong>. The event will be marked as
+      <strong>CANCELLED</strong> and all paid participants will be automatically
+      <strong>refunded</strong> via Stripe.
+    </p>
+    <p class="modal-question">Are you sure you want to proceed?</p>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn-modal-cancel" (click)="closeCancelConfirm()">No, keep it</button>
+    <button class="btn-modal-confirm btn-modal-confirm--danger" (click)="confirmCancel()">
+      Yes, Cancel Event
+    </button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════
+     MODAL – Delay Event Form
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showDelayModal" (click)="closeDelayModal()"></div>
+
+<div class="modal-box modal-box--wide" *ngIf="showDelayModal">
+  <div class="modal-header modal-header--warning">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+    <h2>Delay / Postpone Event</h2>
+  </div>
+
+  <div class="modal-body">
+
+    <!-- Reason -->
+    <div class="form-group">
+      <label class="form-label">
+        Reason for postponement <span class="required">*</span>
+      </label>
+      <textarea class="form-control"
+                rows="3"
+                placeholder="e.g. Bad weather conditions, venue unavailable…"
+                [(ngModel)]="delayForm.reason">
+      </textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">
+          New Start Date <span class="required">*</span>
+        </label>
+        <input type="datetime-local"
+               class="form-control"
+               [(ngModel)]="delayForm.newDateDebut" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          New End Date <span class="required">*</span>
+        </label>
+        <input type="datetime-local"
+               class="form-control"
+               [(ngModel)]="delayForm.newDateFin" />
+      </div>
+    </div>
+
+    <div class="form-group">
+  <label class="form-label">Municipal Authorisation</label>
+  <input type="file"
+         class="form-control"
+         (change)="onFileSelected($event)"
+         accept=".pdf,.png,.jpg,.jpeg" />
+    <small *ngIf="selectedFileName">{{ selectedFileName }}</small>
+</div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn-modal-cancel" (click)="closeDelayModal()">Cancel</button>
+    <button class="btn-modal-confirm btn-modal-confirm--warning" (click)="submitDelay()">
+      Postpone Event
+    </button>
+  </div>
+</div>
+
+
+///////// AI ASSISTANT //////////
+<button class="ai-fab" (click)="toggleAI()" title="Assistant IA Agricole">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
+    <path d="M12 6v6l4 2"/>
+  </svg>
+</button>
+
+<div class="ai-panel" [class.ai-panel--open]="aiOpen">
+
+  <div class="ai-header">
+    <div class="ai-header-icon">🌿</div>
+    <div>
+      <h3>AI Agricultural Assistant</h3>
+      <p>Location · Date · Weather · Participants</p>
+    </div>
+    <button class="ai-close" (click)="toggleAI()">✕</button>
+  </div>
+
+  <div class="ai-messages" #messagesContainer>
+    <div *ngFor="let msg of messages" class="ai-msg" [class.ai-msg--user]="msg.role === 'user'">
+      <div class="ai-avatar">{{ msg.role === 'user' ? '👤' : '🌱' }}</div>
+      <div class="ai-bubble" [innerHTML]="msg.text"></div>
+    </div>
+    <div *ngIf="isLoading" class="ai-msg">
+      <div class="ai-avatar">🌱</div>
+      <div class="ai-bubble">
+        <div class="ai-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-chips">
+    <button class="ai-chip" (click)="quickAsk('Which location do you recommend for an agricultural market in Tunisia?')">📍 Ideal location</button>
+    <button class="ai-chip" (click)="quickAsk('What is the best period to organize an agricultural event?')">📅 Optimal date</button>
+    <button class="ai-chip" (click)="quickAsk('How many participants can I expect for a rural event?')">👥 Estimation</button>
+    <button class="ai-chip" (click)="quickAsk('What weather factors should I consider when planning my event?')">🌤️ Weather</button>
+  </div>
+
+  <div class="ai-input-row">
+    <input
+      class="ai-input"
+      [(ngModel)]="userInput"
+      placeholder="Ask your question about the event..."
+      (keydown.enter)="sendMessage()"
+    />
+    <button class="ai-send" (click)="sendMessage()" [disabled]="isLoading">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+</div>
+
+<div class="ai-backdrop" *ngIf="aiOpen" (click)="toggleAI()"></div>
+
+<app-footer></app-footer>

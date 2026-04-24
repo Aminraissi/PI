@@ -1,0 +1,19 @@
+# Java
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+*.swp
+*.DS_Store
+
+# Node (for Frontends)
+node_modules/
+dist/
+
+# Secrets (Optional, use environment variables instead)
+# application-local.properties
