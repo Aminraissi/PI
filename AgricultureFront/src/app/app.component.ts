@@ -249,16 +249,17 @@ export class AppComponent implements OnInit, AfterViewInit {
     ) {}
 
     ngOnInit() {
+        // Initialize reveal animations immediately and when images/content load
+        this.initRevealObserver();
+
         setTimeout(() => {
             this.preloaderHidden = true;
-            this.initScrollAnimations();
-        }, 3000);
+        }, 1200); // reduced from 3s to be snappier
 
         this.cartService.cartCount$.subscribe(count => {
             this.cartCount = count;
         });
 
-        // Initial visibility check
         this.updateFloatingCartVisibility();
 
         this.isForumsPostPage = this.router.url.startsWith('/forums/post/');
@@ -271,7 +272,8 @@ export class AppComponent implements OnInit, AfterViewInit {
                 this.isExplorerRoute  = event.urlAfterRedirects.startsWith('/explorer');
                 this.updateFabState();
                 this.updateFloatingCartVisibility();
-                window.setTimeout(() => this.updateFabState(), 120);
+                // Re-scan for new reveal elements after navigation
+                setTimeout(() => this.scanRevealElements(), 200);
             });
 
         this.updateFabState();
@@ -286,6 +288,8 @@ export class AppComponent implements OnInit, AfterViewInit {
                 : base;
             this.explorerLoaded = true;
         }
+        // Scan elements once view is fully initialized
+        this.scanRevealElements();
     }
 
     closeExplorer(): void {
@@ -318,7 +322,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     @HostListener('window:scroll', [])
     onScroll() {
         this.updateFabState();
-        this.checkReveal();
     }
 
     onFabClick() {
@@ -330,7 +333,34 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     scrollTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-    initScrollAnimations() { setTimeout(() => this.checkReveal(), 100); }
+
+    // --- REVEAL ANIMATIONS (Intersection Observer) ---
+    private revealObserver?: IntersectionObserver;
+
+    private initRevealObserver() {
+        this.revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // Once visible, we can stop observing it
+                    this.revealObserver?.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -50px 0px'
+        });
+    }
+
+    private scanRevealElements() {
+        const elements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+        elements.forEach(el => {
+            // Only observe if not already visible
+            if (!el.classList.contains('visible')) {
+                this.revealObserver?.observe(el);
+            }
+        });
+    }
 
     updateFabState() {
         const hasReplies = this.hasVisibleReplies();
@@ -372,13 +402,6 @@ export class AppComponent implements OnInit, AfterViewInit {
         if (textarea instanceof HTMLTextAreaElement) {
             window.setTimeout(() => textarea.focus(), 280);
         }
-    }
-
-    checkReveal() {
-        document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => {
-            if (el.getBoundingClientRect().top < window.innerHeight - 80)
-                el.classList.add('visible');
-        });
     }
 
     // Smart cart visibility
