@@ -1,0 +1,430 @@
+*
+{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body,
+html
+{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body.has-project-viewer
+{
+    overflow: hidden;
+}
+
+.canvas
+{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.canvas.has-cursor-grab
+{
+    cursor: grab;
+}
+
+.canvas.has-cursor-grabbing
+{
+    cursor: grabbing;
+}
+
+.canvas.has-cursor-pointer
+{
+    cursor: pointer;
+}
+
+.project-viewer
+{
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(10, 22, 13, 0.82);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.project-viewer.is-visible
+{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.project-viewer__panel
+{
+    position: relative;
+    width: min(1180px, 100%);
+    max-height: 100%;
+    overflow: auto;
+    padding: 28px;
+    border: 1px solid rgba(201, 231, 175, 0.35);
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(25, 48, 29, 0.96), rgba(11, 24, 14, 0.98));
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    color: #f3f1e7;
+}
+
+.project-viewer__close
+{
+    position: sticky;
+    top: 0;
+    margin-left: auto;
+    display: block;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: #d8f08b;
+    color: #17301a;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.project-viewer__text
+{
+    max-width: 840px;
+    margin: 12px 0 24px;
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.6;
+    color: rgba(243, 241, 231, 0.9);
+}
+
+.project-viewer__text p + p
+{
+    margin-top: 10px;
+}
+
+.project-viewer__gallery
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.project-viewer__image
+{
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    display: block;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    cursor: zoom-in;
+}
+
+.project-image-viewer
+{
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.92);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.project-image-viewer.is-visible
+{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.project-image-viewer__image
+{
+    max-width: min(96vw, 1800px);
+    max-height: 92vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.project-tv-viewer
+{
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    background: radial-gradient(circle at center, rgba(31, 49, 26, 0.2), rgba(0, 0, 0, 0.92));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.project-tv-viewer.is-visible
+{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.project-tv-viewer__frame
+{
+    width: min(86vw, 1320px);
+    aspect-ratio: 16 / 9;
+    padding: 18px;
+    border-radius: 28px;
+    background: linear-gradient(180deg, #131313, #040404);
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+}
+
+.project-tv-viewer__image
+{
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border-radius: 16px;
+    background: #000000;
+}
+
+.threejs-journey
+{
+    display: none;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    width: 420px;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.threejs-journey.is-active
+{
+    display: flex;
+}
+
+.threejs-journey .message
+{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    /* width: 100%; */
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 18px;
+    opacity: 0;
+    transform: translateY(120px);
+    transition: transform 0.5s cubic-bezier(0.5, 0, 0.25, 1), opacity 0.5s 0.2s cubic-bezier(0.5, 0, 0.25, 1);
+}
+
+.threejs-journey .message.is-visible
+{
+    opacity: 1;
+}
+
+.threejs-journey .boy
+{
+    position: absolute;
+    bottom: 100%;
+    left: 20px;
+    width: 132px;
+    height: 118px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.threejs-journey .boy .variant
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 112px;
+    height: 100%;
+    transform: translateY(100%);
+    transition: transform 0.15s ease-in;
+}
+
+.threejs-journey .boy .variant.is-yay
+{
+    background: url('../images/boyYay.png');
+}
+
+.threejs-journey .boy .variant.is-shrugging
+{
+    background: url('../images/boyShrugging.png');
+}
+
+.threejs-journey.is-hover-yes .boy .variant.is-yay
+{
+    transform: translateY(0);
+    transition-delay: 0.1s;
+    transition-timing-function: ease-out;
+}
+
+.threejs-journey.is-hover-no .boy .variant.is-shrugging
+{
+    transform: translateY(0);
+    transition-delay: 0.1s;
+    transition-timing-function: ease-out;
+}
+
+.threejs-journey.is-hover-none .boy .variant.is-hi
+{
+    transform: translateY(0);
+    transition-delay: 0.1s;
+    transition-timing-function: ease-out;
+}
+
+.threejs-journey .boy .is-hi .body
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../images/boyHiBody.png');
+}
+
+.threejs-journey .boy .is-hi .arm
+{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 49px;
+    height: 69px;
+    background: url('../images/boyHiArm.png');
+    animation: boyArmWave 3s infinite ease-in-out;
+    transform-origin: 30% 90%;
+}
+
+@keyframes boyArmWave
+{
+    0% { transform: rotate(0deg); }
+    2.5% { transform: rotate(15deg); }
+    7.5% { transform: rotate(-15deg); }
+
+    12.5% { transform: rotate(15deg); }
+    17.5% { transform: rotate(-15deg); }
+    20% { transform: rotate(0deg); }
+
+    100% { transform: rotate(0deg); }
+}
+
+.threejs-journey .message .bubble
+{
+    position: relative;
+    padding: 20px 30px;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    background: linear-gradient(#fdb572ab, #fdb5721a);
+}
+
+.threejs-journey .message .tip
+{
+    position: absolute;
+    width: 12px;
+    height: 16px;
+    left: calc(100% - 1px);
+    bottom: 13px;
+    background: url('../images/bubbleTip.svg');
+}
+
+.threejs-journey .message.is-answers
+{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.threejs-journey .message .answer
+{
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin-left: 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.threejs-journey .message .answer .background
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+}
+
+.threejs-journey .message .answer .hover
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    transform-origin: 0 0;
+    transform: scaleX(0);
+    transition: transform ease-in-out 0.2s;
+    will-change: transform;
+}
+
+.threejs-journey .message .answer:hover .hover
+{
+    transform: scaleX(1);
+}
+
+.threejs-journey .message .answer .label
+{
+    position: relative;
+}
+
+.threejs-journey .message .answer.is-no
+{
+    color: #ffffff;
+}
+
+.threejs-journey .message .answer.is-no .background
+{
+    border: 2px solid #ffffff;
+    background: linear-gradient(#fdb5721a, #fdb572ab);
+    color: #ffffff;
+}
+
+.threejs-journey .message .answer.is-yes
+{
+    color: #feae69;
+}
+
+.threejs-journey .message .answer.is-yes .background
+{
+    background: #ffffff;
+    opacity: 0.75;
+}
+
+.threejs-journey .message .answer.is-no .hover
+{
+    transform-origin: 100% 0;
+    opacity: 0.2;
+}

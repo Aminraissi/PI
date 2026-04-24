@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="eureka (1)" />
+        <module name="forums-service" />
+        <module name="ServicePret (1)" />
+        <module name="Gateway (1)" />
+      </profile>
+      <profile name="Annotation profile for GestionEvenement" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+        </processorPath>
+        <module name="GestionEvenement (1)" />
+        <module name="gestionUser" />
+      </profile>
+      <profile name="Annotation profile for Payment-Service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="Payment-Service (1)" />
+        <module name="gestionVente (1)" />
+      </profile>
+      <profile name="Annotation profile for farmer-support" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.44/lombok-1.18.44.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.44/lombok-1.18.44.jar" />
+        </processorPath>
+        <module name="Gestion-Formation (1)" />
+        <module name="Gestion-Inventaire (1)" />
+        <module name="farmer-support (1)" />
+        <module name="Assistance-Service (1)" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Assistance-Service" target="17" />
+      <module name="eureka" target="17" />
+      <module name="Explorer" target="17" />
+      <module name="farmer-support" target="17" />
+      <module name="Gateway" target="17" />
+      <module name="Gestion-Formation" target="17" />
+      <module name="Gestion-Inventaire" target="17" />
+      <module name="GestionEvenement" target="17" />
+      <module name="gestionVente" target="17" />
+      <module name="Livraison" target="17" />
+      <module name="Livraison (1)" target="17" />
+      <module name="Payment-Service" target="17" />
+      <module name="ServicePret" target="17" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Assistance-Service" options="-parameters" />
+      <module name="Assistance-Service (1)" options="-parameters" />
+      <module name="Explorer" options="-parameters" />
+      <module name="Gateway" options="-parameters" />
+      <module name="Gateway (1)" options="-parameters" />
+      <module name="Gestion-Formation" options="-parameters" />
+      <module name="Gestion-Formation (1)" options="-parameters" />
+      <module name="Gestion-Inventaire" options="-parameters" />
+      <module name="Gestion-Inventaire (1)" options="-parameters" />
+      <module name="GestionEvenement" options="-parameters" />
+      <module name="GestionEvenement (1)" options="-parameters" />
+      <module name="Livraison" options="-parameters" />
+      <module name="Livraison (1)" options="-parameters" />
+      <module name="Payment-Service" options="-parameters" />
+      <module name="Payment-Service (1)" options="-parameters" />
+      <module name="ServicePret" options="-parameters" />
+      <module name="ServicePret (1)" options="-parameters" />
+      <module name="eureka" options="-parameters" />
+      <module name="eureka (1)" options="-parameters" />
+      <module name="farmer-support" options="-parameters" />
+      <module name="farmer-support (1)" options="-parameters" />
+      <module name="forums-service" options="-parameters" />
+      <module name="gestionUser" options="-parameters" />
+      <module name="gestionVente" options="-parameters" />
+      <module name="gestionVente (1)" options="-parameters" />
+    </option>
+  </component>
+</project>

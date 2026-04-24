@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/AgricultureFront" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Gestion-User-Pi-Cloud" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pi-cloud222" vcs="Git" />
+  </component>
+</project>
