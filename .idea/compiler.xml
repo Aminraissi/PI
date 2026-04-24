@@ -11,6 +11,8 @@
         <module name="forums-service" />
         <module name="ServicePret (1)" />
         <module name="Gateway (1)" />
+        <module name="Livraison" />
+        <module name="Explorer" />
       </profile>
       <profile name="Annotation profile for GestionEvenement" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -51,14 +53,12 @@
     <bytecodeTargetLevel>
       <module name="Assistance-Service" target="17" />
       <module name="eureka" target="17" />
-      <module name="Explorer" target="17" />
       <module name="farmer-support" target="17" />
       <module name="Gateway" target="17" />
       <module name="Gestion-Formation" target="17" />
       <module name="Gestion-Inventaire" target="17" />
       <module name="GestionEvenement" target="17" />
       <module name="gestionVente" target="17" />
-      <module name="Livraison" target="17" />
       <module name="Livraison (1)" target="17" />
       <module name="Payment-Service" target="17" />
       <module name="ServicePret" target="17" />
