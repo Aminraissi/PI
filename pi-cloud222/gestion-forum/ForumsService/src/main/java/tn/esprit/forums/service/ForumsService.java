@@ -737,6 +737,7 @@ public class ForumsService {
         }
 
         post.setMediaApproved(true);
+        post.setMediaPendingReview(false);
         forumPostRepository.save(post);
     }
 
@@ -746,8 +747,9 @@ public class ForumsService {
         ForumPost post = forumPostRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
 
-        post.setMediaUrls(List.of());
+        post.setMediaUrls(new ArrayList<>());
         post.setMediaApproved(true);
+        post.setMediaPendingReview(false);
         forumPostRepository.save(post);
     }
 
@@ -762,6 +764,7 @@ public class ForumsService {
         }
 
         reply.setMediaApproved(true);
+        reply.setMediaPendingReview(false);
         forumReplyRepository.save(reply);
     }
 
@@ -771,8 +774,9 @@ public class ForumsService {
         ForumReply reply = forumReplyRepository.findByIdAndPostId(replyId, postId)
                 .orElseThrow(() -> new NoSuchElementException("Reply not found: " + replyId));
 
-        reply.setMediaUrls(List.of());
+        reply.setMediaUrls(new ArrayList<>());
         reply.setMediaApproved(true);
+        reply.setMediaPendingReview(false);
         forumReplyRepository.save(reply);
     }
 
