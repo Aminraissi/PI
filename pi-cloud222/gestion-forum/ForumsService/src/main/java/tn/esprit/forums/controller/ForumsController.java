@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,18 +33,26 @@ import tn.esprit.forums.model.ForumPost;
 import tn.esprit.forums.model.ForumReport;
 import tn.esprit.forums.model.ForumUser;
 import tn.esprit.forums.service.ForumAiSuggestionService;
+import tn.esprit.forums.service.ForumImageModerationService;
 import tn.esprit.forums.service.ForumsService;
 
 @RestController
 @RequestMapping("/api/forums")
 public class ForumsController {
+    private static final Logger LOG = LoggerFactory.getLogger(ForumsController.class);
 
     private final ForumsService forumsService;
     private final ForumAiSuggestionService forumAiSuggestionService;
+    private final ForumImageModerationService forumImageModerationService;
 
-    public ForumsController(ForumsService forumsService, ForumAiSuggestionService forumAiSuggestionService) {
+    public ForumsController(
+            ForumsService forumsService,
+            ForumAiSuggestionService forumAiSuggestionService,
+            ForumImageModerationService forumImageModerationService
+    ) {
         this.forumsService = forumsService;
         this.forumAiSuggestionService = forumAiSuggestionService;
+        this.forumImageModerationService = forumImageModerationService;
     }
 
     @GetMapping("/posts")
@@ -65,6 +75,7 @@ public class ForumsController {
 
     @GetMapping("/posts/{postId}")
     public ForumPost getPostById(@PathVariable Long postId, @RequestParam(name = "userId", required = false) Long userId) {
+        LOG.info("Forums getPostById request received for postId={} userId={}", postId, userId);
         return forumsService.getPostById(postId, userId);
     }
 
@@ -241,6 +252,15 @@ public class ForumsController {
         return forumsService.getReportsForTarget(targetType, targetId, userId);
     }
 
+    @GetMapping("/reports")
+    public List<ForumReport> getAllReports(
+            @RequestHeader("Authorization") String authorization,
+            @RequestParam(name = "status", required = false) String status
+    ) {
+        Long userId = resolveAuthenticatedUserId(authorization);
+        return forumsService.getAllReports(userId, status);
+    }
+
     @PostMapping("/posts/{postId}/moderation/approve")
     public ResponseEntity<Void> approveReportedPost(
             @RequestHeader("Authorization") String authorization,
@@ -278,6 +298,28 @@ public class ForumsController {
     ) {
         Long userId = resolveAuthenticatedUserId(authorization);
         forumsService.rejectPostMedia(postId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/posts/{postId}/replies/{replyId}/media/approve")
+    public ResponseEntity<Void> approveReplyMedia(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable Long postId,
+            @PathVariable Long replyId
+    ) {
+        Long userId = resolveAuthenticatedUserId(authorization);
+        forumsService.approveReplyMedia(postId, replyId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/posts/{postId}/replies/{replyId}/media/reject")
+    public ResponseEntity<Void> rejectReplyMedia(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable Long postId,
+            @PathVariable Long replyId
+    ) {
+        Long userId = resolveAuthenticatedUserId(authorization);
+        forumsService.rejectReplyMedia(postId, replyId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -355,7 +397,15 @@ public class ForumsController {
 
     @GetMapping("/health/ai")
     public Map<String, Object> aiHealth() {
-        return forumAiSuggestionService.getRuntimeStatus();
+        return Map.of(
+                "assistant", forumAiSuggestionService.getRuntimeStatus(),
+                "imageModeration", forumImageModerationService.getRuntimeStatus()
+        );
+    }
+
+    @GetMapping("/health/ai/image-moderation")
+    public Map<String, Object> imageModerationHealth() {
+        return forumImageModerationService.getRuntimeStatus();
     }
 
     @PostMapping("/ai/tags")
@@ -409,6 +459,13 @@ public class ForumsController {
     @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleUnexpectedError(Exception ex, HttpServletRequest request) {
+        LOG.error("Unhandled forums controller error on {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", ex.getMessage() == null ? "Unexpected server error" : ex.getMessage()));
     }
 
     private Long resolveAuthenticatedUserId(String authorizationHeader) {
