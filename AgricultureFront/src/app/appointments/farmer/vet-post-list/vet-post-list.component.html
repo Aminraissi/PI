@@ -57,7 +57,7 @@
 
   <!-- ── Grille des publications ── -->
   <div class="vpl-grid" *ngIf="!loading && filtered.length > 0">
-    <div class="post-card" *ngFor="let post of filtered" [class.expanded]="expandedPost === post.id">
+    <div class="post-card" *ngFor="let post of filtered" (click)="openPost(post)">
 
       <!-- Badge type -->
       <div class="post-type-badge" [class.article-badge]="post.type==='ARTICLE'" [class.video-badge]="post.type==='VIDEO'">
@@ -73,6 +73,7 @@
       <!-- ── VIDÉO ── -->
       <div class="post-media video-wrap" *ngIf="post.type === 'VIDEO' && post.mediaUrl">
         <video
+          (click)="$event.stopPropagation()"
           controls
           preload="metadata"
           class="post-video"
@@ -94,18 +95,49 @@
           <i class="fas fa-calendar-alt"></i> {{ formatDate(post.createdAt) }}
         </div>
 
-        <div class="post-desc" *ngIf="post.description" [class.clamped]="expandedPost !== post.id">
+        <div class="post-desc" *ngIf="post.description">
           {{ post.description }}
         </div>
-
-        <button class="expand-btn" *ngIf="post.description && post.description.length > 140"
-          (click)="toggleExpand(post.id)">
-          {{ expandedPost === post.id ? 'Voir moins' : 'Lire la suite' }}
-          <i [class]="expandedPost === post.id ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
-        </button>
       </div>
 
     </div>
   </div>
 
+</div>
+
+<div class="post-detail-overlay" *ngIf="selectedPost" (click)="closePost()">
+  <article class="post-detail" (click)="$event.stopPropagation()">
+    <button type="button" class="detail-close" (click)="closePost()" aria-label="Fermer">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div class="detail-media" *ngIf="selectedPost.mediaUrl">
+      <img
+        *ngIf="selectedPost.type === 'ARTICLE'"
+        [src]="mediaUrl(selectedPost)"
+        [alt]="selectedPost.titre"
+        class="detail-img">
+      <video
+        *ngIf="selectedPost.type === 'VIDEO'"
+        [src]="mediaUrl(selectedPost)"
+        controls
+        preload="metadata"
+        class="detail-video">
+        Votre navigateur ne supporte pas la lecture video.
+      </video>
+    </div>
+
+    <div class="detail-body">
+      <div class="post-type-badge detail-badge" [class.article-badge]="selectedPost.type==='ARTICLE'" [class.video-badge]="selectedPost.type==='VIDEO'">
+        <i [class]="selectedPost.type==='ARTICLE' ? 'fas fa-file-alt' : 'fas fa-video'"></i>
+        {{ selectedPost.type === 'ARTICLE' ? 'Article' : 'Video' }}
+      </div>
+
+      <h2 class="detail-title">{{ selectedPost.titre }}</h2>
+      <div class="post-date">
+        <i class="fas fa-calendar-alt"></i> {{ formatDate(selectedPost.createdAt) }}
+      </div>
+      <p class="detail-desc" *ngIf="selectedPost.description">{{ selectedPost.description }}</p>
+    </div>
+  </article>
 </div>

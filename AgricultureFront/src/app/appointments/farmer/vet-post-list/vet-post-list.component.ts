@@ -16,7 +16,7 @@ export class VetPostListComponent implements OnInit {
   error = '';
 
   activeFilter: 'ALL' | 'ARTICLE' | 'VIDEO' = 'ALL';
-  expandedPost: number | null = null;
+  selectedPost: VetPost | null = null;
 
   readonly BASE = 'http://localhost:8088';
 
@@ -44,9 +44,8 @@ export class VetPostListComponent implements OnInit {
     return `${this.BASE}/inventaires${post.mediaUrl}`;
   }
 
-  toggleExpand(id: number) {
-    this.expandedPost = this.expandedPost === id ? null : id;
-  }
+  openPost(post: VetPost) { this.selectedPost = post; }
+  closePost() { this.selectedPost = null; }
 
   formatDate(d: string): string {
     return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
