@@ -18,6 +18,8 @@ export class AuthComponent implements OnInit {
   photoUploadUrl:       string | null = null;
   loginError:           string | null = null;
   isLoading                           = false;
+  photoUploading                     = false;
+  photoUploadError:    string | null = null;
   verificationUserId:   number | null = null;
   verificationEmail:    string | null = null;
   verificationMessage:  string | null = null;
@@ -55,6 +57,13 @@ export class AuthComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const authNotice = this.authService.consumeAuthNotice();
+    if (authNotice) {
+      this.loginError = authNotice;
+      this.mode = 'signin';
+      localStorage.setItem('authMode', 'signin');
+    }
+
     const savedMode = localStorage.getItem('authMode');
     if (savedMode === 'signin' || savedMode === 'signup' || savedMode === 'verify') {
       this.mode = savedMode;
@@ -74,7 +83,7 @@ export class AuthComponent implements OnInit {
     this.signInForm = new FormGroup({
       email:    new FormControl(rememberedEmail || '', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(8)]),
-      remember: new FormControl(rememberedEmail !== null)
+      remember: new FormControl(true)
     });
 
     this.signUpForm = new FormGroup({
@@ -87,7 +96,7 @@ export class AuthComponent implements OnInit {
       role:      new FormControl('', Validators.required)
     });
 
-    if (this.authService.hasActiveSession()) {
+    if (!authNotice && this.authService.hasActiveSession()) {
       const redirectRoute = this.authService.getDefaultRouteForRole(this.authService.getCurrentRole());
       this.router.navigate([redirectRoute]);
     }
@@ -123,7 +132,7 @@ export class AuthComponent implements OnInit {
 
     const { email, remember, password } = this.signInForm.value;
 
-    this.authService.login(email, password).subscribe({
+    this.authService.login(email, password, remember).subscribe({
       next: (response) => {
         if (response.token) {
           if (remember) {
@@ -138,7 +147,9 @@ export class AuthComponent implements OnInit {
         } else if (response.verificationRequired || response.nextStep === 'VERIFY_EMAIL') {
           this.enterVerificationMode(response.userId, response.email, response.message || 'Please verify your email.');
         } else {
-          this.loginError = response.message || 'Login failed';
+          this.loginError = response.nextStep === 'PENDING_ADMIN_REVIEW'
+            ? (response.message || 'Your account is awaiting document review by an administrator.')
+            : (response.message || 'Login failed');
         }
         this.isLoading = false;
       },
@@ -150,14 +161,24 @@ export class AuthComponent implements OnInit {
   }
 
   submitSignUp(): void {
+    if (this.photoUploading) {
+      this.loginError = 'Please wait until the profile photo finishes uploading.';
+      return;
+    }
+
+    if (!this.photoUploadUrl) {
+      this.loginError = 'Please upload a valid profile photo before continuing.';
+      return;
+    }
+
     if (this.signUpForm.invalid) { this.signUpForm.markAllAsTouched(); return; }
 
     this.isLoading  = true;
     this.loginError = null;
 
     const payload: SignupStep1Request = {
-      nom:        this.signUpForm.value.firstName ?? '',
-      prenom:     this.signUpForm.value.lastName  ?? '',
+      nom:        this.signUpForm.value.lastName  ?? '',
+      prenom:     this.signUpForm.value.firstName ?? '',
       email:      this.signUpForm.value.email     ?? '',
       motDePasse: this.signUpForm.value.password  ?? '',
       role:       this.selectedRole,
@@ -239,15 +260,24 @@ export class AuthComponent implements OnInit {
     if (!file) return;
     this.signUpForm.get('photo')?.setValue(file);
     this.signUpForm.get('photo')?.markAsTouched();
-    this.photoUploadUrl = this.buildMockFileUrl(file);
+    this.photoUploadError = null;
+    this.photoUploading = true;
     const reader    = new FileReader();
     reader.onload   = () => this.previewUrl = reader.result as string;
     reader.readAsDataURL(file);
-  }
 
-  private buildMockFileUrl(file: File): string {
-    const safeName = encodeURIComponent(file.name.replace(/\s+/g, '-'));
-    return `https://files.greenroots.local/uploads/${Date.now()}-${safeName}`;
+    this.authService.uploadUserFile(file).subscribe({
+      next: ({ url }) => {
+        this.photoUploadUrl = url;
+        this.photoUploading = false;
+      },
+      error: (err) => {
+        this.photoUploadUrl = null;
+        this.photoUploading = false;
+        this.photoUploadError = err.error?.message || err.error || 'Could not upload the profile photo.';
+        this.signUpForm.get('photo')?.setErrors({ uploadFailed: true });
+      }
+    });
   }
 
   private enterVerificationMode(userId: number | null, email: string | null, message: string): void {
@@ -259,5 +289,9 @@ export class AuthComponent implements OnInit {
     if (userId != null) localStorage.setItem('pendingVerificationUserId', String(userId));
     if (email)          localStorage.setItem('pendingVerificationEmail', email);
     localStorage.setItem('pendingVerificationMessage', message);
+  }
+
+  canSubmitSignUp(): boolean {
+    return !this.isLoading && !this.photoUploading;
   }
 }
