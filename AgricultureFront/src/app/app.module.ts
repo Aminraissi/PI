@@ -32,6 +32,8 @@ import { SharedModule }                      from './shared/shared.module';
 import { ShopModule }                        from './shop/shop.module';
 import { ToastComponent }                    from './shared/components/toast/toast.component';
 import { AppToastComponent }                 from './shared/components/app-toast/app-toast.component';
+import { FarmerModule } from './farmer/farmer.module';
+import { AnimalsModule } from './animals/animals.module';
 
 registerLocaleData(localeFr);
 
@@ -67,8 +69,11 @@ registerLocaleData(localeFr);
         ReactiveFormsModule,
         HttpClientModule,
         AppRoutingModule,
-        SharedModule,
+         FarmerModule,
+        AnimalsModule,
+       
         ShopModule,
+        SharedModule,
     ],
     providers: [
         {

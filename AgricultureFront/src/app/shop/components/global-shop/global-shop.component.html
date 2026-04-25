@@ -17,6 +17,15 @@
     </button>
   </div>
 
+  <!-- Active vet banner -->
+  <div class="active-vet-banner" *ngIf="cartService.currentVetId !== null">
+    <i class="fas fa-info-circle"></i>
+    Panier en cours : produits du <strong>Dr. {{ cartService.currentVetNom }}</strong>.
+    Les produits d'autres vétérinaires ne peuvent pas être mélangés.
+    <button class="btn-clear-cart" (click)="cartService.clear()">Vider le panier</button>
+  </div>
+  </div>
+
   <!-- AI Search Panel -->
   <div class="ai-panel">
     <div class="ai-panel-header" (click)="showAiPanel = !showAiPanel">
@@ -116,7 +125,7 @@
           <span>{{ vetRegion(p) }}</span>
         </div>
         <p *ngIf="p.description" class="gscard-desc">
-          {{ p.description | slice:0:60 }}{{ p.description!.length>60 ? '…' : '' }}
+          {{ p.description | slice:0:60 }}{{ (p.description?.length??0)>60 ? '…' : '' }}
         </p>
         <div class="gscard-footer">
           <span class="gscard-price">{{ p.prixVente | number:'1.2-2' }} DT</span>
@@ -125,12 +134,13 @@
       </div>
     </div>
   </div>
-</div>
+
 
 <!-- Product Detail -->
 <app-product-detail
   *ngIf="selectedProduct"
   [product]="selectedProduct"
+  [vetId]="selectedProduct.owner?.id ?? 0"
   [vetNom]="vetName(selectedProduct)"
   [vetRegion]="vetRegion(selectedProduct)"
   (close)="closeDetail()"
@@ -150,3 +160,6 @@
   (close)="closeCheckout()"
   (success)="onPaymentSuccess()">
 </app-checkout>
+
+<!-- Conflict Dialog (mono-vétérinaire) -->
+<app-cart-conflict></app-cart-conflict>
