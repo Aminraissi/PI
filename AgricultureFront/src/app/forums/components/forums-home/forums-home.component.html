@@ -11,6 +11,9 @@
           <span>{{ group.memberCount }} members</span>
           <button type="button" (click)="changeGroupFilter(null)">Back to all forums</button>
         </div>
+        <div class="admin-hero-actions" *ngIf="isCurrentUserAdmin()">
+          <button type="button" class="admin-review-btn" [routerLink]="['/forums/reports']">Open Report Review</button>
+        </div>
       </div>
       <div class="hero-metrics">
         <article>
@@ -360,12 +363,12 @@
               </p>
               <div class="post-media-strip" *ngIf="post.mediaUrls?.length">
                 <ng-container *ngFor="let media of (post.mediaUrls || []).slice(0, 2)">
-                  <img *ngIf="isImageMedia(media)" [src]="media" alt="Attached media" />
-                  <video *ngIf="isVideoMedia(media)" [src]="media" controls></video>
+                  <img *ngIf="isImageMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" alt="Attached media" />
+                  <video *ngIf="isVideoMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" controls></video>
                 </ng-container>
               </div>
               <small class="media-pending-note" *ngIf="post.mediaPendingReview && !isCurrentUserAdmin()">
-                Media attached to this post is pending admin review.
+                Media attached to this post is waiting for admin review because automatic image moderation could not approve it yet.
               </small>
               <div class="chip-row">
                 <span *ngFor="let tag of post.tags" [ngClass]="getTagColorClass(tag)" class="tag-chip">
