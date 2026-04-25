@@ -281,7 +281,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     ngAfterViewInit(): void {
         if (this.explorerFrame && !this.explorerLoaded) {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
             const base  = 'http://localhost:5173/explorer/';
             this.explorerFrame.nativeElement.src = token
                 ? `${base}?token=${encodeURIComponent(token)}`
@@ -410,6 +410,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
         const token =
             localStorage.getItem('authToken') ||
+            sessionStorage.getItem('authToken') ||
             localStorage.getItem('token') ||
             localStorage.getItem('jwt') ||
             localStorage.getItem('accessToken');
@@ -417,7 +418,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         const user =
             localStorage.getItem('currentUser') ||
             localStorage.getItem('user') ||
-            localStorage.getItem('authUser');
+            localStorage.getItem('authUser') ||
+            sessionStorage.getItem('authUser');
 
         const isLoggedIn = !!token || !!user;
 
