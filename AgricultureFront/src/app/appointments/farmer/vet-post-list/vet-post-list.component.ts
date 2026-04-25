@@ -18,7 +18,7 @@ export class VetPostListComponent implements OnInit {
   activeFilter: 'ALL' | 'ARTICLE' | 'VIDEO' = 'ALL';
   expandedPost: number | null = null;
 
-  readonly BASE = 'http://localhost:8088/inventaires';
+  readonly BASE = 'http://localhost:8088';
 
   constructor(private api: AppointmentsApiService) {}
 
@@ -40,7 +40,8 @@ export class VetPostListComponent implements OnInit {
   mediaUrl(post: VetPost): string {
     if (!post.mediaUrl) return '';
     if (post.mediaUrl.startsWith('http')) return post.mediaUrl;
-    return this.BASE + post.mediaUrl;
+    if (post.mediaUrl.startsWith('/inventaires/')) return this.BASE + post.mediaUrl;
+    return `${this.BASE}/inventaires${post.mediaUrl}`;
   }
 
   toggleExpand(id: number) {

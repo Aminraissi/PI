@@ -34,7 +34,7 @@ export class VetPostManagerComponent implements OnInit {
   // Confirmation suppression
   deleteTargetId: number | null = null;
 
-  readonly BASE = 'http://localhost:8088/inventaires';
+  readonly BASE = 'http://localhost:8088';
 
   constructor(
     private api: AppointmentsApiService,
@@ -152,7 +152,8 @@ export class VetPostManagerComponent implements OnInit {
   mediaUrl(post: VetPost): string {
     if (!post.mediaUrl) return '';
     if (post.mediaUrl.startsWith('http')) return post.mediaUrl;
-    return this.BASE + post.mediaUrl;
+    if (post.mediaUrl.startsWith('/inventaires/')) return this.BASE + post.mediaUrl;
+    return `${this.BASE}/inventaires${post.mediaUrl}`;
   }
 
   formatDate(d: string): string {

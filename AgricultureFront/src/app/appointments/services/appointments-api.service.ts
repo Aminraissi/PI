@@ -399,7 +399,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
 
   getVetPosts(vetId: number): Observable<import('../models/appointments.models').VetPost[]> {
     return this.http.get<ApiResp<import('../models/appointments.models').VetPost[]>>(
-      `${this.inv}/api/posts/vet/${vetId}`,
+      `${this.inv}/posts/vet/${vetId}`,
       { headers: this.h() }
     ).pipe(map(r => r.data));
   }
@@ -409,7 +409,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     const token = this.auth.getToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     return this.http.post<ApiResp<import('../models/appointments.models').VetPost>>(
-      `${this.inv}/api/posts`,
+      `${this.inv}/posts`,
       formData,
       { headers }
     ).pipe(map(r => r.data));
@@ -419,7 +419,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     const token = this.auth.getToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     return this.http.put<ApiResp<import('../models/appointments.models').VetPost>>(
-      `${this.inv}/api/posts/${id}`,
+      `${this.inv}/posts/${id}`,
       formData,
       { headers }
     ).pipe(map(r => r.data));
@@ -427,7 +427,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
 
   deleteVetPost(id: number): Observable<void> {
     return this.http.delete<void>(
-      `${this.inv}/api/posts/${id}`,
+      `${this.inv}/posts/${id}`,
       { headers: this.h() }
     );
   }
