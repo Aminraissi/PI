@@ -33,6 +33,8 @@ import { ShopModule }                    from '../shop/shop.module';
 import { VetCommandesComponent } from './vet/vet-commandes/vet-commandes.component';
 import { VetStatisticsComponent } from './vet/vet-statistics/vet-statistics.component';
 import { FarmerProfileFormComponent } from './farmer/farmer-profile-form/farmer-profile-form.component';
+import { VetPostListComponent }        from './farmer/vet-post-list/vet-post-list.component';
+import { VetPostManagerComponent }     from './vet/vet-post-manager/vet-post-manager.component';
 
 @NgModule({
   declarations: [
@@ -57,9 +59,9 @@ import { FarmerProfileFormComponent } from './farmer/farmer-profile-form/farmer-
      VetCommandesComponent,
        VetStatisticsComponent,
        
-    FarmerProfileFormComponent  
-
-    
+    FarmerProfileFormComponent,
+    VetPostListComponent,
+    VetPostManagerComponent,
   ],
   imports: [
     CommonModule,

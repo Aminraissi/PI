@@ -1,0 +1,333 @@
+/* ============================================
+   VET POST LIST — Côté Agriculteur
+   ============================================ */
+
+.vpl-wrap {
+  margin-top: 32px;
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  border: 1px solid #f3f4f6;
+}
+
+/* ── En-tête ── */
+.vpl-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.vpl-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vpl-header-left > i {
+  font-size: 1.75rem;
+  color: #0f5c3f;
+  background: #e6f4ed;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.vpl-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.vpl-sub {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.vpl-counts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.count-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.article-chip {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.video-chip {
+  background: #fdf4ff;
+  color: #7e22ce;
+}
+
+/* ── Filtres ── */
+.vpl-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: #0f5c3f;
+  color: #0f5c3f;
+  background: #e6f4ed;
+}
+
+.filter-btn.active {
+  background: #0f5c3f;
+  color: white;
+  border-color: #0f5c3f;
+}
+
+.filter-btn.article.active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.filter-btn.video.active {
+  background: #7e22ce;
+  border-color: #7e22ce;
+}
+
+/* ── États ── */
+.vpl-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 0.9375rem;
+}
+
+.loader-ring {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #d1e8df;
+  border-top-color: #0f5c3f;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.vpl-error {
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #ef4444;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vpl-empty {
+  text-align: center;
+  padding: 56px 40px;
+  color: #9ca3af;
+}
+
+.vpl-empty i {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  display: block;
+  opacity: 0.5;
+}
+
+.vpl-empty p {
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+/* ── Grille ── */
+.vpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+/* ── Carte publication ── */
+.post-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.25s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.12);
+  transform: translateY(-3px);
+  border-color: #d1d5db;
+}
+
+/* Badge type */
+.post-type-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
+}
+
+.article-badge {
+  background: rgba(29, 78, 216, 0.9);
+  color: white;
+}
+
+.video-badge {
+  background: rgba(126, 34, 206, 0.9);
+  color: white;
+}
+
+/* Media */
+.post-media {
+  width: 100%;
+  background: #f3f4f6;
+}
+
+.post-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.video-wrap {
+  background: #000;
+}
+
+.post-video {
+  width: 100%;
+  max-height: 260px;
+  display: block;
+  border-radius: 0;
+}
+
+.post-no-media {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdf4, #e6f4ed);
+}
+
+.post-no-media i {
+  font-size: 2.5rem;
+  color: #0f5c3f;
+  opacity: 0.3;
+}
+
+/* Corps */
+.post-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.post-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.post-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.post-date i {
+  font-size: 0.6875rem;
+}
+
+.post-desc {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.65;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.post-desc.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #0f5c3f;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.2s;
+}
+
+.expand-btn:hover { color: #0a3d28; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .vpl-wrap { padding: 20px; }
+  .vpl-grid { grid-template-columns: 1fr; }
+  .vpl-header { flex-direction: column; }
+}

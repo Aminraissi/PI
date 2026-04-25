@@ -8,6 +8,10 @@
     </div>
 
     <nav class="sidebar-nav">
+      <button class="nav-item home-nav" (click)="goHome()">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </button>
       <button class="nav-item" [class.active]="activeTab === 'inventory'" (click)="setTab('inventory')">
         <i class="fas fa-boxes"></i>
         <span>Inventory</span>

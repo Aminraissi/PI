@@ -20,6 +20,10 @@ export class InventoryLayoutComponent {
     this.router.navigate(['/']);
   }
 
+  goHome() {
+    this.router.navigate(['/']);
+  }
+
  setTab(tab: 'inventory' | 'animals' | 'statistics' | 'boutique') {
     this.activeTab = tab;
   }
