@@ -32,6 +32,8 @@ export interface ForumReply {
   authorId: number;
   content: string;
   mediaUrls?: string[];
+  mediaApproved?: boolean;
+  mediaPendingReview?: boolean;
   upvotes: number;
   downvotes: number;
   isAccepted: boolean;
@@ -104,6 +106,14 @@ export interface ForumReportDetail {
   reviewedAt?: string | null;
   reviewedBy?: number | null;
   adminNotes?: string | null;
+}
+
+export interface ForumReportCaseActionTarget {
+  targetType: 'POST' | 'REPLY' | 'COMMENT';
+  targetId: number;
+  postId?: number | null;
+  replyId?: number | null;
+  commentId?: number | null;
 }
 
 interface AiTagSuggestionResponse {
@@ -335,6 +345,15 @@ export class ForumsMockService {
     return this.http.get<ForumReportDetail[]>(`${this.apiUrl}/reports/${targetType.toLowerCase()}/${targetId}`);
   }
 
+  getAllReports(status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'): Observable<ForumReportDetail[]> {
+    let params = new HttpParams();
+    if (status && status !== 'ALL') {
+      params = params.set('status', status);
+    }
+
+    return this.http.get<ForumReportDetail[]>(`${this.apiUrl}/reports`, { params });
+  }
+
   approveReportedPost(postId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/moderation/approve`, {});
   }
@@ -351,6 +370,14 @@ export class ForumsMockService {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/media/reject`, {});
   }
 
+  approveReplyMedia(postId: number, replyId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/media/approve`, {});
+  }
+
+  rejectReplyMedia(postId: number, replyId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/media/reject`, {});
+  }
+
   approveReportedReply(postId: number, replyId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/moderation/approve`, {});
   }
@@ -365,6 +392,30 @@ export class ForumsMockService {
 
   rejectReportedComment(postId: number, replyId: number, commentId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/comments/${commentId}/moderation/reject`, {});
+  }
+
+  approveReportTarget(target: ForumReportCaseActionTarget): Observable<void> {
+    if (target.targetType === 'POST') {
+      return this.approveReportedPost(target.postId ?? target.targetId);
+    }
+
+    if (target.targetType === 'REPLY') {
+      return this.approveReportedReply(target.postId ?? 0, target.replyId ?? target.targetId);
+    }
+
+    return this.approveReportedComment(target.postId ?? 0, target.replyId ?? 0, target.commentId ?? target.targetId);
+  }
+
+  rejectReportTarget(target: ForumReportCaseActionTarget): Observable<void> {
+    if (target.targetType === 'POST') {
+      return this.rejectReportedPost(target.postId ?? target.targetId);
+    }
+
+    if (target.targetType === 'REPLY') {
+      return this.rejectReportedReply(target.postId ?? 0, target.replyId ?? target.targetId);
+    }
+
+    return this.rejectReportedComment(target.postId ?? 0, target.replyId ?? 0, target.commentId ?? target.targetId);
   }
 
   acceptReply(postId: number, replyId: number): Observable<void> {
