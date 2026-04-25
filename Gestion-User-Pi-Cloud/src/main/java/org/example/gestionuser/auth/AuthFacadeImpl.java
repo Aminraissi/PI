@@ -28,9 +28,14 @@ public class AuthFacadeImpl implements AuthFacade {
     public LoginResponse login(String email, String motDePasse) {
         User user = userService.findByEmail(email);
 
-        if (user == null || user.getMotDePasse() == null || !user.getMotDePasse().equals(motDePasse)) {
+        if (user == null) {
             return new LoginResponse(null, null, null, email, null, null, null, null,
-                    "LOGIN", false, "Invalid credentials");
+                    "LOGIN", false, "No account was found for this email address");
+        }
+
+        if (user.getMotDePasse() == null || !user.getMotDePasse().equals(motDePasse)) {
+            return new LoginResponse(null, null, null, email, null, null, null, null,
+                    "LOGIN", false, "Incorrect email or password");
         }
 
         if (user.getEmailVerificationStatus() != EmailVerificationStatus.VERIFIED) {
@@ -47,6 +52,24 @@ public class AuthFacadeImpl implements AuthFacade {
                     true,
                     "Email verification required before access"
             );
+        }
+
+        if (user.getStatutCompte() == StatutCompte.SUSPENDU) {
+            return blockedLoginResponse(user, "ACCOUNT_SUSPENDED", "Account suspended by administrator");
+        }
+
+        if (user.getStatutCompte() == StatutCompte.REFUSE) {
+            String message = user.getMotifRefus() != null && !user.getMotifRefus().isBlank()
+                    ? "Account request rejected: " + user.getMotifRefus()
+                    : "Account request rejected by administrator";
+            return blockedLoginResponse(user, "ACCOUNT_REFUSED", message);
+        }
+
+        if (user.getStatutCompte() == StatutCompte.EN_ATTENTE) {
+            String message = user.getProfileValidationStatus() == ProfileValidationStatus.PENDING_VALIDATION
+                    ? "Your account is awaiting document review by an administrator"
+                    : "Account pending administrator review";
+            return blockedLoginResponse(user, "PENDING_ADMIN_REVIEW", message);
         }
 
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail());
@@ -193,13 +216,7 @@ public class AuthFacadeImpl implements AuthFacade {
         // TODO(email-team): Validate verification token and expiration before marking email as verified.
         // Current implementation is a dummy switch to allow integration progress.
         user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
-        user.setStatutCompte(StatutCompte.APPROUVE);
-
-        if (user.getProfileValidationStatus() == null) {
-            user.setProfileValidationStatus(roleNeedsDocumentValidation(user.getRole())
-                    ? ProfileValidationStatus.PENDING_VALIDATION
-                    : ProfileValidationStatus.NOT_REQUIRED);
-        }
+        normalizeStatusesAfterEmailVerification(user);
 
         User updated = userService.updateUser(user);
         return new SignupResponse(
@@ -212,6 +229,37 @@ public class AuthFacadeImpl implements AuthFacade {
                 "LOGIN",
                 "Email verified successfully. You can now log in."
         );
+    }
+
+    private void normalizeStatusesAfterEmailVerification(User user) {
+        if (roleNeedsDocumentValidation(user.getRole())) {
+            if (user.getProfileValidationStatus() == null || user.getProfileValidationStatus() == ProfileValidationStatus.INCOMPLETE) {
+                user.setProfileValidationStatus(ProfileValidationStatus.PENDING_VALIDATION);
+            }
+
+            if (user.getProfileValidationStatus() == ProfileValidationStatus.VALIDATED) {
+                user.setStatutCompte(StatutCompte.APPROUVE);
+            } else if (user.getProfileValidationStatus() == ProfileValidationStatus.REJECTED) {
+                user.setStatutCompte(StatutCompte.REFUSE);
+            } else {
+                user.setStatutCompte(StatutCompte.EN_ATTENTE);
+            }
+            return;
+        }
+
+        if (roleNeedsExtendedProfile(user.getRole())
+                && (user.getProfileValidationStatus() == null || user.getProfileValidationStatus() == ProfileValidationStatus.INCOMPLETE)) {
+            user.setProfileValidationStatus(ProfileValidationStatus.INCOMPLETE);
+            user.setStatutCompte(StatutCompte.EN_ATTENTE);
+            return;
+        }
+
+        if (user.getProfileValidationStatus() == null) {
+            user.setProfileValidationStatus(roleNeedsExtendedProfile(user.getRole())
+                    ? ProfileValidationStatus.VALIDATED
+                    : ProfileValidationStatus.NOT_REQUIRED);
+        }
+        user.setStatutCompte(StatutCompte.APPROUVE);
     }
 
     private Role parseRole(String rawRole) {
@@ -254,15 +302,31 @@ public class AuthFacadeImpl implements AuthFacade {
     }
 
     private String buildUsername(User user) {
-        String nom = user.getNom() == null ? "" : user.getNom().trim();
         String prenom = user.getPrenom() == null ? "" : user.getPrenom().trim();
-        String fullName = (nom + " " + prenom).trim();
+        String nom = user.getNom() == null ? "" : user.getNom().trim();
+        String fullName = (prenom + " " + nom).trim();
 
         if (!fullName.isEmpty()) {
             return fullName;
         }
 
         return user.getEmail();
+    }
+
+    private LoginResponse blockedLoginResponse(User user, String nextStep, String message) {
+        return new LoginResponse(
+                null,
+                user.getId(),
+                buildUsername(user),
+                user.getEmail(),
+                user.getRole() != null ? user.getRole().name() : null,
+                user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
+                user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
+                user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
+                nextStep,
+                false,
+                message
+        );
     }
 
     @Override
@@ -276,10 +340,20 @@ public class AuthFacadeImpl implements AuthFacade {
             return new TokenValidationResponse(false, null, null, "Token is invalid or expired");
         }
 
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        User user = userId == null ? null : userService.getUser(userId);
+        if (user == null) {
+            return new TokenValidationResponse(false, null, null, "User not found");
+        }
+
+        if (user.getStatutCompte() == StatutCompte.SUSPENDU) {
+            return new TokenValidationResponse(false, user.getId(), user.getEmail(), "Account suspended by administrator");
+        }
+
         return new TokenValidationResponse(
                 true,
-                jwtTokenProvider.getUserIdFromToken(token),
-                jwtTokenProvider.getEmailFromToken(token),
+                user.getId(),
+                user.getEmail(),
                 "Token is valid"
         );
     }

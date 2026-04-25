@@ -193,6 +193,11 @@
             </label>
           </div>
 
+          <div class="auth-feedback auth-feedback-error" *ngIf="loginError">
+            <i class="fas fa-circle-exclamation"></i>
+            <span>{{ loginError }}</span>
+          </div>
+
           <button type="submit" class="auth-btn">
             <i class="fas fa-sign-in-alt"></i> Sign In
           </button>
@@ -335,6 +340,14 @@
       </div>
     </ng-container>
   </div>
+  <div class="auth-feedback auth-feedback-info" *ngIf="photoUploading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <span>Uploading profile photo...</span>
+  </div>
+  <div class="auth-feedback auth-feedback-error" *ngIf="photoUploadError">
+    <i class="fas fa-circle-exclamation"></i>
+    <span>{{ photoUploadError }}</span>
+  </div>
   <span class="field-error" *ngIf="suInvalid('photo')">
   <i class="fas fa-exclamation-circle"></i>
 
@@ -348,6 +361,9 @@
 
   <span *ngIf="signUpForm.get('photo')?.hasError('maxSize')">
     Image must be less than 2MB.
+  </span>
+  <span *ngIf="signUpForm.get('photo')?.hasError('uploadFailed')">
+    Profile photo upload failed.
   </span>
 </span>
 </div>
@@ -394,7 +410,7 @@
     </span>
   </span>
 </div>
-          <button type="submit" class="auth-btn">
+          <button type="submit" class="auth-btn" [disabled]="!canSubmitSignUp()">
           <ng-container *ngIf="needsExtraStep">
             <i class="fas fa-arrow-right"></i> Next
           </ng-container>
