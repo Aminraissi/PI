@@ -470,12 +470,21 @@ export class ForumsHomeComponent implements OnInit, OnDestroy {
 
   isVideoMedia(url: string): boolean {
     const lower = (url ?? '').toLowerCase();
-    return lower.startsWith('data:video/') || /(\.mp4|\.webm|\.mov|youtube\.com|youtu\.be|vimeo\.com)/.test(lower);
+    return this.isValidDataMediaUrl(url, 'video') || /(\.mp4|\.webm|\.mov|youtube\.com|youtu\.be|vimeo\.com)/.test(lower);
   }
 
   isImageMedia(url: string): boolean {
     const lower = (url ?? '').toLowerCase();
-    return lower.startsWith('data:image/') || /(\.png|\.jpg|\.jpeg|\.gif|\.webp|tenor\.com|giphy\.com)/.test(lower);
+    return this.isValidDataMediaUrl(url, 'image') || /(\.png|\.jpg|\.jpeg|\.gif|\.webp|tenor\.com|giphy\.com)/.test(lower);
+  }
+
+  onMediaRenderError(url: string, event?: Event): void {
+    const target = event?.target as HTMLElement | null;
+    if (target) {
+      target.style.display = 'none';
+    }
+
+    console.warn('[ForumsHome] Skipping invalid media URL', url?.slice(0, 80));
   }
 
   stripHtml(value: string): string {
@@ -1224,6 +1233,26 @@ export class ForumsHomeComponent implements OnInit, OnDestroy {
 
   private isAiReply(reply: ForumReply): boolean {
     return reply.authorId === ForumsHomeComponent.AI_AUTHOR_ID;
+  }
+
+  private isValidDataMediaUrl(url: string | null | undefined, expectedType: 'image' | 'video'): boolean {
+    const value = (url ?? '').trim();
+    if (!value.startsWith(`data:${expectedType}/`)) {
+      return false;
+    }
+
+    const marker = ';base64,';
+    const markerIndex = value.indexOf(marker);
+    if (markerIndex < 0) {
+      return false;
+    }
+
+    const payload = value.substring(markerIndex + marker.length);
+    if (!payload || payload.length < 16 || payload.length % 4 !== 0) {
+      return false;
+    }
+
+    return /^[A-Za-z0-9+/=]+$/.test(payload);
   }
 
   private syncGroupContextFromRoute(): void {

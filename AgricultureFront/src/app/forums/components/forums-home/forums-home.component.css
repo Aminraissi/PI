@@ -161,6 +161,28 @@
   cursor: pointer;
 }
 
+.admin-hero-actions {
+  margin-top: 14px;
+}
+
+.admin-review-btn {
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.96), rgba(254, 215, 170, 0.72));
+  color: #9a3412;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(180, 83, 9, 0.14);
+}
+
+.admin-review-btn:hover,
+.admin-review-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(180, 83, 9, 0.18);
+}
+
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
