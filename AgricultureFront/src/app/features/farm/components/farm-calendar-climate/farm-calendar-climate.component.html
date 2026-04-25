@@ -1,27 +1,177 @@
-<h2>Climat local (station proche)</h2>
-<p class="muted small">
-  Moyennes mensuelles sur l’année {{ climateYear }} à partir des coordonnées du terrain (Open-Meteo Archive).
-  Les bulletins officiels de l’INM (meteo.tn) ne sont pas exposés en API publique depuis le navigateur ; cette section résume le climat au point choisi.
-</p>
+<div class="climate-header">
+  <div>
+    <span class="section-kicker">Local climate</span>
+    <h2>Tunisia map and agro-climate reading</h2>
+    <p class="muted small">
+      Visual section inspired by
+      <a href="https://www.meteo.tn/" target="_blank" rel="noreferrer">meteo.tn</a>:
+      a Tunisia map, zone reading, and a climate summary for the selected field.
+      The values on this page are still powered by Open-Meteo Archive and your loaded forecast.
+    </p>
+  </div>
 
-<div *ngIf="climateLoading" class="muted">Chargement climat…</div>
-<div class="table-wrap" *ngIf="!climateLoading && climateMonthly.length > 0">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Mois</th>
-        <th>T° min moy.</th>
-        <th>T° max moy.</th>
-        <th>Pluie totale</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let row of climateMonthly">
-        <td>{{ row.month }}</td>
-        <td>{{ row.avgTempMin }}°C</td>
-        <td>{{ row.avgTempMax }}°C</td>
-        <td>{{ row.totalRainMm }} mm</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="climate-badge" *ngIf="selectedTerrain">
+    <strong>{{ selectedTerrain.nom }}</strong>
+    <span>{{ selectedTerrain.localisation }}</span>
+    <small>{{ selectedZoneLabel }} Tunisia</small>
+  </div>
+</div>
+
+<div *ngIf="climateLoading" class="muted">Loading climate...</div>
+
+<div class="climate-layout" *ngIf="!climateLoading && climateMonthly.length > 0">
+  <section class="climate-map-panel">
+    <div class="panel-topline">
+      <span>Tunisia climate map</span>
+      <strong>{{ climateYear || 'Latest full year' }}</strong>
+    </div>
+
+    <div class="map-interface">
+      <div class="map-topbar">
+        <button type="button" class="map-tab" [class.active]="activeMapTab === 'weather'" (click)="setMapTab('weather')">Weather</button>
+        <button type="button" class="map-tab" [class.active]="activeMapTab === 'wind'" (click)="setMapTab('wind')">Wind</button>
+        <span class="map-date">{{ mapDateLabel }}</span>
+      </div>
+
+      <div class="map-body">
+        <aside class="map-sidebar">
+          <button type="button" class="sidebar-day" [class.active]="activeDay === 'today'" (click)="setActiveDay('today')">Today</button>
+          <button type="button" class="sidebar-slot" [class.current]="activePeriod === 'morning'" (click)="setActivePeriod('morning')">Morning</button>
+          <button type="button" class="sidebar-slot" [class.current]="activePeriod === 'afternoon'" (click)="setActivePeriod('afternoon')">Afternoon</button>
+          <button type="button" class="sidebar-slot" [class.current]="activePeriod === 'night'" (click)="setActivePeriod('night')">Night</button>
+          <button type="button" class="sidebar-day" [class.active]="activeDay === 'tomorrow'" (click)="setActiveDay('tomorrow')">Tomorrow</button>
+          <button type="button" class="sidebar-day" [class.active]="activeDay === 'plus2'" (click)="setActiveDay('plus2')">+2 days</button>
+          <button type="button" class="sidebar-day" [class.active]="activeDay === 'plus3'" (click)="setActiveDay('plus3')">+3 days</button>
+        </aside>
+
+        <div class="tunisia-map">
+          <div class="map-canvas">
+            <img
+              class="tunisia-base-map"
+              src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Governorates_of_Tunisia_blank.svg"
+              alt="Tunisia governorates map"
+              referrerpolicy="no-referrer" />
+
+            <div
+              class="place-label"
+              *ngFor="let place of placeLabels"
+              [class.align-left]="place.align === 'left'"
+              [class.align-right]="place.align === 'right'"
+              [class.emphasis]="place.emphasis"
+              [style.top.%]="place.top"
+              [style.left.%]="place.left">
+              {{ place.name }}
+            </div>
+
+            <div
+            class="weather-marker"
+            *ngFor="let marker of weatherMarkers"
+            [class.wind-view]="activeMapTab === 'wind'"
+            [style.top.%]="marker.top"
+            [style.left.%]="marker.left">
+            <span class="temp">{{ activeMapTab === 'wind' ? 12 + (marker.temp % 10) : marker.temp }}</span>
+            <i [class]="iconClass(displayIcon(marker.icon))"></i>
+          </div>
+
+            <div class="terrain-marker" [ngStyle]="selectedMarkerStyle" title="Selected field">
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="map-attribution">
+      Base map: Tunisia governorates SVG from Wikimedia Commons.
+    </p>
+
+    <div class="map-caption">
+      <div>
+        <strong>Field marker</strong>
+        <span>{{ selectedTerrain?.latitude || '--' }}, {{ selectedTerrain?.longitude || '--' }}</span>
+      </div>
+      <div>
+        <strong>Nearby forecast</strong>
+        <span *ngIf="weather[0]">{{ weather[0].tempMin }} to {{ weather[0].tempMax }} deg, rain {{ weather[0].precipitation }} mm</span>
+        <span *ngIf="!weather[0]">No forecast available</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="climate-overview">
+    <article class="overview-card">
+      <span class="metric-label">Annual rainfall</span>
+      <strong>{{ totalRain | number:'1.0-0' }} mm</strong>
+      <p>Accumulated reading for the selected field during {{ climateYear }}.</p>
+    </article>
+
+    <article class="overview-card">
+      <span class="metric-label">Thermal average</span>
+      <strong>{{ averageMin | number:'1.0-1' }} / {{ averageMax | number:'1.0-1' }} deg</strong>
+      <p>Average monthly minimum and maximum temperatures for the loaded climate year.</p>
+    </article>
+
+    <article class="overview-card">
+      <span class="metric-label">Key month</span>
+      <strong>{{ wettestMonth?.month || '--' }}</strong>
+      <p *ngIf="wettestMonth">Peak rainfall: {{ wettestMonth.totalRainMm }} mm. Warmest month: {{ warmestMonth?.month || '--' }}.</p>
+      <p *ngIf="!wettestMonth">These indicators appear after climate loading finishes.</p>
+    </article>
+  </section>
+
+  <section class="zone-grid">
+    <article
+      class="zone-card"
+      *ngFor="let zone of tunisiaZones"
+      [class.active]="zone.key === selectedZoneKey">
+      <div class="zone-card-head">
+        <h3>{{ zone.label }} Tunisia</h3>
+        <span>{{ zone.key === selectedZoneKey ? 'Selected field zone' : 'Climate reference' }}</span>
+      </div>
+      <p>{{ zone.summary }}</p>
+    </article>
+  </section>
+
+  <section class="rain-chart">
+    <div class="panel-topline">
+      <span>Monthly rainfall</span>
+      <strong>{{ climateYear }} history</strong>
+    </div>
+
+    <div class="bars">
+      <div class="bar-col" *ngFor="let row of climateMonthly">
+        <div class="bar-track">
+          <div class="bar-fill" [style.height.%]="getRainBarHeight(row)"></div>
+        </div>
+        <strong>{{ row.totalRainMm }}</strong>
+        <span>{{ row.month | slice:0:3 }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="table-wrap">
+    <div class="panel-topline">
+      <span>Climate table</span>
+      <strong>Monthly summary</strong>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Avg min temp</th>
+          <th>Avg max temp</th>
+          <th>Total rain</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of climateMonthly">
+          <td>{{ row.month }}</td>
+          <td>{{ row.avgTempMin }} deg</td>
+          <td>{{ row.avgTempMax }} deg</td>
+          <td>{{ row.totalRainMm }} mm</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </div>
