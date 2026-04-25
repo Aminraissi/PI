@@ -41,7 +41,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         { label: 'Reclamations', route: '/claims'            },
         { label: 'Delivery',     route: '/delivery'          },
         { label: 'Events',       route: '/events/listEvents' },  // ← /events/listEvents (matches routing module)
-        { label: 'Trainings',    route: '/formations'        },
+        { label: 'Trainings',    route: '/training'        },
     ];
 
     dropdownLinks: NavDropdownLink[] = [
