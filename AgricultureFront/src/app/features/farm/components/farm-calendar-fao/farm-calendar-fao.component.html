@@ -1,22 +1,22 @@
-<h2>Périodes culturales (FAO)</h2>
-<p class="muted small">Données officielles FAO pour la Tunisie (TN). Recherche par nom de culture (ex. avoine, blé, olive…).</p>
+<h2>Crop windows (FAO)</h2>
+<p class="muted small">Official FAO data for Tunisia (TN). Search by crop name, for example wheat, olive, or oats.</p>
 <div class="inline-form">
-  <input type="text" [(ngModel)]="selectedCrop" placeholder="Nom de culture" />
+  <input type="text" [(ngModel)]="selectedCrop" placeholder="Crop name" />
   <button type="button" (click)="loadCropWindows()" [disabled]="faoLoading">
-    {{ faoLoading ? 'Chargement…' : 'Charger' }}
+    {{ faoLoading ? 'Loading...' : 'Load' }}
   </button>
 </div>
 
-<div *ngIf="!faoLoading && cropWindows.length === 0" class="empty">Saisissez une culture et chargez les périodes.</div>
+<div *ngIf="!faoLoading && cropWindows.length === 0" class="empty">Enter a crop and load the crop windows.</div>
 <div class="table-wrap" *ngIf="cropWindows.length > 0">
   <table class="data-table">
     <thead>
       <tr>
-        <th>Culture</th>
-        <th>Zone agro</th>
-        <th>Semis</th>
-        <th>Récolte</th>
-        <th>Remarques</th>
+        <th>Crop</th>
+        <th>Agro zone</th>
+        <th>Planting</th>
+        <th>Harvest</th>
+        <th>Notes</th>
       </tr>
     </thead>
     <tbody>
@@ -25,10 +25,10 @@
           <strong>{{ w.crop }}</strong>
           <span class="badge" [class.fao]="w.source === 'FAO'" [class.fallback]="w.source === 'Fallback'">{{ w.source }}</span>
         </td>
-        <td>{{ w.aezName || '—' }}</td>
-        <td>{{ w.plantingStart }} → {{ w.plantingEnd }}</td>
-        <td>{{ w.harvestStart }} → {{ w.harvestEnd }}</td>
-        <td class="notes-cell">{{ w.sessionNotes || '—' }}</td>
+        <td>{{ w.aezName || '-' }}</td>
+        <td>{{ w.plantingStart }} to {{ w.plantingEnd }}</td>
+        <td>{{ w.harvestStart }} to {{ w.harvestEnd }}</td>
+        <td class="notes-cell">{{ w.sessionNotes || '-' }}</td>
       </tr>
     </tbody>
   </table>

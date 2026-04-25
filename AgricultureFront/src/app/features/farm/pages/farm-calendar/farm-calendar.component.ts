@@ -83,7 +83,7 @@ export class FarmCalendarComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.error = 'Unable to load terrains for weather forecasts.';
+        this.error = 'Unable to load fields for weather forecasts.';
       }
     });
   }
@@ -158,7 +158,7 @@ export class FarmCalendarComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.error = 'Unable to update event in backend.';
+          this.error = 'Unable to update the event.';
         }
       });
     } else {
@@ -182,7 +182,7 @@ export class FarmCalendarComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.error = 'Unable to save event in backend.';
+          this.error = 'Unable to save the event.';
         }
       });
     }
@@ -249,6 +249,42 @@ export class FarmCalendarComponent implements OnInit {
     this.resetForm();
   }
 
+  get selectedTerrain(): Terrain | null {
+    return this.terrains.find((terrain) => terrain.idTerrain === this.selectedTerrainId) ?? null;
+  }
+
+  get totalEventsThisMonth(): number {
+    const year = this.currentMonthDate.getFullYear();
+    const month = this.currentMonthDate.getMonth();
+
+    return this.events.filter((event) => {
+      const eventDate = new Date(`${event.date}T00:00:00`);
+      return eventDate.getFullYear() === year && eventDate.getMonth() === month;
+    }).length;
+  }
+
+  get nextPlannedEvent(): CalendarEvent | null {
+    const todayKey = this.toDateKey(new Date());
+    return this.events.find((event) => event.date >= todayKey) ?? null;
+  }
+
+  get climateRainTotal(): number {
+    return this.climateMonthly.reduce((sum, row) => sum + row.totalRainMm, 0);
+  }
+
+  get climateAverageMax(): number {
+    if (!this.climateMonthly.length) {
+      return 0;
+    }
+
+    const total = this.climateMonthly.reduce((sum, row) => sum + row.avgTempMax, 0);
+    return total / this.climateMonthly.length;
+  }
+
+  get forecastHighlight(): WeatherForecastDay | null {
+    return this.weather[0] ?? null;
+  }
+
   getEventsForDay(dateKey: string): CalendarEvent[] {
     return this.events.filter((event) => event.date === dateKey);
   }
@@ -279,7 +315,7 @@ export class FarmCalendarComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.error = 'Unable to load backend events.';
+        this.error = 'Unable to load events.';
       }
     });
   }
