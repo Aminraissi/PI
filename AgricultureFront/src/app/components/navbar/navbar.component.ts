@@ -45,12 +45,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
     ];
 
     dropdownLinks: NavDropdownLink[] = [
-        { label: 'Terrain', icon: 'fas fa-leaf', route: '/farm', hasSubmenu: true, submenu: [
-                { label: 'Add Terrain', icon: 'fas fa-plus', route: '/farm/add'  },
-                { label: 'My Terrains', icon: 'fas fa-list', route: '/farm/list' }
-            ]},
+
+        { label: 'Terrain',         icon: 'fas fa-leaf',          route: '/farm/list'         },
         { label: 'Inventory',         icon: 'fas fa-boxes',          route: '/inventory'         },
         { label: 'Appointments',      icon: 'fas fa-calendar-check', route: '/appointments'      },
+        { label: 'Calendar',      icon: 'fas fa-calendar', route: '/farm/calendar'      },
         { label: 'Animals',           icon: 'fas fa-paw',            route: '/animals'           },
         { label: 'Disease Predictor', icon: 'fas fa-microscope',     route: '/disease-predictor' },
         { label: 'Help Request',      icon: 'fas fa-hands-helping',  route: '/help-request'      },
