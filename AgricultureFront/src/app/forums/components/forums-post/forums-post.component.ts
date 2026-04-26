@@ -69,6 +69,7 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
   similarQuestions: ForumPost[] = [];
   recentDiscussions: ForumPost[] = [];
   commentDraftByReply: Record<number, string> = {};
+  commentSubmitErrorByReply: Record<number, string> = {};
   collapsedReplyIds = new Set<number>();
   collapsedCommentKeys = new Set<string>();
   usersById: Record<number, ForumUser> = {};
@@ -139,11 +140,14 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
   }
 
   loadPost(postId: number, allowAiAwait = false): void {
+    console.log('[ForumsPost] loadPost start', { postId, allowAiAwait, currentUserId: this.currentUserId, currentGroupId: this.currentGroupId });
     this.forumsService.getPostById(postId, this.currentUserId ?? undefined)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (post) => {
+          console.log('[ForumsPost] loadPost success', post);
           if (!post) {
+            console.warn('[ForumsPost] loadPost returned empty post, navigating back', { postId });
             this.goBack();
             return;
           }
@@ -191,10 +195,23 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
                   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                   .slice(0, 4);
                 this.preloadUsers(this.recentDiscussions);
+                console.log('[ForumsPost] related posts loaded', {
+                  postId,
+                  similarCount: this.similarQuestions.length,
+                  recentCount: this.recentDiscussions.length
+                });
               }
             });
         },
-        error: () => this.goBack()
+        error: (err) => {
+          console.error('[ForumsPost] loadPost failed', {
+            postId,
+            status: err?.status,
+            message: err?.message,
+            error: err?.error
+          });
+          this.goBack();
+        }
       });
   }
 
@@ -699,6 +716,14 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
     return this.isCurrentUserAdmin() && !!post.mediaPendingReview;
   }
 
+  canReviewReplyMedia(reply: ForumReply): boolean {
+    return this.isCurrentUserAdmin() && !!reply.mediaPendingReview;
+  }
+
+  isModeratingReplyMedia(replyId: number): boolean {
+    return this.moderatingReplyIds.has(replyId);
+  }
+
   approvePostMedia(): void {
     if (!this.post || !this.canReviewPostMedia(this.post)) {
       return;
@@ -739,6 +764,60 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.moderatingMedia = false;
           this.reportFeedback = err?.error?.error || 'Could not reject media right now.';
+        }
+      });
+  }
+
+  approveReplyMedia(replyId: number): void {
+    if (!this.post) {
+      return;
+    }
+
+    const reply = this.post.replies.find((item) => item.id === replyId);
+    if (!reply || !this.canReviewReplyMedia(reply)) {
+      return;
+    }
+
+    this.moderatingReplyIds.add(replyId);
+    this.reportFeedback = '';
+    this.forumsService.approveReplyMedia(this.post.id, replyId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.moderatingReplyIds.delete(replyId);
+          this.reportFeedback = 'Reply media approved and now visible to all users.';
+          this.loadPost(this.post!.id);
+        },
+        error: (err) => {
+          this.moderatingReplyIds.delete(replyId);
+          this.reportFeedback = err?.error?.error || 'Could not approve reply media right now.';
+        }
+      });
+  }
+
+  rejectReplyMedia(replyId: number): void {
+    if (!this.post) {
+      return;
+    }
+
+    const reply = this.post.replies.find((item) => item.id === replyId);
+    if (!reply || !this.canReviewReplyMedia(reply)) {
+      return;
+    }
+
+    this.moderatingReplyIds.add(replyId);
+    this.reportFeedback = '';
+    this.forumsService.rejectReplyMedia(this.post.id, replyId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.moderatingReplyIds.delete(replyId);
+          this.reportFeedback = 'Reply media rejected and removed.';
+          this.loadPost(this.post!.id);
+        },
+        error: (err) => {
+          this.moderatingReplyIds.delete(replyId);
+          this.reportFeedback = err?.error?.error || 'Could not reject reply media right now.';
         }
       });
   }
@@ -868,12 +947,21 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
 
   isVideoMedia(url: string): boolean {
     const lower = (url ?? '').toLowerCase();
-    return lower.startsWith('data:video/') || /(\.mp4|\.webm|\.mov|youtube\.com|youtu\.be|vimeo\.com)/.test(lower);
+    return this.isValidDataMediaUrl(url, 'video') || /(\.mp4|\.webm|\.mov|youtube\.com|youtu\.be|vimeo\.com)/.test(lower);
   }
 
   isImageMedia(url: string): boolean {
     const lower = (url ?? '').toLowerCase();
-    return lower.startsWith('data:image/') || /(\.png|\.jpg|\.jpeg|\.gif|\.webp|tenor\.com|giphy\.com)/.test(lower);
+    return this.isValidDataMediaUrl(url, 'image') || /(\.png|\.jpg|\.jpeg|\.gif|\.webp|tenor\.com|giphy\.com)/.test(lower);
+  }
+
+  onMediaRenderError(url: string, event?: Event): void {
+    const target = event?.target as HTMLElement | null;
+    if (target) {
+      target.style.display = 'none';
+    }
+
+    console.warn('[ForumsPost] Skipping invalid media URL', url?.slice(0, 80));
   }
 
   improveReplyDraft(): void {
@@ -934,6 +1022,7 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
     if (!this.post) return;
 
     const content = (this.commentDraftByReply[replyId] || '').trim();
+    this.commentSubmitErrorByReply[replyId] = '';
     if (!content) return;
 
     if (!this.ensureAuthenticated('add a comment')) {
@@ -950,7 +1039,11 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.commentDraftByReply[replyId] = '';
+          this.commentSubmitErrorByReply[replyId] = '';
           this.loadPost(this.post!.id);
+        },
+        error: (err) => {
+          this.commentSubmitErrorByReply[replyId] = err?.error?.error || 'Could not add comment right now.';
         }
       });
   }
@@ -1431,5 +1524,25 @@ export class ForumsPostComponent implements OnInit, OnDestroy {
     this.authPromptAction = action;
     this.showAuthPrompt = true;
     return false;
+  }
+
+  private isValidDataMediaUrl(url: string | null | undefined, expectedType: 'image' | 'video'): boolean {
+    const value = (url ?? '').trim();
+    if (!value.startsWith(`data:${expectedType}/`)) {
+      return false;
+    }
+
+    const marker = ';base64,';
+    const markerIndex = value.indexOf(marker);
+    if (markerIndex < 0) {
+      return false;
+    }
+
+    const payload = value.substring(markerIndex + marker.length);
+    if (!payload || payload.length < 16 || payload.length % 4 !== 0) {
+      return false;
+    }
+
+    return /^[A-Za-z0-9+/=]+$/.test(payload);
   }
 }

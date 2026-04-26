@@ -209,13 +209,13 @@ import { filter } from 'rxjs/operators';
     `]
 })
 export class AppComponent implements OnInit, AfterViewInit {
-    preloaderHidden  = false;
-    showBackTop      = false;
+    preloaderHidden = false;
+    showBackTop = false;
     showFloatingCart = false;
     fabMode: 'jump-reply' | 'scroll-top' = 'scroll-top';
     isForumsPostPage = false;
-    isExplorerRoute  = false;
-    cartCount        = 0;
+    isExplorerRoute = false;
+    cartCount = 0;
 
     @ViewChild('explorerFrame') private explorerFrame?: ElementRef<HTMLIFrameElement>;
     private explorerLoaded = false;
@@ -228,17 +228,17 @@ export class AppComponent implements OnInit, AfterViewInit {
     ]);
 
     private readonly folioRouteMap: Record<string, string> = {
-        '/delivery':     '/delivery',
-        '/forum':        '/forums',
-        '/forums':       '/forums',
-        '/inventory':    '/inventory',
-        '/marketplace':  '/marketplace',
-        '/loans':        '/loans',
-        '/events':       '/events',
-        '/training':     '/training',
-        '/formations':   '/training',
+        '/delivery': '/delivery',
+        '/forum': '/forums',
+        '/forums': '/forums',
+        '/inventory': '/inventory',
+        '/marketplace': '/marketplace',
+        '/loans': '/loans',
+        '/events': '/events',
+        '/training': '/training',
+        '/formations': '/training',
         '/appointments': '/',
-        '/animals':      '/',
+        '/animals': '/',
         '/help-request': '/',
     };
 
@@ -246,7 +246,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         private router: Router,
         private sanitizer: DomSanitizer,
         private cartService: CartService
-    ) {}
+    ) { }
 
     ngOnInit() {
         // Initialize reveal animations immediately and when images/content load
@@ -263,13 +263,13 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.updateFloatingCartVisibility();
 
         this.isForumsPostPage = this.router.url.startsWith('/forums/post/');
-        this.isExplorerRoute  = this.router.url.startsWith('/explorer');
+        this.isExplorerRoute = this.router.url.startsWith('/explorer');
 
         this.router.events
             .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
             .subscribe((event: NavigationEnd) => {
                 this.isForumsPostPage = event.urlAfterRedirects.startsWith('/forums/post/');
-                this.isExplorerRoute  = event.urlAfterRedirects.startsWith('/explorer');
+                this.isExplorerRoute = event.urlAfterRedirects.startsWith('/explorer');
                 this.updateFabState();
                 this.updateFloatingCartVisibility();
                 // Re-scan for new reveal elements after navigation
@@ -281,8 +281,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     ngAfterViewInit(): void {
         if (this.explorerFrame && !this.explorerLoaded) {
-            const token = localStorage.getItem('authToken');
-            const base  = 'http://localhost:5173/explorer/';
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const base = 'http://localhost:5173/explorer/';
             this.explorerFrame.nativeElement.src = token
                 ? `${base}?token=${encodeURIComponent(token)}`
                 : base;
@@ -301,8 +301,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         if (!this.explorerOrigins.has(event.origin)) return;
 
         const payload = event.data as { type?: string; route?: string; path?: string; href?: string } | null;
-        const isNav   = payload?.type === 'greenroots:navigate' || payload?.type === 'navigate';
-        const target  = payload?.route || payload?.path || payload?.href;
+        const isNav = payload?.type === 'greenroots:navigate' || payload?.type === 'navigate';
+        const target = payload?.route || payload?.path || payload?.href;
         if (!payload || !isNav || typeof target !== 'string') return;
 
         const angular = this.resolveAngularRoute(target);
@@ -382,7 +382,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             return;
         }
 
-        const composerTop    = window.scrollY + composer.getBoundingClientRect().top;
+        const composerTop = window.scrollY + composer.getBoundingClientRect().top;
         const viewportBottom = window.scrollY + window.innerHeight;
         this.fabMode = viewportBottom < composerTop ? 'jump-reply' : 'scroll-top';
     }
@@ -410,6 +410,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
         const token =
             localStorage.getItem('authToken') ||
+            sessionStorage.getItem('authToken') ||
             localStorage.getItem('token') ||
             localStorage.getItem('jwt') ||
             localStorage.getItem('accessToken');
@@ -417,7 +418,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         const user =
             localStorage.getItem('currentUser') ||
             localStorage.getItem('user') ||
-            localStorage.getItem('authUser');
+            localStorage.getItem('authUser') ||
+            sessionStorage.getItem('authUser');
 
         const isLoggedIn = !!token || !!user;
 

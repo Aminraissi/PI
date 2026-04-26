@@ -32,7 +32,7 @@
     "secure": false,
     "changeOrigin": true
   },
-  "/forums": {
+  "/forums/api": {
     "target": "http://localhost:8089",
     "secure": false,
     "changeOrigin": true
