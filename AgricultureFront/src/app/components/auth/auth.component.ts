@@ -1,17 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService, BackendRole, SignupStep1Request, SignupResponse } from '../../services/auth/auth.service';
 import { Router } from '@angular/router';
 
+
+declare const google: any;
+declare const FB: any;
 @Component({
   selector: 'app-auth',
   standalone: false,
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css']
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent implements OnInit, AfterViewInit {
 
-  mode: 'signin' | 'signup' | 'verify' = 'signin';
+  mode: 'signin' | 'signup' | 'verify' | 'forgot' | 'forgotPhone' | 'reset' = 'signin';
   showSignInPass    = false;
   showSignUpPass    = false;
   previewUrl:           string | null = null;
@@ -26,6 +29,34 @@ export class AuthComponent implements OnInit {
 
   signInForm!: FormGroup;
   signUpForm!: FormGroup;
+
+  forgotEmailForm!: FormGroup;
+  forgotPhoneForm!: FormGroup;
+  resetPasswordForm!: FormGroup;
+
+  resetEmail: string | null = null;
+  resetPhone: string | null = null;
+  resetMessage: string | null = null;
+  resetError: string | null = null;
+  resetLoading = false;
+
+  private readonly googleClientId = '270359567342-1evqop862k1bolr40f5qsn47b4d9q4rl.apps.googleusercontent.com';
+
+  googleSignupMode = false;
+  googleCredential: string | null = null;
+  googleProfile: any = null;
+  private googleInitialized = false;
+
+  private readonly facebookAppId = '1855481011803635';
+  private facebookInitialized = false;
+
+  facebookSignupMode = false;
+  facebookAccessToken: string | null = null;
+  facebookProfile: any = null;
+
+  get socialSignupMode(): boolean {
+    return this.googleSignupMode || this.facebookSignupMode;
+  }
 
   // Roles that require extra info
   rolesWithExtra = [
@@ -56,7 +87,14 @@ export class AuthComponent implements OnInit {
 
   ngOnInit(): void {
     const savedMode = localStorage.getItem('authMode');
-    if (savedMode === 'signin' || savedMode === 'signup' || savedMode === 'verify') {
+    if (
+      savedMode === 'signin' ||
+      savedMode === 'signup' ||
+      savedMode === 'verify' ||
+      savedMode === 'forgot' ||
+      savedMode === 'forgotPhone' ||
+      savedMode === 'reset'
+    ) {
       this.mode = savedMode;
     }
 
@@ -87,15 +125,61 @@ export class AuthComponent implements OnInit {
       role:      new FormControl('', Validators.required)
     });
 
+    this.forgotEmailForm = new FormGroup({
+      email: new FormControl('', [Validators.required, Validators.email])
+    });
+
+    this.forgotPhoneForm = new FormGroup({
+      phone: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{8}$/)])
+    });
+
+
+    this.resetPasswordForm = new FormGroup({
+      code: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{6}$/)]),
+      newPassword: new FormControl('', [Validators.required, Validators.minLength(8)]),
+      confirmPassword: new FormControl('', [Validators.required])
+    }, { validators: this.passwordsMatchValidator });
+
+    this.forgotEmailForm.get('email')?.valueChanges.subscribe(() => {
+      this.resetError = null;
+    });
+
+    this.forgotPhoneForm.get('phone')?.valueChanges.subscribe(() => {
+      this.resetError = null;
+    });
+
+    this.resetPasswordForm.valueChanges.subscribe(() => {
+      this.resetError = null;
+    });
+
+
     if (this.authService.hasActiveSession()) {
       const redirectRoute = this.authService.getDefaultRouteForRole(this.authService.getCurrentRole());
       this.router.navigate([redirectRoute]);
     }
   }
 
+  ngAfterViewInit(): void {
+    this.initGoogleButton();
+    this.initFacebookSdk();
+  }
+
   switchTo(m: 'signin' | 'signup'): void {
     this.mode = m;
+    this.loginError = null;
+    this.resetError = null;
     localStorage.setItem('authMode', m);
+
+    if (m === 'signin') {
+      this.googleSignupMode = false;
+      this.googleCredential = null;
+      this.googleProfile = null;
+      this.restoreNormalSignupValidators();
+    }
+
+    setTimeout(() => {
+      this.initGoogleButton();
+    }, 0);
   }
 
   togglePass(field: 'signin' | 'signup'): void {
@@ -150,7 +234,20 @@ export class AuthComponent implements OnInit {
   }
 
   submitSignUp(): void {
-    if (this.signUpForm.invalid) { this.signUpForm.markAllAsTouched(); return; }
+    if (this.signUpForm.invalid) {
+      this.signUpForm.markAllAsTouched();
+      return;
+    }
+
+    if (this.googleSignupMode) {
+      this.submitGoogleSignupCompletion();
+      return;
+    }
+
+      if (this.facebookSignupMode) {
+      this.submitFacebookSignupCompletion();
+      return;
+    }
 
     this.isLoading  = true;
     this.loginError = null;
@@ -168,6 +265,7 @@ export class AuthComponent implements OnInit {
     this.authService.signupStep1(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
+
         if (response.nextStep === 'SIGNUP_STEP2' && response.userId != null) {
           localStorage.setItem('signupBase', JSON.stringify({
             ...this.signUpForm.value,
@@ -260,4 +358,631 @@ export class AuthComponent implements OnInit {
     if (email)          localStorage.setItem('pendingVerificationEmail', email);
     localStorage.setItem('pendingVerificationMessage', message);
   }
+
+  
+  passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const newPassword = control.get('newPassword')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+
+    if (!newPassword || !confirmPassword) return null;
+
+    return newPassword === confirmPassword ? null : { passwordsMismatch: true };
+    }
+
+    
+
+    switchToForgot(): void {
+    this.mode = 'forgot';
+    this.resetEmail = null;
+    this.resetPhone = null;
+    this.resetError = null;
+    this.resetMessage = null;
+  }
+
+  backToSignIn(): void {
+    this.mode = 'signin';
+    this.resetError = null;
+    this.resetMessage = null;
+  }
+
+  feInvalid(field: string): boolean {
+    const c = this.forgotEmailForm?.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
+
+  fpInvalid(field: string): boolean {
+    const c = this.forgotPhoneForm?.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
+
+  rpInvalid(field: string): boolean {
+    const c = this.resetPasswordForm?.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
+
+  submitForgotEmail(): void {
+    if (this.forgotEmailForm.invalid) {
+      this.forgotEmailForm.markAllAsTouched();
+      return;
+    }
+
+    this.resetLoading = true;
+    this.resetError = null;
+    this.resetMessage = null;
+
+    const email = this.forgotEmailForm.value.email;
+
+    this.authService.forgotPasswordCheckEmail(email).subscribe({
+      next: (response) => {
+        this.resetLoading = false;
+        this.resetEmail = email;
+        this.resetMessage = response.message || 'Email found. Please confirm your phone number.';
+
+        this.mode = 'forgotPhone';
+      },
+      error: (err) => {
+        this.resetLoading = false;
+        this.resetError = err.error?.message || 'We couldn’t find an account with this email. Please check the address or create a new account.';
+      }
+    });
+  }
+
+  submitForgotPhone(): void {
+    if (this.forgotPhoneForm.invalid) {
+      this.forgotPhoneForm.markAllAsTouched();
+      return;
+    }
+
+    if (!this.resetEmail) {
+      this.resetError = 'Missing email. Please start again.';
+      this.mode = 'forgot';
+      return;
+    }
+
+    this.resetLoading = true;
+    this.resetError = null;
+    this.resetMessage = null;
+
+    const phone = this.forgotPhoneForm.value.phone;
+
+    this.authService.forgotPasswordByPhone(this.resetEmail, phone).subscribe({
+      next: (response) => {
+        this.resetLoading = false;
+        this.resetPhone = phone;
+        this.resetMessage = response.message || 'Reset code sent to your phone.';
+        this.mode = 'reset';
+      },
+      error: (err) => {
+        this.resetLoading = false;
+        this.resetError = err.error?.message || 'This phone number is not linked to the email you entered.';
+      }
+    });
+  }
+  submitResetPassword(): void {
+    if (this.resetPasswordForm.invalid) {
+      this.resetPasswordForm.markAllAsTouched();
+      return;
+    }
+
+    if (!this.resetEmail || !this.resetPhone) {
+      this.resetError = 'Missing email or phone. Please start again.';
+      this.mode = 'forgot';
+      return;
+    }
+
+    this.resetLoading = true;
+    this.resetError = null;
+    this.resetMessage = null;
+
+    this.authService.resetPasswordByPhone(
+      this.resetEmail,
+      this.resetPhone,
+      this.resetPasswordForm.value.code,
+      this.resetPasswordForm.value.newPassword
+    ).subscribe({
+      next: (response) => {
+        this.resetLoading = false;
+        this.resetMessage = response.message || 'Password reset successfully.';
+
+        this.resetPasswordForm.reset();
+        this.forgotEmailForm.reset();
+        this.forgotPhoneForm.reset();
+
+        this.mode = 'signin';
+        this.loginError = 'Password reset successfully. You can now sign in.';
+      },
+      error: (err) => {
+        this.resetLoading = false;
+        this.resetError = err.error?.message || 'Password reset failed.';
+      }
+    });
+  }
+
+  initGoogleButton(): void {
+  setTimeout(() => {
+    if (typeof google === 'undefined') {
+      console.error('Google Identity Services not loaded');
+      return;
+    }
+
+    const googleBtn = document.getElementById('googleSignInButton');
+    if (!googleBtn) return;
+
+    googleBtn.innerHTML = '';
+
+    if (!this.googleInitialized) {
+      google.accounts.id.initialize({
+        client_id: this.googleClientId,
+        callback: (response: any) => this.handleGoogleCredential(response)
+      });
+
+      this.googleInitialized = true;
+    }
+
+    google.accounts.id.renderButton(googleBtn, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'rectangular',
+      width: 190,
+      text: this.mode === 'signup' ? 'signup_with' : 'signin_with',
+      logo_alignment: 'left'
+    });
+  }, 200);
+}
+
+  handleGoogleCredential(response: any): void {
+    if (!response?.credential) {
+      this.loginError = 'Google authentication failed. Please try again.';
+      return;
+    }
+
+    if (this.mode === 'signup') {
+      this.startGoogleSignup(response.credential);
+      return;
+    }
+
+    this.loginWithGoogle(response.credential);
+  }
+
+  loginWithGoogle(credential: string): void {
+    this.isLoading = true;
+    this.loginError = null;
+
+    this.authService.loginWithGoogle(credential).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+
+        if (!res?.token) {
+          this.loginError = res?.message || 'Google login failed.';
+          return;
+        }
+
+        const redirectRoute = this.authService.getDefaultRouteForRole(
+          res.role ? res.role as BackendRole : null
+        );
+
+        this.router.navigate([redirectRoute]);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loginError = err.error?.message || 'Google login failed.';
+      }
+    });
+  }
+
+  startGoogleSignup(credential: string): void {
+    this.isLoading = false;
+    this.loginError = null;
+
+    const profile = this.decodeGoogleCredential(credential);
+
+    if (!profile?.email) {
+      this.loginError = 'Could not read your Google account information. Please try again.';
+      return;
+    }
+
+    this.googleSignupMode = true;
+    this.googleCredential = credential;
+    this.googleProfile = profile;
+
+    this.mode = 'signup';
+    localStorage.setItem('authMode', 'signup');
+
+    this.signUpForm.patchValue({
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      email: profile.email || '',
+      password: 'GOOGLE_AUTH',
+      photo: null,
+      phone: '',
+      role: ''
+    });
+
+    this.previewUrl = profile.picture || null;
+    this.photoUploadUrl = profile.picture || null;
+
+    this.applyGoogleSignupValidators();
+  }
+
+  applyGoogleSignupValidators(): void {
+    this.signUpForm.get('firstName')?.clearValidators();
+    this.signUpForm.get('lastName')?.clearValidators();
+    this.signUpForm.get('email')?.clearValidators();
+    this.signUpForm.get('password')?.clearValidators();
+    this.signUpForm.get('photo')?.clearValidators();
+
+    this.signUpForm.get('phone')?.setValidators([
+      Validators.required,
+      Validators.pattern(/^[0-9]{8}$/)
+    ]);
+
+    this.signUpForm.get('role')?.setValidators([Validators.required]);
+
+    Object.keys(this.signUpForm.controls).forEach(key => {
+      this.signUpForm.get(key)?.updateValueAndValidity();
+    });
+  }
+
+  restoreNormalSignupValidators(): void {
+    if (!this.signUpForm) return;
+
+    this.googleSignupMode = false;
+
+    this.signUpForm.get('firstName')?.setValidators([
+      Validators.required,
+      Validators.pattern(/^[a-zA-Z]+$/)
+    ]);
+
+    this.signUpForm.get('lastName')?.setValidators([
+      Validators.required,
+      Validators.pattern(/^[a-zA-Z]+$/)
+    ]);
+
+    this.signUpForm.get('email')?.setValidators([
+      Validators.required,
+      Validators.email
+    ]);
+
+    this.signUpForm.get('password')?.setValidators([
+      Validators.required,
+      Validators.minLength(8)
+    ]);
+
+    this.signUpForm.get('photo')?.setValidators([
+      Validators.required,
+      this.imageValidator
+    ]);
+
+    this.signUpForm.get('phone')?.setValidators([
+      Validators.required,
+      Validators.pattern(/^[0-9]{8}$/)
+    ]);
+
+    this.signUpForm.get('role')?.setValidators([Validators.required]);
+
+    Object.keys(this.signUpForm.controls).forEach(key => {
+      this.signUpForm.get(key)?.updateValueAndValidity();
+    });
+  }
+
+  submitGoogleSignupCompletion(): void {
+    if (!this.googleCredential) {
+      this.loginError = 'Missing Google signup session. Please try again.';
+      return;
+    }
+
+    if (this.signUpForm.invalid) {
+      this.signUpForm.markAllAsTouched();
+      return;
+    }
+
+    this.isLoading = true;
+    this.loginError = null;
+
+    const payload = {
+      credential: this.googleCredential,
+      telephone: this.signUpForm.value.phone,
+      role: this.selectedRole
+    };
+
+    console.log('Google complete signup payload:', {
+      credentialExists: !!payload.credential,
+      credentialLength: payload.credential?.length,
+      telephone: payload.telephone,
+      role: payload.role
+    });
+
+    this.authService.completeGoogleSignup(payload).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+        /**
+         * IMPORTANT:
+         * Check SIGNUP_STEP2 first.
+         * Backend may return a token AND nextStep SIGNUP_STEP2.
+         * In that case, we must go to register-extra, not dashboard.
+         */
+        if (response.nextStep === 'SIGNUP_STEP2' && response.userId != null) {
+          localStorage.setItem('signupBase', JSON.stringify({
+            firstName: this.signUpForm.value.firstName,
+            lastName: this.signUpForm.value.lastName,
+            email: this.signUpForm.value.email,
+            phone: this.signUpForm.value.phone,
+            role: this.selectedRole,
+            photo: this.photoUploadUrl
+          }));
+
+          localStorage.setItem('signupRole', this.selectedRole);
+          localStorage.setItem('signupUserId', String(response.userId));
+          localStorage.setItem('signupEmail', response.email || this.signUpForm.value.email);
+          localStorage.setItem(
+            'signupMessage',
+            response.message || 'Google signup completed. Please complete your profile.'
+          );
+
+          this.router.navigate(['/register-extra']);
+          return;
+        }
+
+        /**
+         * If no extra profile is needed, backend returns token.
+         */
+        if ('token' in response && response.token) {
+          const redirectRoute = this.authService.getDefaultRouteForRole(
+            response.role ? response.role as BackendRole : null
+          );
+
+          this.router.navigate([redirectRoute]);
+          return;
+        }
+
+        /**
+         * Fallback.
+         */
+        this.mode = 'signin';
+        this.googleSignupMode = false;
+        this.googleCredential = null;
+        this.googleProfile = null;
+
+        this.loginError = response.message || 'Google signup completed. You can now sign in.';
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loginError = err.error?.message || 'Could not complete Google signup.';
+      }
+    });
+  }
+
+  decodeGoogleCredential(credential: string): any {
+    try {
+      const payload = credential.split('.')[1];
+      const decodedPayload = JSON.parse(
+        decodeURIComponent(
+          atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        )
+      );
+
+      return {
+        email: decodedPayload.email,
+        firstName: decodedPayload.given_name,
+        lastName: decodedPayload.family_name,
+        picture: decodedPayload.picture
+      };
+    } catch (e) {
+      console.error('Could not decode Google credential', e);
+      return null;
+    }
+  }
+
+
+  initFacebookSdk(): void {
+    setTimeout(() => {
+      if (typeof FB === 'undefined') {
+        console.error('Facebook SDK not loaded');
+        return;
+      }
+
+      if (this.facebookInitialized) {
+        return;
+      }
+
+      FB.init({
+        appId: this.facebookAppId,
+        cookie: true,
+        xfbml: false,
+        version: 'v20.0'
+      });
+
+      this.facebookInitialized = true;
+    }, 500);
+  }
+
+  loginWithFacebook(): void {
+    this.initFacebookSdk();
+
+    if (typeof FB === 'undefined') {
+      this.loginError = 'Facebook authentication is not available. Please refresh the page.';
+      return;
+    }
+
+    this.loginError = null;
+
+    FB.login((response: any) => {
+      if (!response?.authResponse?.accessToken) {
+        this.loginError = 'Facebook login was cancelled or failed.';
+        return;
+      }
+
+      const accessToken = response.authResponse.accessToken;
+
+      FB.api('/me', {
+        fields: 'id,first_name,last_name,name,email,picture'
+      }, (profile: any) => {
+        if (!profile || profile.error) {
+          this.loginError = 'Could not read your Facebook profile.';
+          return;
+        }
+
+        console.log('Facebook profile:', profile);
+        console.log('Facebook access token exists:', !!accessToken);
+
+        if (this.mode === 'signup') {
+          this.startFacebookSignup(accessToken, profile);
+          return;
+        }
+
+        this.signInWithFacebook(accessToken);
+      });
+    }, {
+      scope: 'email,public_profile',
+      return_scopes: true
+    });
+  }
+
+  startFacebookSignup(accessToken: string, profile: any): void {
+    this.loginError = null;
+
+    if (!profile?.email) {
+      this.loginError = 'Your Facebook account did not provide an email. Please use Google or email signup.';
+      return;
+    }
+
+    this.facebookSignupMode = true;
+    this.facebookAccessToken = accessToken;
+    this.facebookProfile = profile;
+
+    this.googleSignupMode = false;
+    this.googleCredential = null;
+    this.googleProfile = null;
+
+    this.mode = 'signup';
+    localStorage.setItem('authMode', 'signup');
+
+    this.signUpForm.patchValue({
+      firstName: profile.first_name || '',
+      lastName: profile.last_name || '',
+      email: profile.email || '',
+      password: 'FACEBOOK_AUTH',
+      photo: null,
+      phone: '',
+      role: ''
+    });
+
+    this.previewUrl = profile.picture?.data?.url || null;
+    this.photoUploadUrl = profile.picture?.data?.url || null;
+
+    this.applyGoogleSignupValidators();
+
+    console.log('Facebook signup missing fields mode activated:', {
+      email: profile.email,
+      firstName: profile.first_name,
+      lastName: profile.last_name
+    });
+  }
+
+  signInWithFacebook(accessToken: string): void {
+    this.isLoading = true;
+    this.loginError = null;
+
+    this.authService.loginWithFacebook(accessToken).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+
+        if (!res?.token) {
+          this.loginError = res?.message || 'Facebook login failed.';
+          return;
+        }
+
+        const redirectRoute = this.authService.getDefaultRouteForRole(
+          res.role ? res.role as BackendRole : null
+        );
+
+        this.router.navigate([redirectRoute]);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loginError = err.error?.message || 'Facebook login failed.';
+      }
+    });
+  }
+
+  submitFacebookSignupCompletion(): void {
+    if (!this.facebookAccessToken) {
+      this.loginError = 'Missing Facebook signup session. Please try again.';
+      return;
+    }
+
+    if (this.signUpForm.invalid) {
+      this.signUpForm.markAllAsTouched();
+      return;
+    }
+
+    this.isLoading = true;
+    this.loginError = null;
+
+    const payload = {
+      accessToken: this.facebookAccessToken,
+      telephone: this.signUpForm.value.phone,
+      role: this.selectedRole
+    };
+
+    console.log('Facebook complete signup payload:', {
+      accessTokenExists: !!payload.accessToken,
+      tokenLength: payload.accessToken?.length,
+      telephone: payload.telephone,
+      role: payload.role
+    });
+
+    this.authService.completeFacebookSignup(payload).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+        if (response.nextStep === 'SIGNUP_STEP2' && response.userId != null) {
+          localStorage.setItem('signupBase', JSON.stringify({
+            firstName: this.signUpForm.value.firstName,
+            lastName: this.signUpForm.value.lastName,
+            email: this.signUpForm.value.email,
+            phone: this.signUpForm.value.phone,
+            role: this.selectedRole,
+            photo: this.photoUploadUrl
+          }));
+
+          localStorage.setItem('signupRole', this.selectedRole);
+          localStorage.setItem('signupUserId', String(response.userId));
+          localStorage.setItem('signupEmail', response.email || this.signUpForm.value.email);
+          localStorage.setItem(
+            'signupMessage',
+            response.message || 'Facebook signup completed. Please complete your profile.'
+          );
+
+          this.router.navigate(['/register-extra']);
+          return;
+        }
+
+        if ('token' in response && response.token) {
+          const redirectRoute = this.authService.getDefaultRouteForRole(
+            response.role ? response.role as BackendRole : null
+          );
+
+          this.router.navigate([redirectRoute]);
+          return;
+        }
+
+        this.mode = 'signin';
+        this.facebookSignupMode = false;
+        this.facebookAccessToken = null;
+        this.facebookProfile = null;
+
+        this.loginError = response.message || 'Facebook signup completed. You can now sign in.';
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loginError = err.error?.message || 'Could not complete Facebook signup.';
+      }
+    });
+  }
+
 }

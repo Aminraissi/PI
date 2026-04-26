@@ -865,3 +865,23 @@
     grid-template-columns: 1fr;
   }
 }
+
+.google-auth-button {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  min-height: 56px;
+}
+
+.google-auth-button > div,
+.google-auth-button iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+@media (max-width: 480px) {
+  .google-auth-button {
+    min-height: 52px;
+  }
+}

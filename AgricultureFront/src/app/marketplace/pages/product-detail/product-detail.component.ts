@@ -104,42 +104,74 @@ daysOfWeek = [
 
   ngOnInit() {
     this.currentUserId = this.authService.getCurrentUserId();
-  const id = this.route.snapshot.paramMap.get('id');
-  const mode = this.route.snapshot.paramMap.get('mode');
 
-  this.mode = mode === 'rent' ? 'rent' : 'buy';
+    const idParam = this.route.snapshot.paramMap.get('id');
+    const modeParam = this.route.snapshot.paramMap.get('mode');
 
-  if (!id) return;
+    this.mode = modeParam === 'rent' ? 'rent' : 'buy';
 
-  if (this.mode === 'buy') {
-    this.loadProduct(+id);
-  } else {
-    this.loadRental(+id);
+    const id = Number(idParam);
+
+    console.log('DETAIL ROUTE PARAMS:', {
+      modeParam,
+      idParam,
+      parsedId: id
+    });
+
+    if (!idParam || !id || Number.isNaN(id)) {
+      console.error('Invalid detail id:', { modeParam, idParam, parsedId: id });
+
+      this.product = {
+        id: 0,
+        name: 'Invalid item',
+        price: 0,
+        image: 'assets/images/logo.png',
+        description: 'This item could not be opened because its ID is invalid.',
+        quantity: 0
+      };
+
+      return;
+    }
+
+    if (this.mode === 'buy') {
+      this.loadProduct(id);
+    } else {
+      this.loadRental(id);
+    }
   }
-}
 extractId(url: string): number {
   return Number(url.split('/').pop());
 }
 
   loadProduct(id: number) {
-    
-    this.productService.getById(id).subscribe((p: any) => {
+  console.log('LOADING PRODUCT ID:', id);
+
+  this.productService.getById(id).subscribe({
+    next: (p: any) => {
+      console.log('PRODUCT DETAIL RESPONSE:', p);
+
       this.product = {
-        id: this.extractId(p._links.self.href),
-        name: p.nom,
-        price: p.prix,
+        id: p.id ?? id,
+        name: p.nom || p.name || 'Unnamed product',
+        price: p.prix ?? p.price ?? 0,
         image: p.photoProduit
           ? 'http://localhost:8090/uploads/' + p.photoProduit
-          : 'assets/images/product1.jpg',
-        description: p.description,
-        quantity: p.quantiteDisponible
+          : 'assets/images/logo.png',
+        description: p.description || 'No description available.',
+        quantity: p.quantiteDisponible ?? p.quantity ?? 0,
+        idUser: p.idUser
       };
-      this.isOwner = p.idUser === this.currentUserId;
+
+      this.isOwner = Number(p.idUser) === Number(this.currentUserId);
 
       this.loadReviews();
       this.loadReviewEligibility();
-    });
-  }
+    },
+    error: (err) => {
+      console.error('Error loading product:', err);
+    }
+  });
+}
 
   loadRental(id: number) {
   this.locationService.getById(id).subscribe((r: any) => {

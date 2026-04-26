@@ -28,4 +28,6 @@ public interface IPropositionLocationService {
     List<PropositionLocation> getByLocation(Long locationId);
 
     boolean hasFinalizedPropositionForUserAndLocation(Long userId, Long locationId);
+
+    List<PropositionLocation> getAll();
 }

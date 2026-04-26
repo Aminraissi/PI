@@ -14,4 +14,6 @@ public interface IUser {
     User findByEmail(String email);
     List<User> getUsersEnAttente();
     User updateStatut(Long id, StatutCompte statut);
+    User findByTelephone(String telephone);
+    User updatePasswordByPhone(String telephone, String newPassword);
 }

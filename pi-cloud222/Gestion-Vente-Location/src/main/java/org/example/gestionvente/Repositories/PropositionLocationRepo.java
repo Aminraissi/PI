@@ -17,4 +17,7 @@ public interface PropositionLocationRepo extends JpaRepository<PropositionLocati
 
     List<PropositionLocation> findByLocationId(Long locationId);
     List<PropositionLocation> findByLocataireIdAndLocationId(Long locataireId, Long locationId);
+    boolean existsByLocationId(Long locationId);
+
+    boolean existsByLocationIdAndStatutIgnoreCase(Long locationId, String statut);
 }

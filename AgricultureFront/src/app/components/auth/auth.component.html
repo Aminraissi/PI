@@ -121,10 +121,8 @@
 
           <!-- Socials -->
           <div class="social-auth">
-            <button type="button" class="social-btn">
-              <i class="fab fa-google google-icon"></i><span>Google</span>
-            </button>
-            <button type="button" class="social-btn">
+            <div id="googleSignInButton" class="social-btn "></div>
+            <button type="button" class="social-btn" (click)="loginWithFacebook()">
               <i class="fab fa-facebook facebook-icon"></i><span>Facebook</span>
             </button>
             <button type="button" class="social-btn">
@@ -160,7 +158,7 @@
           <div class="form-group" [class.has-error]="siInvalid('password')">
             <label>
               Password
-              <a class="forgot-link">Forgot password?</a>
+              <a class="forgot-link" (click)="switchToForgot()">Forgot password?</a>
             </label>
             <div class="input-box">
               <i class="fas fa-lock"></i>
@@ -204,6 +202,211 @@
 
         </form>
 
+        <!-- ===== FORGOT PASSWORD: EMAIL ===== -->
+        <form
+          class="auth-form"
+          *ngIf="mode === 'forgot'"
+          [formGroup]="forgotEmailForm"
+          (ngSubmit)="submitForgotEmail()"
+          novalidate>
+
+          <div class="form-head">
+            <h2 class="auth-title gradient">
+              <i class="fas fa-envelope"></i> Forgot Password
+            </h2>
+            <p>Enter your email address first.</p>
+          </div>
+
+          <div class="form-group" [class.has-error]="feInvalid('email')">
+            <label>Email Address</label>
+            <div class="input-box">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                formControlName="email"
+                placeholder="you@example.com">
+            </div>
+
+            <span class="field-error" *ngIf="feInvalid('email')">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="forgotEmailForm.get('email')?.hasError('required')">
+                Email is required.
+              </span>
+              <span *ngIf="forgotEmailForm.get('email')?.hasError('email')">
+                Enter a valid email.
+              </span>
+            </span>
+          </div>
+
+          <div class="field-error" *ngIf="resetError">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ resetError }}</span>
+          </div>
+
+          <button type="submit" class="auth-btn" [disabled]="resetLoading">
+            <ng-container *ngIf="!resetLoading">
+              <i class="fas fa-arrow-right"></i> Continue
+            </ng-container>
+            <ng-container *ngIf="resetLoading">
+              Checking...
+            </ng-container>
+          </button>
+
+          <p class="switch-link">
+            Remember your password?
+            <a (click)="backToSignIn()">Back to Sign In</a>
+          </p>
+        </form>
+
+        <!-- ===== FORGOT PASSWORD: PHONE ===== -->
+        <form
+          class="auth-form"
+          *ngIf="mode === 'forgotPhone'"
+          [formGroup]="forgotPhoneForm"
+          (ngSubmit)="submitForgotPhone()"
+          novalidate>
+
+          <div class="form-head">
+            <h2 class="auth-title gradient">
+              <i class="fas fa-phone"></i> Confirm Phone
+            </h2>
+            <p>Enter the phone number linked to this account.</p>
+          </div>
+
+          <div class="verification-card" *ngIf="resetEmail">
+            <p><strong>Email:</strong> {{ resetEmail }}</p>
+          </div>
+
+          <div class="form-group" [class.has-error]="fpInvalid('phone')">
+            <label>Phone Number</label>
+            <div class="input-box">
+              <i class="fas fa-phone"></i>
+              <input
+                type="tel"
+                formControlName="phone"
+                placeholder="12345678">
+            </div>
+
+            <span class="field-error" *ngIf="fpInvalid('phone')">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="forgotPhoneForm.get('phone')?.hasError('required')">
+                Phone number is required.
+              </span>
+              <span *ngIf="forgotPhoneForm.get('phone')?.hasError('pattern')">
+                Phone must be 8 digits.
+              </span>
+            </span>
+          </div>
+
+          <div class="field-error" *ngIf="resetError">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ resetError }}</span>
+          </div>
+
+          <button type="submit" class="auth-btn" [disabled]="resetLoading">
+            <ng-container *ngIf="!resetLoading">
+              <i class="fas fa-paper-plane"></i> Send Reset Code
+            </ng-container>
+            <ng-container *ngIf="resetLoading">
+              Sending...
+            </ng-container>
+          </button>
+
+          <p class="switch-link">
+            <a (click)="switchToForgot()">Use another email</a>
+          </p>
+        </form>
+
+        <!-- ===== RESET PASSWORD ===== -->
+        <form
+          class="auth-form"
+          *ngIf="mode === 'reset'"
+          [formGroup]="resetPasswordForm"
+          (ngSubmit)="submitResetPassword()"
+          novalidate>
+
+          <div class="form-head">
+            <h2 class="auth-title gradient">
+              <i class="fas fa-key"></i> Reset Password
+            </h2>
+            <p>Enter the code sent to your phone and choose a new password.</p>
+          </div>
+
+          <div class="verification-card" *ngIf="resetEmail && resetPhone">
+            <p><strong>Email:</strong> {{ resetEmail }}</p>
+            <p><strong>Phone:</strong> {{ resetPhone }}</p>
+            <p class="verification-note">
+              Enter the code sent by SMS.
+            </p>
+          </div>
+
+          <div class="form-group" [class.has-error]="rpInvalid('code')">
+            <label>Reset Code</label>
+            <div class="input-box">
+              <i class="fas fa-shield-alt"></i>
+              <input
+                type="text"
+                formControlName="code"
+                placeholder="123456">
+            </div>
+
+            <span class="field-error" *ngIf="rpInvalid('code')">
+              <i class="fas fa-exclamation-circle"></i>
+              Enter the 6 digit code.
+            </span>
+          </div>
+
+          <div class="form-group" [class.has-error]="rpInvalid('newPassword')">
+            <label>New Password</label>
+            <div class="input-box">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                formControlName="newPassword"
+                placeholder="Min. 8 characters">
+            </div>
+
+            <span class="field-error" *ngIf="rpInvalid('newPassword')">
+              <i class="fas fa-exclamation-circle"></i>
+              Minimum 8 characters.
+            </span>
+          </div>
+
+          <div class="form-group" [class.has-error]="rpInvalid('confirmPassword') || resetPasswordForm.hasError('passwordsMismatch')">
+            <label>Confirm Password</label>
+            <div class="input-box">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                formControlName="confirmPassword"
+                placeholder="Repeat password">
+            </div>
+
+            <span class="field-error" *ngIf="resetPasswordForm.hasError('passwordsMismatch')">
+              <i class="fas fa-exclamation-circle"></i>
+              Passwords do not match.
+            </span>
+          </div>
+
+          <div class="field-error" *ngIf="resetError">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ resetError }}</span>
+          </div>
+
+          <button type="submit" class="auth-btn" [disabled]="resetLoading">
+            <ng-container *ngIf="!resetLoading">
+              <i class="fas fa-check"></i> Reset Password
+            </ng-container>
+            <ng-container *ngIf="resetLoading">
+              Resetting...
+            </ng-container>
+          </button>
+
+          <p class="switch-link">
+            <a (click)="switchToForgot()">Use another phone number</a>
+          </p>
+        </form>
+
         <!-- ===== SIGN UP ===== -->
         <form
           class="auth-form"
@@ -219,11 +422,9 @@
             <p>Create your account and start exploring.</p> 
           </div>
 
-          <div class="social-auth">
-            <button type="button" class="social-btn">
-              <i class="fab fa-google google-icon"></i><span>Google</span>
-            </button>
-            <button type="button" class="social-btn">
+          <div class="social-auth" *ngIf="!socialSignupMode">
+            <div id="googleSignInButton" class="social-btn "></div>
+            <button type="button" class="social-btn" (click)="loginWithFacebook()">
               <i class="fab fa-facebook facebook-icon"></i><span>Facebook</span>
             </button>
             <button type="button" class="social-btn">
@@ -231,10 +432,12 @@
             </button>
           </div>
 
-          <div class="auth-divider"><span>or sign up with email</span></div>
+          <div class="auth-divider" *ngIf="!socialSignupMode">
+            <span>or sign up with email</span>
+          </div>
 
           <!-- Name row -->
-         <div class="form-row">
+         <div class="form-row" *ngIf="!socialSignupMode">
           <div class="form-group" [class.has-error]="suInvalid('firstName')">
           <label>First Name</label>
           <div class="input-box">
@@ -277,7 +480,7 @@
   </div>
 </div>
           <!-- Email -->
-          <div class="form-group" [class.has-error]="suInvalid('email')">
+          <div class="form-group" *ngIf="!socialSignupMode" [class.has-error]="suInvalid('email')">
             <label>Email Address</label>
             <div class="input-box">
               <i class="fas fa-envelope"></i>
@@ -295,7 +498,7 @@
           </div>
 
           <!-- Password -->
-          <div class="form-group" [class.has-error]="suInvalid('password')">
+          <div class="form-group" *ngIf="!socialSignupMode" [class.has-error]="suInvalid('password')">
             <label>Password</label>
             <div class="input-box">
               <i class="fas fa-lock"></i>
@@ -319,38 +522,48 @@
           </div>
 
           <!-- Upload Photo -->
-<div class="form-group">
-  <label>Profile Photo</label>
-  <div class="upload-box" (click)="fileInput.click()" [class.has-preview]="previewUrl">
-    <input #fileInput type="file" (change)="onFileChange($event)" hidden>
-    <ng-container *ngIf="!previewUrl">
-      <i class="fas fa-cloud-upload-alt upload-icon"></i>
-      <span class="upload-text">Click to upload photo</span>
-      <span class="upload-hint">JPG,JPEG,PNG — max 2MB</span>
-    </ng-container>
-    <ng-container *ngIf="previewUrl">
-      <img [src]="previewUrl" class="upload-preview" alt="Preview">
-      <div class="upload-change">
-        <i class="fas fa-camera"></i> Change
-      </div>
-    </ng-container>
-  </div>
-  <span class="field-error" *ngIf="suInvalid('photo')">
-  <i class="fas fa-exclamation-circle"></i>
+          <div class="form-group" *ngIf="!socialSignupMode">
+            <label>Profile Photo</label>
+            <div class="upload-box" (click)="fileInput.click()" [class.has-preview]="previewUrl">
+              <input #fileInput type="file" (change)="onFileChange($event)" hidden>
+              <ng-container *ngIf="!previewUrl">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <span class="upload-text">Click to upload photo</span>
+                <span class="upload-hint">JPG,JPEG,PNG — max 2MB</span>
+              </ng-container>
+              <ng-container *ngIf="previewUrl">
+                <img [src]="previewUrl" class="upload-preview" alt="Preview">
+                <div class="upload-change">
+                  <i class="fas fa-camera"></i> Change
+                </div>
+              </ng-container>
+            </div>
+            <span class="field-error" *ngIf="suInvalid('photo')">
+            <i class="fas fa-exclamation-circle"></i>
 
-  <span *ngIf="signUpForm.get('photo')?.hasError('required')">
-    Profile photo is required.
-  </span>
+            <span *ngIf="signUpForm.get('photo')?.hasError('required')">
+              Profile photo is required.
+            </span>
 
-  <span *ngIf="signUpForm.get('photo')?.hasError('invalidType')">
-    Only JPG ,JPEG and PNG images are allowed.
-  </span>
+            <span *ngIf="signUpForm.get('photo')?.hasError('invalidType')">
+              Only JPG ,JPEG and PNG images are allowed.
+            </span>
 
-  <span *ngIf="signUpForm.get('photo')?.hasError('maxSize')">
-    Image must be less than 2MB.
-  </span>
-</span>
-</div>
+            <span *ngIf="signUpForm.get('photo')?.hasError('maxSize')">
+              Image must be less than 2MB.
+            </span>
+          </span>
+          </div>
+
+          <div class="verification-card" *ngIf="socialSignupMode">
+            <p>
+              <strong>{{ googleSignupMode ? 'Google' : 'Facebook' }} account:</strong>
+              {{ signUpForm.value.email }}
+            </p>
+            <p class="verification-note">
+              Your name, email, and profile photo were received. Please complete the missing fields.
+            </p>
+          </div>
 
           <!-- Phone -->
         <div class="form-group" [class.has-error]="suInvalid('phone')">
@@ -394,12 +607,21 @@
     </span>
   </span>
 </div>
+<div class="field-error" *ngIf="loginError">
+  <i class="fas fa-exclamation-circle"></i>
+  <span>{{ loginError }}</span>
+</div>
           <button type="submit" class="auth-btn">
           <ng-container *ngIf="needsExtraStep">
             <i class="fas fa-arrow-right"></i> Next
           </ng-container>
-          <ng-container *ngIf="!needsExtraStep">
-          <i class="fas fa-user-plus"></i> Create Account
+
+          <ng-container *ngIf="!needsExtraStep && !socialSignupMode">
+            <i class="fas fa-user-plus"></i> Create Account
+          </ng-container>
+
+          <ng-container *ngIf="!needsExtraStep && socialSignupMode">
+            <i class="fas fa-check"></i> Complete Signup
           </ng-container>
           </button>
           
