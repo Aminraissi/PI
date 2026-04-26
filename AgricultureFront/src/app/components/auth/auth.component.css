@@ -452,6 +452,34 @@
 }
 .field-error i { font-size: 11px; }
 
+.auth-feedback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.auth-feedback i {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.auth-feedback-error {
+  color: #b42318;
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+}
+
+.auth-feedback-info {
+  color: #175cd3;
+  background: #eff8ff;
+  border: 1px solid #b2ddff;
+}
+
 /* ---- Password strength ---- */
 .strength-bar {
   display: flex;

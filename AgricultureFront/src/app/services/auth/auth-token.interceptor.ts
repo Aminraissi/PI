@@ -6,9 +6,12 @@ import {
   HttpRequest
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthTokenInterceptor implements HttpInterceptor {
+  constructor(private authService: AuthService) {}
+
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     let finalUrl = req.url;
     let isApiRequest = false;
@@ -38,7 +41,7 @@ export class AuthTokenInterceptor implements HttpInterceptor {
       isApiRequest = true;
     }
 
-    const token = localStorage.getItem('authToken');
+    const token = this.authService.getToken();
     
     if (!isApiRequest) {
       if (finalUrl !== req.url) {
