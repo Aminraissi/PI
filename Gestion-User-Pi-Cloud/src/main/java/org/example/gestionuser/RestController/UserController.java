@@ -7,6 +7,8 @@ import org.example.gestionuser.entities.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/user")
@@ -50,5 +52,9 @@ public class UserController {
     @PutMapping("/updateStatut/{id}")
     public User updateStatut(@PathVariable Long id, @RequestParam StatutCompte statut) {
         return iu.updateStatut(id, statut);
+    }
+    @GetMapping("/institutions")
+    public List<User> getInstitutions() {
+        return iu.getInstitutions();
     }
 }

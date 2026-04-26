@@ -14,4 +14,5 @@ public interface IUser {
     User findByEmail(String email);
     List<User> getUsersEnAttente();
     User updateStatut(Long id, StatutCompte statut);
+    public List<User> getInstitutions();
 }

@@ -20,7 +20,8 @@ public class Contrat {
     private LocalDate dateCreation;
     private Double montant;
 
-
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String contenuContrat;
     @Lob
     @Column(columnDefinition = "LONGTEXT")
@@ -30,4 +31,7 @@ public class Contrat {
 
     @ManyToOne
     private DemandePret demande;
+
+    @Enumerated(EnumType.STRING)
+    private ValidationAdminStatus validationAdmin = ValidationAdminStatus.PENDING;
 }
