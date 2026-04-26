@@ -41,8 +41,11 @@ public class ForumReply {
 
         @ElementCollection(fetch = FetchType.EAGER)
         @CollectionTable(name = "forum_reply_media", joinColumns = @JoinColumn(name = "reply_id"))
-        @Column(name = "media_url", nullable = false, length = 4096)
+        @Column(name = "media_url", nullable = false, columnDefinition = "LONGTEXT")
         private List<String> mediaUrls = new ArrayList<>();
+
+        @Column(nullable = false)
+        private boolean mediaApproved = true;
 
         @Column(nullable = false)
         private int upvotes;
@@ -79,6 +82,9 @@ public class ForumReply {
 
         @Transient
         private boolean currentUserHasPendingReport;
+
+        @Transient
+        private boolean mediaPendingReview;
 
         @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
         @OrderBy("id ASC")
@@ -125,6 +131,14 @@ public class ForumReply {
 
         public void setMediaUrls(List<String> mediaUrls) {
                 this.mediaUrls = mediaUrls;
+        }
+
+        public boolean isMediaApproved() {
+                return mediaApproved;
+        }
+
+        public void setMediaApproved(boolean mediaApproved) {
+                this.mediaApproved = mediaApproved;
         }
 
         public int getUpvotes() {
@@ -225,6 +239,14 @@ public class ForumReply {
 
         public void setCurrentUserHasPendingReport(boolean currentUserHasPendingReport) {
                 this.currentUserHasPendingReport = currentUserHasPendingReport;
+        }
+
+        public boolean isMediaPendingReview() {
+                return mediaPendingReview;
+        }
+
+        public void setMediaPendingReview(boolean mediaPendingReview) {
+                this.mediaPendingReview = mediaPendingReview;
         }
 
         public List<ForumComment> getComments() {

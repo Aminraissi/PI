@@ -39,7 +39,7 @@ public class ForumPost {
 
         @ElementCollection(fetch = FetchType.EAGER)
         @CollectionTable(name = "forum_post_media", joinColumns = @JoinColumn(name = "post_id"))
-        @Column(name = "media_url", nullable = false, length = 4096)
+        @Column(name = "media_url", nullable = false, columnDefinition = "LONGTEXT")
         private List<String> mediaUrls = new ArrayList<>();
 
         @Column(nullable = false)

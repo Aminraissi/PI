@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, SignupStep2Request } from '../../services/auth/auth.service';
@@ -10,7 +11,7 @@ import { AuthService, SignupStep2Request } from '../../services/auth/auth.servic
   styleUrls: ['./register-extra.component.css']
   
 })
-export class RegisterExtraComponent implements OnInit {
+export class RegisterExtraComponent implements OnInit, OnDestroy {
 
   role = '';
   userId: number | null = null;
@@ -20,12 +21,23 @@ export class RegisterExtraComponent implements OnInit {
   previewCert:  string | null = null;
   previewDoc:   string | null = null;
   previewComm:  string | null = null;
+  previewCinType: 'image' | 'pdf' | null = null;
+  previewCertType: 'image' | 'pdf' | null = null;
+  previewDocType: 'image' | 'pdf' | null = null;
+  previewCommType: 'image' | 'pdf' | null = null;
+  previewCinResource: SafeResourceUrl | null = null;
+  previewCertResource: SafeResourceUrl | null = null;
+  previewDocResource: SafeResourceUrl | null = null;
+  previewCommResource: SafeResourceUrl | null = null;
   cinUploadUrl: string | null = null;
   certUploadUrl: string | null = null;
   docUploadUrl: string | null = null;
   commUploadUrl: string | null = null;
   isLoading = false;
+  uploadingField: string | null = null;
+  uploadError = '';
   submitError = '';
+  private objectUrls: string[] = [];
 
   // Role config
   roleConfig: Record<string, { label: string; fields: string[] }> = {
@@ -64,7 +76,11 @@ export class RegisterExtraComponent implements OnInit {
     return this.config.fields.includes(field);
   }
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit(): void {
     this.role = localStorage.getItem('signupRole') || '';
@@ -107,22 +123,25 @@ export class RegisterExtraComponent implements OnInit {
     if (!file) return;
     this.extraForm.get(field)?.setValue(file);
     this.extraForm.get(field)?.markAsTouched();
+    this.extraForm.get(field)?.setErrors(null);
+    this.uploadError = '';
+    this.setPreview(field, file);
+    this.uploadingField = field;
 
-    const uploadUrl = this.buildMockFileUrl(file);
-    if (field === 'cin') this.cinUploadUrl = uploadUrl;
-    if (field === 'workCertificate') this.certUploadUrl = uploadUrl;
-    if (field === 'documentUrl') this.docUploadUrl = uploadUrl;
-    if (field === 'organizationLogo') this.commUploadUrl = uploadUrl;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (field === 'cin')               this.previewCin  = result;
-      if (field === 'workCertificate')   this.previewCert = result;
-      if (field === 'documentUrl')       this.previewDoc  = result;
-      if (field === 'organizationLogo')  this.previewComm = result;
-    };
-    reader.readAsDataURL(file);
+    this.authService.uploadUserFile(file).subscribe({
+      next: ({ url }) => {
+        if (field === 'cin') this.cinUploadUrl = url;
+        if (field === 'workCertificate') this.certUploadUrl = url;
+        if (field === 'documentUrl') this.docUploadUrl = url;
+        if (field === 'organizationLogo') this.commUploadUrl = url;
+        this.uploadingField = null;
+      },
+      error: (err) => {
+        this.uploadingField = null;
+        this.uploadError = err.error?.message || err.error || 'Could not upload the selected file.';
+        this.extraForm.get(field)?.setErrors({ uploadFailed: true });
+      }
+    });
   }
 
   goBack(): void {
@@ -130,6 +149,19 @@ export class RegisterExtraComponent implements OnInit {
   }
 
   submit(): void {
+    if (this.uploadingField) {
+      this.submitError = 'Please wait until the selected file finishes uploading.';
+      return;
+    }
+
+    if ((this.extraForm.get('documentUrl') && !this.docUploadUrl)
+      || (this.extraForm.get('workCertificate') && !this.certUploadUrl)
+      || (this.extraForm.get('cin') && !this.cinUploadUrl)
+      || (this.extraForm.get('organizationLogo') && !this.commUploadUrl)) {
+      this.submitError = 'Please upload all required documents before submitting.';
+      return;
+    }
+
     if (this.extraForm.invalid || this.userId == null) {
       this.extraForm.markAllAsTouched();
       return;
@@ -165,6 +197,10 @@ export class RegisterExtraComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+  }
+
   private buildPayload(): SignupStep2Request {
     const value = this.extraForm.value;
 
@@ -188,8 +224,37 @@ export class RegisterExtraComponent implements OnInit {
     };
   }
 
-  private buildMockFileUrl(file: File): string {
-    const safeName = encodeURIComponent(file.name.replace(/\s+/g, '-'));
-    return `https://files.greenroots.local/uploads/${Date.now()}-${safeName}`;
+  private setPreview(field: string, file: File): void {
+    const objectUrl = URL.createObjectURL(file);
+    this.objectUrls.push(objectUrl);
+
+    const type = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image';
+    const resourceUrl = type === 'pdf'
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl)
+      : null;
+
+    if (field === 'cin') {
+      this.previewCin = objectUrl;
+      this.previewCinType = type;
+      this.previewCinResource = resourceUrl;
+    }
+
+    if (field === 'workCertificate') {
+      this.previewCert = objectUrl;
+      this.previewCertType = type;
+      this.previewCertResource = resourceUrl;
+    }
+
+    if (field === 'documentUrl') {
+      this.previewDoc = objectUrl;
+      this.previewDocType = type;
+      this.previewDocResource = resourceUrl;
+    }
+
+    if (field === 'organizationLogo') {
+      this.previewComm = objectUrl;
+      this.previewCommType = type;
+      this.previewCommResource = resourceUrl;
+    }
   }
 }
