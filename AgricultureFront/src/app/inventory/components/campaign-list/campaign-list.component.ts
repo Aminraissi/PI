@@ -111,7 +111,7 @@ export class CampaignListComponent implements OnInit {
 
   // ── Statuts ──
   statusLabel(s: string) {
-    return ({ PLANNED:'Planifiée', IN_PROGRESS:'En cours', COMPLETED:'Terminée' } as any)[s] || s;
+    return ({ PLANNED:'Planned', IN_PROGRESS:'In Progress', COMPLETED:'Completed' } as any)[s] || s;
   }
 
   statusClass(s: string) {
@@ -124,10 +124,10 @@ export class CampaignListComponent implements OnInit {
 
   // ── Action ──
   markDone(campaignId: number) {
-    if (!confirm('Confirmer la vaccination de tous les animaux de cette campagne ?')) return;
+    if (!confirm('Confirm the vaccination of all animals in this campaign?')) return;
     this.api.vaccinateCampaign(campaignId).subscribe({
       next: () => { this.load(); this.selectedCampaigns = []; this.selectedDay = null; },
-      error: (e) => alert(e.error?.message || 'Erreur lors de la validation')
+      error: (e) => alert(e.error?.message || 'Error during validation')
     });
   }
 

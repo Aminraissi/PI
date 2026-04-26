@@ -26,9 +26,9 @@ export class VetProductFormComponent implements OnInit {
 
   catConfig: Record<VetCategory, { label: string; emoji: string; color: string; units: string[] }> = {
     VACCIN:     { label: 'Vaccin',       emoji: '💉', color: '#1565c0', units: ['dose', 'flacon', 'ampoule', 'ml'] },
-    MEDICAMENT: { label: 'Médicament',   emoji: '💊', color: '#6a1b9a', units: ['comprimé', 'ml', 'mg', 'sachet', 'flacon'] },
-    ALIMENT:    { label: 'Aliment',      emoji: '🌾', color: '#2e7d32', units: ['kg', 'g', 'L', 'sac', 'boîte'] },
-    AUTRE:      { label: 'Autre',        emoji: '📦', color: '#e65100', units: ['pièce', 'unité', 'boîte', 'lot'] },
+    MEDICAMENT: { label: 'Medicine',   emoji: '💊', color: '#6a1b9a', units: ['Tablet', 'ml', 'mg', 'sachet', 'flacon'] },
+    ALIMENT:    { label: 'Feed',      emoji: '🌾', color: '#2e7d32', units: ['kg', 'g', 'L', 'sac', 'box'] },
+    AUTRE:      { label: 'Other',        emoji: '📦', color: '#e65100', units: ['piece', 'unité', 'box', 'lot'] },
   };
 
   constructor(private api: InventoryApiService, private toast: ToastService) {}
@@ -88,14 +88,14 @@ export class VetProductFormComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.toast.success(this.isEdit
-          ? `Produit "${val.nom}" modifié avec succès !`
-          : `Produit "${val.nom}" ajouté à l'inventaire !`
+          ? `Product "${val.nom}" updated successfully!`
+          : `Product "${val.nom}" added to inventory!`
         );
         this.saved.emit();
       },
       error: (e) => {
         this.loading = false;
-        this.error = e.error?.message || 'Erreur serveur';
+        this.error = e.error?.message || 'Server error';
         this.toast.error(this.error);
       }
     });

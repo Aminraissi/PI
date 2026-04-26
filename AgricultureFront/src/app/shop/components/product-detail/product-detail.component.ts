@@ -44,7 +44,7 @@ export class ProductDetailComponent implements OnInit {
     const added = this.cartService.addItem(this.product, this.quantity, this.vetId, this.vetNom, this.vetRegion);
     if (added) {
       this.addedToCart = true;
-      this.toast.success(`"${this.product.nom}" ajouté au panier !`);
+      this.toast.success(`"${this.product.nom}" added to cart!`);
     }
   }
 
@@ -53,7 +53,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   categoryLabel(c: string) {
-    return { VACCIN:'Vaccin', MEDICAMENT:'Médicament', ALIMENT:'Aliment', RECOLTE:'Récolte', AUTRE:'Autre' }[c] || c;
+    return { VACCIN:'Vaccine', MEDICAMENT:'Medication', ALIMENT:'Feed', RECOLTE:'Harvest', AUTRE:'Other' }[c] || c;
   }
 
   categoryEmoji(c: string) {

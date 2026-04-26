@@ -25,7 +25,7 @@ export class VetPostListComponent implements OnInit {
   ngOnInit() {
     this.api.getVetPosts(this.vetId).subscribe({
       next: p => { this.posts = p; this.loading = false; },
-      error: () => { this.error = 'Impossible de charger les publications.'; this.loading = false; }
+      error: () => { this.error = 'Unable to load publications.'; this.loading = false; }
     });
   }
 

@@ -35,9 +35,9 @@ export class ProductListComponent implements OnInit {
       error: (e) => {
         this.loading = false;
         if (e.status === 0) {
-          this.error = 'Impossible de joindre le serveur (port 8088). Vérifiez que le backend est démarré.';
+          this.error = 'Unable to connect to the server (port 8088). Please ensure the backend is running.';
         } else {
-          this.error = e.error?.message || 'Erreur de chargement des produits.';
+          this.error = e.error?.message || 'Error loading products.';
         }
       }
     });
@@ -55,7 +55,7 @@ export class ProductListComponent implements OnInit {
   }
 
   delete(p: InventoryProduct) {
-    if (!confirm(`Supprimer "${p.nom}" ?`)) return;
+    if (!confirm(`Delete "${p.nom}" ?`)) return;
     this.api.deleteProduct(p.id).subscribe({ next: () => this.load() });
   }
 
@@ -100,8 +100,8 @@ export class ProductListComponent implements OnInit {
 
   categoryLabel(c: string): string {
     const map: Record<string, string> = {
-      VACCIN: 'Vaccin', MEDICAMENT: 'Médicament', ALIMENT: 'Aliment',
-      RECOLTE: 'Récolte', AUTRE: 'Autre'
+      VACCIN: 'Vaccin', MEDICAMENT: 'Medication', ALIMENT: 'Food',
+      RECOLTE: 'Crop', AUTRE: 'Others'
     };
     return map[c] || c;
   }

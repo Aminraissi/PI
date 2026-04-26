@@ -4,7 +4,7 @@
     <div class="modal-header">
       <h2>
         <i class="fas fa-horse" style="color:#2d6a2d;margin-right:8px;"></i>
-        {{ isEdit ? 'Modifier l\'animal' : 'Ajouter un animal' }}
+        {{ isEdit ? 'Modify Animal' : 'Add Animal' }}
       </h2>
       <button class="close-btn" (click)="cancelled.emit()"><i class="fas fa-times"></i></button>
     </div>
@@ -13,41 +13,41 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>Espèce *</label>
-          <input formControlName="espece" placeholder="ex: Vache, Mouton, Chèvre..."
+          <label>Species *</label>
+          <input formControlName="espece" placeholder="ex: Cow, Sheep, Goat..."
                  [class.err]="invalid('espece')">
-          <span class="err-msg" *ngIf="invalid('espece')">Champ requis</span>
+          <span class="err-msg" *ngIf="invalid('espece')">Field required</span>
         </div>
         <div class="form-group">
-          <label>Référence</label>
+          <label>Reference</label>
           <input formControlName="reference"
-                 [placeholder]="isEdit ? 'Générée automatiquement (verrouillée)' : 'Générée automatiquement'"
+                 [placeholder]="isEdit ? 'Generated automatically (locked)' : 'Generated automatically'"
                  readonly>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Poids (kg) *</label>
+          <label>Weight (kg) *</label>
           <input type="number" formControlName="poids" min="0.01" step="0.1"
                  placeholder="ex: 350" [class.err]="invalid('poids')">
-          <span class="err-msg" *ngIf="invalid('poids')">Poids > 0 requis</span>
+          <span class="err-msg" *ngIf="invalid('poids')">Weight > 0 required</span>
         </div>
         <div class="form-group">
-          <label>Date de naissance *</label>
+          <label>Date of Birth *</label>
           <input type="date" formControlName="dateNaissance"
                  [class.err]="invalid('dateNaissance')">
-          <span class="err-msg" *ngIf="invalid('dateNaissance')">Date requise</span>
+          <span class="err-msg" *ngIf="invalid('dateNaissance')">Date required</span>
         </div>
       </div>
 
       <div class="err-msg global" *ngIf="error">{{ error }}</div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()">Annuler</button>
+        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()">Cancel</button>
         <button type="submit" class="btn btn-save" [disabled]="loading">
           <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
-          {{ isEdit ? 'Enregistrer' : 'Créer' }}
+          {{ isEdit ? 'Save' : 'Create' }}
         </button>
       </div>
 

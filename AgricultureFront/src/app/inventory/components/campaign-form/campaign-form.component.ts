@@ -93,12 +93,12 @@ export class CampaignFormComponent implements OnInit {
     const val = this.form.getRawValue();
 
     if (Number(val.ageMin) > Number(val.ageMax)) {
-      this.error = "L'age minimum doit etre inferieur ou egal a l'age maximum.";
+      this.error = "Minimum age cannot be greater than maximum age.";
       return;
     }
 
     if (val.plannedDate && val.plannedDate < this.todayIso) {
-      this.error = "La date planifiee ne peut pas etre inferieure a la date d'aujourd'hui.";
+      this.error = "The planned date cannot be earlier than today.";
       return;
     }
 
@@ -135,7 +135,7 @@ export class CampaignFormComponent implements OnInit {
 
   private syncToGoogleCalendar(campaign: VaccinationCampaign) {
     this.calendarStatus = 'syncing';
-    this.calendarMessage = 'Synchronisation avec Google Calendar...';
+    this.calendarMessage = 'Google Calendar Synchronization...';
 
     const event = this.calendarService.buildVaccinationEvent({
       espece:      campaign.espece,
@@ -149,13 +149,13 @@ export class CampaignFormComponent implements OnInit {
     this.calendarService.createEvent(event).subscribe({
       next: () => {
         this.calendarStatus = 'success';
-        this.calendarMessage = 'Evenement ajoute dans Google Calendar';
+        this.calendarMessage = 'Event added to Google Calendar';
         setTimeout(() => this.saved.emit(), 2000);
       },
       error: (err) => {
         console.error('Google Calendar error:', err);
         this.calendarStatus = 'error';
-        this.calendarMessage = "Campagne enregistree, mais l'ajout dans Google Calendar a echoue.";
+        this.calendarMessage = "Campaign saved, but adding to Google Calendar failed.";
         setTimeout(() => this.saved.emit(), 3000);
       }
     });

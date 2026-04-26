@@ -118,9 +118,9 @@ export class StatisticsDashboardComponent implements OnInit, AfterViewInit, OnDe
       error: (err) => {
         this.loading = false;
         if (err?.status === 0) {
-          this.error = 'Impossible de joindre le serveur statistiques (port 8088).';
+          this.error = 'Unable to connect to the statistics server (port 8088). Please ensure the backend is running.';
         } else {
-          this.error = err?.error?.message || 'Erreur lors du chargement des statistiques.';
+          this.error = err?.error?.message || 'Error loading statistics.';
         }
       }
     });
@@ -252,7 +252,7 @@ export class StatisticsDashboardComponent implements OnInit, AfterViewInit, OnDe
       data: {
         labels,
         datasets: [{
-          label: 'Déficit',
+          label: 'Deficit',
           data: values,
           backgroundColor: '#E76F51',
           borderRadius: 8,
@@ -283,10 +283,10 @@ export class StatisticsDashboardComponent implements OnInit, AfterViewInit, OnDe
   private categoryLabel(category: string): string {
     const labels: Record<string, string> = {
       VACCIN: 'Vaccins',
-      MEDICAMENT: 'Médicaments',
-      ALIMENT: 'Aliments',
-      RECOLTE: 'Récoltes',
-      AUTRE: 'Autres'
+      MEDICAMENT: 'Medicaments',
+      ALIMENT: 'Foods',
+      RECOLTE: 'Crops',
+      AUTRE: 'Others  '
     };
     return labels[category] || category;
   }

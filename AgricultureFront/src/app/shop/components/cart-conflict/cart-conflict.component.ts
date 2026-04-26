@@ -9,22 +9,22 @@ import { CartService, CartConflict } from '../../services/cart.service';
   <div class="conflict-backdrop" (click)="keep()"></div>
   <div class="conflict-modal">
     <div class="conflict-icon">🛒⚠️</div>
-    <h3 class="conflict-title">Produits de vétérinaires différents</h3>
+    <h3 class="conflict-title">Different veterinary products</h3>
     <p class="conflict-body">
-      Votre panier contient déjà des produits du
+      Your cart already contains products from
       <strong>Dr. {{ conflict.currentVetNom }}</strong>.<br>
-      Vous ne pouvez pas mélanger des produits de plusieurs vétérinaires dans une même commande.
+      You cannot mix products from multiple veterinarians in a single order.
     </p>
     <p class="conflict-question">
-      Voulez-vous vider le panier actuel et commencer une nouvelle commande avec
+      Do you want to empty the current cart and start a new order with
       <strong>Dr. {{ conflict.newVetNom }}</strong> ?
     </p>
     <div class="conflict-actions">
       <button class="btn-keep" (click)="keep()">
-        <i class="fas fa-arrow-left"></i> Garder le panier actuel
+        <i class="fas fa-arrow-left"></i> Keep the current cart
       </button>
       <button class="btn-replace" (click)="replace()">
-        <i class="fas fa-trash-alt"></i> Vider et recommencer
+        <i class="fas fa-trash-alt"></i> Empty and restart
       </button>
     </div>
   </div>

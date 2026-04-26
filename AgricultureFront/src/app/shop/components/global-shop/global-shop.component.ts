@@ -32,11 +32,11 @@ export class GlobalShopComponent implements OnInit {
   showCheckout = false;
 
   categories = [
-    { value: '',           label: 'Toutes' },
-    { value: 'VACCIN',     label: '💉 Vaccins' },
-    { value: 'MEDICAMENT', label: '💊 Médicaments' },
-    { value: 'ALIMENT',    label: '🌾 Aliments' },
-    { value: 'AUTRE',      label: '📦 Autre' },
+    { value: '',           label: 'All' },
+    { value: 'VACCIN',     label: '💉 Vaccines' },
+    { value: 'MEDICAMENT', label: '💊 Medications' },
+    { value: 'ALIMENT',    label: '🌾 Feeds' },
+    { value: 'AUTRE',      label: '📦 Other' },
   ];
 
   constructor(
@@ -114,7 +114,7 @@ export class GlobalShopComponent implements OnInit {
   }
 
   vetName(p: InventoryProduct): string {
-    return p.owner ? `${p.owner.prenom ?? ''} ${p.owner.nom ?? ''}`.trim() : 'Vétérinaire';
+    return p.owner ? `${p.owner.prenom ?? ''} ${p.owner.nom ?? ''}`.trim() : 'veterinarian';
   }
 
   vetRegion(p: InventoryProduct): string {
@@ -126,7 +126,7 @@ export class GlobalShopComponent implements OnInit {
   }
 
   categoryLabel(c: string) {
-    return { VACCIN:'Vaccin', MEDICAMENT:'Médicament', ALIMENT:'Aliment', RECOLTE:'Récolte', AUTRE:'Autre' }[c] || c;
+    return { VACCIN:'Vaccines', MEDICAMENT:'Medications', ALIMENT:'Feeds', RECOLTE:'Harvest', AUTRE:'Other' }[c] || c;
   }
 
   categoryEmoji(c: string) {

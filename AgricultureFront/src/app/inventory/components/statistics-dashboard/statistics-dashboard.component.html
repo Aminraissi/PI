@@ -5,8 +5,8 @@
     <div class="header-left">
       <div class="header-icon"><i class="fas fa-seedling"></i></div>
       <div>
-        <h1 class="page-title">Statistiques agricoles</h1>
-        <p class="page-subtitle">Vue d'ensemble de votre inventaire et coûts</p>
+        <h1 class="page-title">Statistics</h1>
+        <p class="page-subtitle">Overview of your inventory and costs</p>
       </div>
     </div>
   </div>
@@ -14,7 +14,7 @@
   <!-- ── Loading / Error ──────────────────────────────────── -->
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
-    <p>Chargement des statistiques…</p>
+    <p>Loading statistics…</p>
   </div>
 
   <div *ngIf="error && !loading" class="error-state">
@@ -24,7 +24,7 @@
 
   <div *ngIf="!loading && !error && products.length === 0" class="loading-state">
     <i class="fas fa-chart-pie" style="font-size:2rem;margin-bottom:12px;display:block;color:#6b8c6b"></i>
-    <p>Aucune donnée inventaire pour afficher les statistiques.</p>
+    <p>No inventory data available to display statistics.</p>
   </div>
 
   <ng-container *ngIf="hasData">
@@ -34,33 +34,33 @@
       <div class="kpi-card kpi-products">
         <div class="kpi-icon"><i class="fas fa-boxes"></i></div>
         <div class="kpi-body">
-          <span class="kpi-label">Produits suivis</span>
+          <span class="kpi-label">Products tracked</span>
           <span class="kpi-value">{{ kpis.totalProducts }}</span>
-          <span class="kpi-sub">Dans votre inventaire</span>
+          <span class="kpi-sub">In your inventory</span>
         </div>
       </div>
       <div class="kpi-card kpi-stock">
         <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
         <div class="kpi-body">
-          <span class="kpi-label">Stock total</span>
+          <span class="kpi-label">Total Stocks</span>
           <span class="kpi-value">{{ kpis.totalUnits }}</span>
-          <span class="kpi-sub">Unités en stock</span>
+          <span class="kpi-sub">Units in stock</span>
         </div>
       </div>
       <div class="kpi-card kpi-low" *ngIf="kpis.lowStockCount > 0">
         <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
         <div class="kpi-body">
-          <span class="kpi-label">Stock faible</span>
+          <span class="kpi-label">Low stock</span>
           <span class="kpi-value">{{ kpis.lowStockCount }}</span>
-          <span class="kpi-sub">Produits sous le seuil</span>
+          <span class="kpi-sub">Products below threshold</span>
         </div>
       </div>
       <div class="kpi-card kpi-cost">
         <div class="kpi-icon"><i class="fas fa-shopping-cart"></i></div>
         <div class="kpi-body">
-          <span class="kpi-label">Coût achats</span>
+          <span class="kpi-label">Purchase cost</span>
           <span class="kpi-value">{{ formatCurrency(kpis.purchaseCost) }}</span>
-          <span class="kpi-sub">Achats stock cumulés</span>
+          <span class="kpi-sub">Cumulative purchase cost</span>
         </div>
       </div>
     </div>
@@ -72,8 +72,8 @@
           <div class="chart-title-group">
             <span class="chart-icon green"><i class="fas fa-chart-pie"></i></span>
             <div>
-              <h3 class="chart-title">Répartition du stock par catégorie</h3>
-              <p class="chart-desc">Distribution des produits par type</p>
+              <h3 class="chart-title">Stock Distribution by Category</h3>
+              <p class="chart-desc">Distribution of products by type</p>
             </div>
           </div>
         </div>
@@ -87,8 +87,8 @@
           <div class="chart-title-group">
             <span class="chart-icon orange"><i class="fas fa-exclamation-circle"></i></span>
             <div>
-              <h3 class="chart-title">Produits en stock faible</h3>
-              <p class="chart-desc">Déficit par produit sous le seuil</p>
+              <h3 class="chart-title">Low Stock Products</h3>
+              <p class="chart-desc">Deficit by product below threshold</p>
             </div>
           </div>
         </div>
@@ -100,16 +100,16 @@
 
     <!-- ── Stock Alerts Table ────────────────────────────── -->
     <div class="alerts-section" *ngIf="lowStockProducts.length > 0">
-      <h2 class="section-title"><i class="fas fa-bell"></i> Produits à réapprovisionner</h2>
+      <h2 class="section-title"><i class="fas fa-bell"></i> Products to Reorder</h2>
       <div class="alerts-grid">
         <div class="alert-table-card">
           <div class="alert-table-header low">
-            <i class="fas fa-exclamation-circle"></i> Stocks faibles
+            <i class="fas fa-exclamation-circle"></i> Low Stock
             <span class="alert-badge">{{ lowStockProducts.length }}</span>
           </div>
           <table class="alert-table">
             <thead>
-              <tr><th>Produit</th><th>Stock actuel</th><th>Seuil minimum</th><th>Déficit</th></tr>
+              <tr><th>Product</th><th>Current Stock</th><th>Minimum Threshold</th><th>Deficit</th></tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of lowStockProducts | slice:0:8">

@@ -29,12 +29,12 @@ export class FarmerShopComponent implements OnInit {
   addedProductId: number | null = null;
 
   categories = [
-    { value: '', label: 'Toutes catégories' },
-    { value: 'VACCIN',     label: '💉 Vaccins' },
-    { value: 'MEDICAMENT', label: '💊 Médicaments' },
-    { value: 'ALIMENT',    label: '🌾 Aliments' },
-    { value: 'RECOLTE',    label: '🌿 Récoltes' },
-    { value: 'AUTRE',      label: '📦 Autre' },
+    { value: '', label: 'All Categories' },
+    { value: 'VACCIN',     label: '💉 Vaccines' },
+    { value: 'MEDICAMENT', label: '💊 Medications' },
+    { value: 'ALIMENT',    label: '🌾 Feeds' },
+    { value: 'RECOLTE',    label: '🌿 Crops' },
+    { value: 'AUTRE',      label: '📦 Other' },
   ];
 
   constructor(private api: InventoryApiService, public cartService: CartService) {}
@@ -42,7 +42,7 @@ export class FarmerShopComponent implements OnInit {
   ngOnInit() {
     this.api.getPublicShop(this.vetId).subscribe({
       next: p => { this.products = p; this.loading = false; },
-      error: () => { this.loading = false; this.error = 'Impossible de charger la boutique.'; }
+      error: () => { this.loading = false; this.error = 'Unable to load the store.'; }
     });
   }
 
@@ -83,7 +83,7 @@ export class FarmerShopComponent implements OnInit {
   }
 
   categoryLabel(c: string): string {
-    return { VACCIN:'Vaccin', MEDICAMENT:'Médicament', ALIMENT:'Aliment', RECOLTE:'Récolte', AUTRE:'Autre' }[c] || c;
+    return { VACCIN:'Vaccines', MEDICAMENT:'Medications', ALIMENT:'Feeds', RECOLTE:'Crops', AUTRE:'Other' }[c] || c;
   }
 
   categoryEmoji(c: string): string {

@@ -33,15 +33,15 @@ export class BatchListComponent implements OnInit, OnChanges {
   selectedBatch: Batch | null = null;
   consumeReasons: Reason[] = ['CONSOMMATION', 'PERTE', 'VENTE', 'PRODUIT_EXPIRE', 'VOL', 'VACCINATION', 'AJUSTEMENT', 'AUTRE'];
   consumeReasonLabels: Record<Reason, string> = {
-    ACHAT: 'Achat',
-    CONSOMMATION: 'Consommation',
-    PERTE: 'Perte',
-    VENTE: 'Vente',
-    PRODUIT_EXPIRE: 'Produit expire',
-    VOL: 'Vol',
+    ACHAT: 'Purchase',
+    CONSOMMATION: 'Consumption',
+    PERTE: 'Loss',
+    VENTE: 'Sale',
+    PRODUIT_EXPIRE: 'Expired Product',
+    VOL: 'Theft',
     VACCINATION: 'Vaccination',
-    AJUSTEMENT: 'Ajustement',
-    AUTRE: 'Autre'
+    AJUSTEMENT: 'Adjustment',
+    AUTRE: 'Other'
   };
 
   addForm = new FormGroup({
@@ -93,7 +93,7 @@ export class BatchListComponent implements OnInit, OnChanges {
       },
       error: () => {
         this.loadingBatches = false;
-        this.toast.error('Erreur lors du chargement des lots.');
+        this.toast.error('Unable to load batches for this product.');
       }
     });
   }
@@ -135,13 +135,13 @@ export class BatchListComponent implements OnInit, OnChanges {
       next: () => {
         this.addLoading = false;
         this.showAddStock = false;
-        this.toast.success(`Stock ajoute avec succes pour "${this.product.nom}".`);
+        this.toast.success(`Stock added successfully for "${this.product.nom}".`);
         this.loadBatches();
         this.stockAdded.emit();
       },
       error: (e) => {
         this.addLoading = false;
-        this.addError = e.error?.error || e.error?.message || 'Erreur lors de l ajout du stock';
+        this.addError = e.error?.error || e.error?.message || 'Unable to add stock';
         this.toast.error(this.addError);
       }
     });
@@ -183,13 +183,13 @@ export class BatchListComponent implements OnInit, OnChanges {
       next: () => {
         this.consumeLoading = false;
         this.showConsumeFromBatch = false;
-        this.toast.success(`Lot ${this.selectedBatch?.lotNumber} consomme avec succes.`);
+        this.toast.success(`Lot ${this.selectedBatch?.lotNumber}Successfully consumed`);
         this.loadBatches();
         this.stockAdded.emit();
       },
       error: (e) => {
         this.consumeLoading = false;
-        this.consumeBatchError = e.error?.error || e.error?.message || 'Erreur lors de la consommation du lot';
+        this.consumeBatchError = e.error?.error || e.error?.message || 'Unable to consume batch';
         this.toast.error(this.consumeBatchError);
       }
     });

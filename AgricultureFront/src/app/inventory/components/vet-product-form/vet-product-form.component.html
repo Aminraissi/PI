@@ -4,8 +4,8 @@
       <div class="modal-header-left">
         <div class="modal-icon">{{ isEdit ? '✏️' : '➕' }}</div>
         <div>
-          <h2>{{ isEdit ? 'Modifier le produit' : 'Ajouter un produit' }}</h2>
-          <p class="modal-subtitle">Stock clinique veterinaire</p>
+          <h2>{{ isEdit ? 'Modify Product' : 'Add Product' }}</h2>
+          <p class="modal-subtitle">Veterinary Clinic Stock</p>
         </div>
       </div>
       <button class="close-btn" (click)="cancelled.emit()">
@@ -16,17 +16,17 @@
     <form [formGroup]="form" (ngSubmit)="submit()" class="modal-body">
       <div class="form-group">
         <label class="form-label">
-          <i class="fas fa-tag"></i> Nom du produit *
+          <i class="fas fa-tag"></i> Product Name *
         </label>
         <input formControlName="nom"
                placeholder="ex: Ivermectine 1%, Vaccin..."
                [class.err]="invalid('nom')">
-        <span class="err-msg" *ngIf="invalid('nom')">Le nom est requis</span>
+        <span class="err-msg" *ngIf="invalid('nom')">Product name is required</span>
       </div>
 
       <div class="form-group">
         <label class="form-label">
-          <i class="fas fa-th-large"></i> Categorie *
+          <i class="fas fa-th-large"></i> Category *
         </label>
         <div class="cat-grid">
           <button
@@ -40,12 +40,12 @@
             <span class="cat-name">{{ catConfig[c].label }}</span>
           </button>
         </div>
-        <span class="err-msg" *ngIf="invalid('categorie')">Selectionnez une categorie</span>
+        <span class="err-msg" *ngIf="invalid('categorie')">Please select a category</span>
       </div>
 
       <div class="form-group">
         <label class="form-label">
-          <i class="fas fa-balance-scale"></i> Unite *
+          <i class="fas fa-balance-scale"></i> Unit *
         </label>
         <input formControlName="unit"
                placeholder="dose, flacon, ml, comprime..."
@@ -57,17 +57,17 @@
                   [class.selected]="form.get('unit')?.value === u"
                   (click)="selectUnit(u)">{{ u }}</button>
         </div>
-        <span class="err-msg" *ngIf="invalid('unit')">L unite est requise</span>
+        <span class="err-msg" *ngIf="invalid('unit')">Unit is required</span>
       </div>
 
       <div class="form-group">
         <label class="form-label">
-          <i class="fas fa-exclamation-triangle"></i> Seuil d alerte stock bas
+          <i class="fas fa-exclamation-triangle"></i> Low Stock Alert Threshold
         </label>
         <input type="number" formControlName="minThreshold" min="0"
                [class.err]="invalid('minThreshold')">
-        <small class="form-hint">Une alerte s affichera quand le stock descend en dessous de cette valeur</small>
-        <span class="err-msg" *ngIf="invalid('minThreshold')">Valeur >= 0 requise</span>
+        <small class="form-hint">An alert will be displayed when the stock falls below this value</small>
+        <span class="err-msg" *ngIf="invalid('minThreshold')">Value >= 0 is required</span>
       </div>
 
       <div class="form-group">
@@ -84,25 +84,25 @@
             <label for="perishable" class="checkbox-custom"></label>
           </div>
           <div class="checkbox-info">
-            <span class="checkbox-title">Produit perissable</span>
-            <span class="checkbox-sub">Vaccins, medicaments biologiques, produits avec date d expiration</span>
+            <span class="checkbox-title">Perishable Product</span>
+            <span class="checkbox-sub">Vaccines, biological medications, products with expiration dates</span>
           </div>
         </label>
       </div>
 
       <div class="form-hint-box" *ngIf="!isEdit">
         <i class="fas fa-info-circle"></i>
-        Le stock, les prix achat et les dates peuvent etre ajustes depuis l onglet <strong>Lots</strong>.
+        The stock, purchase prices, and dates can be adjusted from the <strong>Lots</strong> tab.
       </div>
 
       <div class="err-msg form-error" *ngIf="error">{{ error }}</div>
 
       <div class="modal-footer">
-        <button type="button" class="btn-cancel" (click)="cancelled.emit()">Annuler</button>
+        <button type="button" class="btn-cancel" (click)="cancelled.emit()">Cancel</button>
         <button type="submit" class="btn-save" [disabled]="loading">
           <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
           <i class="fas fa-check" *ngIf="!loading"></i>
-          {{ isEdit ? 'Enregistrer' : 'Creer le produit' }}
+          {{ isEdit ? 'Save Changes' : 'Create Product' }}
         </button>
       </div>
     </form>

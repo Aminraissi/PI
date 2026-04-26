@@ -1,21 +1,19 @@
 <div class="avis-section">
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- HEADER + SUMMARY                                       -->
-  <!-- ══════════════════════════════════════════════════════ -->
+ 
   <div class="avis-header">
     <div class="avis-title-row">
       <h2 class="avis-title">
-        <i class="fas fa-star"></i> Avis & Évaluations
+        <i class="fas fa-star"></i> Reviews & Ratings
       </h2>
       <button
         *ngIf="isAgriculteur && !hasAlreadyReviewed && !showAvisForm"
         class="btn-give-avis"
         (click)="openAvisForm()">
-        <i class="fas fa-pen"></i> Donner mon avis
+        <i class="fas fa-pen"></i> Give your review
       </button>
       <span class="already-reviewed" *ngIf="isAgriculteur && hasAlreadyReviewed">
-        <i class="fas fa-check-circle"></i> Vous avez déjà évalué ce vétérinaire
+        <i class="fas fa-check-circle"></i> You have already rated this veterinarian
       </span>
     </div>
 
@@ -45,19 +43,17 @@
 
     <div class="no-summary" *ngIf="!summary || summary.totalAvis === 0">
       <i class="fas fa-star-half-alt"></i>
-      <span>Aucun avis pour l'instant. Soyez le premier à évaluer ce vétérinaire !</span>
+      <span>No reviews yet. Be the first to rate this veterinarian!</span>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- FORMULAIRE NOUVEAU AVIS                                -->
-  <!-- ══════════════════════════════════════════════════════ -->
+ 
   <div class="avis-form-card" *ngIf="showAvisForm">
-    <h3 class="form-title"><i class="fas fa-edit"></i> Votre évaluation</h3>
+    <h3 class="form-title"><i class="fas fa-edit"></i> Your review</h3>
 
     <!-- ★ SÉLECTEUR D'ÉTOILES INTERACTIF ★ -->
     <div class="star-selector">
-      <span class="star-hint">Votre note :</span>
+      <span class="star-hint">Your rating:</span>
       <div class="stars-row">
         <span class="star-wrap"
               (mouseenter)="setHover(1)" (mouseleave)="clearHover()" (click)="setNote(1)">
@@ -96,12 +92,12 @@
     <!-- Commentaire -->
     <div class="field-wrap">
       <label class="field-label">
-        <i class="fas fa-comment-dots"></i> Votre commentaire *
+        <i class="fas fa-comment-dots"></i> Your comment 
       </label>
       <textarea
         [(ngModel)]="newCommentaire"
         rows="4"
-        placeholder="Décrivez votre expérience avec ce vétérinaire…"
+        placeholder="Describe your experience with this veterinarian…"
         class="field-ta"
         [class.field-ta--error]="hasInappropriateContent"
         maxlength="1000">
@@ -110,7 +106,7 @@
 
       <div class="bad-word-warning" *ngIf="hasInappropriateContent">
         <i class="fas fa-exclamation-triangle"></i>
-        Votre commentaire contient des mots inappropriés. Veuillez le reformuler.
+        Your comment contains inappropriate words. Please rephrase it.
       </div>
     </div>
 
@@ -120,33 +116,29 @@
 
     <div class="form-actions">
       <button class="btn-cancel" (click)="cancelAvisForm()" [disabled]="submittingAvis">
-        Annuler
+        Cancel
       </button>
       <button class="btn-submit"
               (click)="submitAvis()"
               [disabled]="submittingAvis || hasInappropriateContent">
         <i class="fas fa-spinner fa-spin" *ngIf="submittingAvis"></i>
         <i class="fas fa-paper-plane"    *ngIf="!submittingAvis"></i>
-        Publier mon avis
+        Publish my review
       </button>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- LOADING / ERROR                                        -->
-  <!-- ══════════════════════════════════════════════════════ -->
+ 
   <div class="loading-box" *ngIf="loading">
     <div class="loader"></div>
-    <span>Chargement des avis…</span>
+    <span>Loading reviews…</span>
   </div>
 
   <div class="err-box" *ngIf="error && !loading">
     <i class="fas fa-exclamation-triangle"></i> {{ error }}
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- LISTE DES AVIS                                         -->
-  <!-- ══════════════════════════════════════════════════════ -->
+
   <div class="avis-list" *ngIf="!loading && avis.length > 0">
     <div class="avis-card" *ngFor="let a of avis">
 
@@ -196,14 +188,14 @@
             class="btn-translate"
             *ngIf="!translations[a.id] && !translatingId[a.id] && !translationErrors[a.id]"
             (click)="translateAvis(a)"
-            title="Traduire ce commentaire">
+            title="Translate this comment">
             <i class="fas fa-language"></i>
-            <span>Traduire</span>
+            <span>Translate</span>
           </button>
 
           <!-- Chargement -->
           <span class="translate-loading" *ngIf="translatingId[a.id]">
-            <i class="fas fa-spinner fa-spin"></i> Traduction en cours…
+            <i class="fas fa-spinner fa-spin"></i> Translation in progress…
           </span>
 
           <!-- Erreur + Réessayer -->
@@ -211,7 +203,7 @@
                 *ngIf="translationErrors[a.id] && !translatingId[a.id]">
             <i class="fas fa-exclamation-circle"></i> {{ translationErrors[a.id] }}
             <button class="btn-retry" (click)="translateAvis(a)">
-              <i class="fas fa-redo"></i> Réessayer
+              <i class="fas fa-redo"></i> Retry
             </button>
           </span>
 
@@ -221,7 +213,7 @@
             *ngIf="translations[a.id]"
             (click)="clearTranslation(a.id)">
             <i class="fas fa-undo-alt"></i>
-            <span>Voir l'original</span>
+            <span>View original</span>
           </button>
 
         </div>
@@ -244,7 +236,7 @@
           (click)="toggleCommentInput(a.id)"
           *ngIf="a.agriculteurId !== currentUserId">
           <i class="fas fa-reply"></i>
-          <span class="action-lbl">Répondre</span>
+          <span class="action-lbl">Reply</span>
         </button>
       </div>
 
@@ -288,7 +280,7 @@
         <div class="bad-word-warning bad-word-warning--sm"
              *ngIf="commentInputs[a.id] && badWords.containsBadWord(commentInputs[a.id])">
           <i class="fas fa-exclamation-triangle"></i>
-          Votre réponse contient des mots inappropriés.
+          Your response contains inappropriate words.
         </div>
       </div>
 
@@ -319,7 +311,7 @@
   <!-- Aucun avis -->
   <div class="empty-avis" *ngIf="!loading && avis.length === 0 && !error">
     <i class="fas fa-comment-slash"></i>
-    <p>Aucun avis pour l'instant.</p>
+    <p>No reviews available at the moment.</p>
   </div>
 
 </div>

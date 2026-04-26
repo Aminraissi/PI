@@ -41,7 +41,7 @@ export class VetProfileComponent implements OnInit {
     motif: this.motifCtrl,
   });
 
-  weekDays = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   constructor(private api: AppointmentsApiService, private invApi: InventoryApiService, private toast: ToastService) {}
 
@@ -97,7 +97,7 @@ export class VetProfileComponent implements OnInit {
     if (this.form.invalid || !this.selectedSlot) { this.form.markAllAsTouched(); return; }
     const ref = this.form.value.animalReference!.trim();
     const animal = this.animals.find(a => a.reference.toLowerCase() === ref.toLowerCase());
-    if (!animal) { this.bookingError = `Aucun animal avec la référence "${ref}" trouvé.`; return; }
+    if (!animal) { this.bookingError = `No animal found with this reference "${ref}".`; return; }
 
     this.bookingLoading = true;
     this.bookingError = '';
@@ -110,11 +110,11 @@ export class VetProfileComponent implements OnInit {
       next: () => {
         this.bookingLoading = false;
         this.step = 'done';
-        this.toast.success('Rendez-vous réservé avec succès !');
+        this.toast.success('Appointment booked successfully!');
       },
       error: e => {
         this.bookingLoading = false;
-        this.bookingError = e.error?.message || 'Erreur lors de la réservation';
+        this.bookingError = e.error?.message || 'Error occurred while booking the appointment';
         this.toast.error(this.bookingError);
       }
     });

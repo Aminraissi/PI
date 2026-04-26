@@ -66,7 +66,7 @@ export class NewClaimComponent implements OnInit {
     const file = input.files[0];
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      this.attachmentError = 'La piÃ¨ce jointe ne doit pas dÃ©passer 10 Mo.';
+      this.attachmentError = 'File is too large. Maximum size is 10 MB.';
       input.value = '';
       return;
     }
@@ -103,7 +103,7 @@ export class NewClaimComponent implements OnInit {
       },
       error: () => {
         this.submitting = false;
-        this.submitError = 'Une erreur est survenue. Veuillez réessayer.';
+        this.submitError = 'An error occurred. Please try again.';
       }
     });
   }

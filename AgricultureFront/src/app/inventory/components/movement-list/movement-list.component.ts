@@ -24,15 +24,15 @@ export class MovementListComponent implements OnInit {
   }
 
   typeLabel(t: string) {
-    return { ENTREE: 'Entrée', SORTIE: 'Sortie', AJUSTEMENT: 'Ajustement' }[t] || t;
+    return { ENTREE: 'Entry', SORTIE: 'Exit', AJUSTEMENT: 'Adjustment' }[t] || t;
   }
   typeClass(t: string) {
     return { ENTREE: 'type-in', SORTIE: 'type-out', AJUSTEMENT: 'type-adj' }[t] || '';
   }
   reasonLabel(r: string) {
     const m: Record<string,string> = {
-      ACHAT:'Achat', CONSOMMATION:'Consommation', PERTE:'Perte', VENTE:'Vente',
-      PRODUIT_EXPIRE:'Expiré', VOL:'Vol', VACCINATION:'Vaccination', AJUSTEMENT:'Ajustement', AUTRE:'Autre'
+      ACHAT:'Purchase', CONSOMMATION:'Consumption', PERTE:'Loss', VENTE:'Sale',
+      PRODUIT_EXPIRE:'Expired Product', VOL:'Theft', VACCINATION:'Vaccination', AJUSTEMENT:'Adjustment', AUTRE:'Other'
     };
     return m[r] || r;
   }

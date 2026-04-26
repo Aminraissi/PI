@@ -92,7 +92,7 @@ export class CheckoutComponent implements OnInit {
     if (paymentStatus === 'cancel') {
       localStorage.removeItem(this.pendingCheckoutKey);
       this.step = 'error';
-      this.error = 'Paiement annule. Vous pouvez reessayer.';
+      this.error = 'Payment cancelled. You can try again.';
       this.toast.error(this.error);
       return;
     }
@@ -100,7 +100,7 @@ export class CheckoutComponent implements OnInit {
     if (paymentStatus === 'success') {
       if (!Number.isFinite(pendingOrderId)) {
         this.step = 'error';
-        this.error = 'Paiement effectue, mais la commande est introuvable.';
+        this.error = 'Payment successful, but the order is not found.';
         this.toast.error(this.error);
         return;
       }
@@ -114,11 +114,11 @@ export class CheckoutComponent implements OnInit {
           localStorage.removeItem(this.pendingCheckoutKey);
           this.step = 'success';
           this.cartService.clear();
-          this.toast.success('Paiement effectue avec succes.');
+          this.toast.success('Payment successful.');
         },
         error: (e) => {
           this.step = 'error';
-          this.error = e.error?.error || e.error?.message || 'Paiement effectue mais statut commande non mis a jour.';
+          this.error = e.error?.error || e.error?.message || 'Payment successful but order status not updated.';
           this.toast.error(this.error);
         }
       });

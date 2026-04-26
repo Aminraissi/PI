@@ -21,7 +21,7 @@ export class ProductFormComponent implements OnInit {
 
   categories: ProductCategory[] = ['VACCIN', 'MEDICAMENT', 'ALIMENT', 'RECOLTE', 'AUTRE'];
   catLabels: Record<string, string> = {
-    VACCIN: 'Vaccin', MEDICAMENT: 'Médicament', ALIMENT: 'Aliment', RECOLTE: 'Récolte', AUTRE: 'Autre'
+    VACCIN: 'Vaccin', MEDICAMENT: 'Medicament', ALIMENT: 'Food', RECOLTE: 'Harvest', AUTRE: 'Other'
   };
 
   constructor(private api: InventoryApiService, private toast: ToastService) {}
@@ -72,8 +72,8 @@ export class ProductFormComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.toast.success(this.isEdit
-          ? `Produit "${val.nom}" modifié avec succès !`
-          : `Produit "${val.nom}" ajouté avec succès !`
+          ? `Product "${val.nom}" updated successfully!`
+          : `Product "${val.nom}" created successfully!`
         );
         this.saved.emit();
       },
@@ -81,7 +81,7 @@ export class ProductFormComponent implements OnInit {
         this.loading = false;
         
         
-        this.error = e.error?.message || 'Erreur';
+        this.error = e.error?.message || 'Error';
         this.toast.error(this.error);
       }
     });

@@ -21,16 +21,16 @@
     <div class="vpl-header-left">
       <div class="vpl-header-icon">🏥</div>
       <div>
-        <h1 class="vpl-title">Stock Clinique</h1>
-        <p class="vpl-subtitle">Gérez vos produits et médicaments vétérinaires</p>
+        <h1 class="vpl-title">Veterinary Inventory</h1>
+        <p class="vpl-subtitle">Manage your veterinary products and medications</p>
       </div>
     </div>
     <div class="vpl-header-actions">
       <button class="btn-movements" (click)="openMovements()">
-        <i class="fas fa-exchange-alt"></i> Mouvements
+        <i class="fas fa-exchange-alt"></i> Movements
       </button>
       <button class="btn-add" (click)="openAdd()">
-        <i class="fas fa-plus"></i> Ajouter un produit
+        <i class="fas fa-plus"></i> Add Product
       </button>
     </div>
   </div>
@@ -41,28 +41,28 @@
       <div class="stat-icon" style="background:#e8f5e9; color:#2e7d32">📦</div>
       <div class="stat-info">
         <span class="stat-num">{{ totalProducts }}</span>
-        <span class="stat-lbl">Produits</span>
+        <span class="stat-lbl">Products</span>
       </div>
     </div>
     <div class="stat-card" [class.stat-warn]="lowStockCount > 0">
       <div class="stat-icon" style="background:#fff8e1; color:#f57c00">⚠️</div>
       <div class="stat-info">
         <span class="stat-num">{{ lowStockCount }}</span>
-        <span class="stat-lbl">Stock bas</span>
+        <span class="stat-lbl">Low Stock</span>
       </div>
     </div>
     <div class="stat-card" [class.stat-danger]="outOfStockCount > 0">
       <div class="stat-icon" style="background:#fbe9e7; color:#c62828">❌</div>
       <div class="stat-info">
         <span class="stat-num">{{ outOfStockCount }}</span>
-        <span class="stat-lbl">En rupture</span>
+        <span class="stat-lbl">Out of Stock</span>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="background:#e3f2fd; color:#0277bd">🏪</div>
       <div class="stat-info">
         <span class="stat-num">{{ products | enBoutiqueCount }}</span>
-        <span class="stat-lbl">En boutique</span>
+        <span class="stat-lbl">In Boutique</span>
       </div>
     </div>
   </div>
@@ -72,7 +72,7 @@
     <div class="search-wrap">
       <i class="fas fa-search search-icon"></i>
       <input type="text" [(ngModel)]="searchTerm"
-             placeholder="Rechercher un produit..." class="search-input">
+             placeholder="Search for a product..." class="search-input">
     </div>
     <div class="cat-filter-btns">
       <button *ngFor="let c of categories"
@@ -87,7 +87,7 @@
   <!-- Loader -->
   <div *ngIf="loading" class="vpl-loader">
     <div class="spinner"></div>
-    <p>Chargement du stock clinique...</p>
+    <p>Loading veterinary inventory...</p>
   </div>
 
   <!-- Error -->
@@ -98,17 +98,17 @@
   <!-- Empty state -->
   <div *ngIf="!loading && !error && products.length === 0" class="vpl-empty">
     <div class="empty-icon">💉</div>
-    <h3>Aucun produit dans votre stock clinique</h3>
-    <p>Ajoutez vos vaccins, médicaments et aliments pour commencer à gérer votre inventaire vétérinaire.</p>
+    <h3>No products in your veterinary inventory</h3>
+    <p>Add your vaccines, medications, and foods to start managing your veterinary inventory.</p>
     <button class="btn-add" (click)="openAdd()">
-      <i class="fas fa-plus"></i> Ajouter mon premier produit
+      <i class="fas fa-plus"></i> Add Your First Product
     </button>
   </div>
 
   <!-- No results after filter -->
   <div *ngIf="!loading && products.length > 0 && filtered.length === 0" class="vpl-no-results">
-    <p>Aucun produit ne correspond à votre recherche.</p>
-    <button (click)="searchTerm=''; filterCat=''">Réinitialiser les filtres</button>
+    <p>No products match your search criteria.</p>
+    <button (click)="searchTerm=''; filterCat=''">Reset Filters</button>
   </div>
 
   <!-- Products grid -->
@@ -127,13 +127,13 @@
         </div>
         <div class="vcard-badges-right">
           <span class="badge-low"  *ngIf="isLowStock(p) && (p.currentQuantity ?? 0) > 0">
-            <i class="fas fa-exclamation-triangle"></i> Stock bas
+            <i class="fas fa-exclamation-triangle"></i> Low Stock
           </span>
           <span class="badge-out"  *ngIf="(p.currentQuantity ?? 0) === 0">
-            <i class="fas fa-times-circle"></i> Rupture
+            <i class="fas fa-times-circle"></i> Out of Stock
           </span>
           <span class="badge-shop" *ngIf="p.enBoutique">
-            🏪 Boutique
+            🏪In Store
           </span>
         </div>
       </div>
@@ -144,7 +144,7 @@
       <!-- Stock info -->
       <div class="vcard-stock">
         <div class="stock-bar-wrap">
-          <div class="stock-label">Stock actuel</div>
+          <div class="stock-label">Current Stock</div>
           <div class="stock-val">
             <span class="stock-num">{{ p.currentQuantity ?? 0 }}</span>
             <span class="stock-unit">{{ p.unit }}</span>
@@ -158,7 +158,7 @@
           </div>
         </div>
         <div class="stock-threshold">
-          Seuil min : {{ p.minThreshold }} {{ p.unit }}
+          Minimum Threshold: {{ p.minThreshold }} {{ p.unit }}
         </div>
       </div>
 
@@ -166,7 +166,7 @@
       <div class="vcard-meta">
         <span class="meta-tag">
           <i class="fas" [ngClass]="p.isPerishable ? 'fa-clock' : 'fa-box'"></i>
-          {{ p.isPerishable ? 'Périssable' : 'Non périssable' }}
+          {{ p.isPerishable ? 'Perishable' : 'Non-perishable' }}
         </span>
         <span class="meta-tag" *ngIf="p.prixVente">
           <i class="fas fa-tag"></i>

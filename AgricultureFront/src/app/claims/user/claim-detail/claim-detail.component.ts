@@ -60,7 +60,7 @@ export class ClaimDetailComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Réclamation introuvable.';
+        this.error = 'Unable to load claim details.';
         this.loading = false;
       }
     });
@@ -87,7 +87,7 @@ export class ClaimDetailComponent implements OnInit {
         setTimeout(() => this.scrollToBottom(), 100);
       },
       error: () => {
-        this.messageError = 'Erreur lors de l\'envoi du message.';
+        this.messageError = 'Error occurred while sending the message.';
         this.sendingMessage = false;
       }
     });

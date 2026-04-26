@@ -50,9 +50,9 @@ export class AnimalListComponent implements OnInit, OnChanges {
       error: (e) => {
         this.loading = false;
         if (e.status === 0) {
-          this.error = 'Impossible de joindre le serveur (port 8082). Vérifiez que le backend est démarré.';
+          this.error = 'Server inaccessible (port 8088).';
         } else {
-          this.error = e.error?.message || 'Erreur de chargement des animaux.';
+          this.error = e.error?.message || 'Error loading animals';
         }
       }
     });
@@ -63,7 +63,7 @@ export class AnimalListComponent implements OnInit, OnChanges {
   onSaved()  { this.showAnimalForm = false; this.load(); }
 
   delete(a: Animal) {
-    if (!confirm(`Supprimer l'animal "${a.reference}" ?`)) return;
+    if (!confirm(`Delete the animal "${a.reference}" ?`)) return;
     this.api.deleteAnimal(a.id).subscribe({ next: () => this.load() });
   }
 

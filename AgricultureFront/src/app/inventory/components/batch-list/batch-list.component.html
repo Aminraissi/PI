@@ -1,52 +1,52 @@
 <div class="page-header">
   <div class="back-row">
     <button class="back-btn" (click)="back.emit()">
-      <i class="fas fa-arrow-left"></i> Retour
+      <i class="fas fa-arrow-left"></i> Back
     </button>
     <div>
       <h1 class="page-title">Lots - {{ product.nom }}</h1>
-      <p class="page-sub">{{ totalStock }} {{ product.unit }} en stock</p>
+      <p class="page-sub">{{ totalStock }} {{ product.unit }} in stock</p>
     </div>
   </div>
 
   <div class="header-actions">
     <button class="btn btn-primary" (click)="openAddStock()">
-      <i class="fas fa-plus-circle"></i> Ajouter Un Stock
+      <i class="fas fa-plus-circle"></i> Add Stock
     </button>
     <button class="btn btn-outline" (click)="adjust.emit()">
-      <i class="fas fa-sliders-h"></i> Ajuster Stock
+      <i class="fas fa-sliders-h"></i> Adjust Stock
     </button>
   </div>
 </div>
 
 <div class="batch-filters" *ngIf="!loadingBatches && internalBatches.length > 0">
-  <label for="sortMode">Tri des lots</label>
+  <label for="sortMode">Sort by</label>
   <select id="sortMode" [(ngModel)]="sortMode">
-    <option value="OLDEST">Les plus anciens (date achat)</option>
-    <option value="NEWEST">Les plus recents (date achat)</option>
-    <option value="EXPIRY_ASC">Date de peremption croissante</option>
+    <option value="OLDEST">Oldest (purchase date)</option>
+    <option value="NEWEST">Newest (purchase date)</option>
+    <option value="EXPIRY_ASC">Expiry date (ascending)</option>
   </select>
 </div>
 
 <div *ngIf="loadingBatches" class="sm">
-  <div class="spinner"></div> Chargement des lots...
+  <div class="spinner"></div> Loading batches...
 </div>
 
 <div class="empty-state" *ngIf="!loadingBatches && internalBatches.length === 0">
   <i class="fas fa-layer-group"></i>
-  <p>Aucun lot enregistre pour ce produit.</p>
+  <p>No batches registered for this product.</p>
   <button class="btn btn-primary mt12" (click)="openAddStock()">
-    <i class="fas fa-plus-circle"></i> Ajouter le premier stock
+    <i class="fas fa-plus-circle"></i> Add First Stock
   </button>
 </div>
 
 <table class="data-table" *ngIf="!loadingBatches && internalBatches.length > 0">
   <thead>
     <tr>
-      <th>N° Lot</th>
-      <th>Quantite</th>
-      <th>Prix achat (DT)</th>
-      <th>Date achat</th>
+      <th>Batch Number</th>
+      <th>Quantity</th>
+      <th>Purchase Price (DT)</th>
+      <th>Purchase Date</th>
       <th>Date expiry</th>
       <th>Note</th>
       <th>Action</th>
@@ -61,14 +61,14 @@
       <td>
         <span *ngIf="b.expiryDate" [class.expiry-warn]="isExpiringSoon(b.expiryDate)">
           {{ b.expiryDate | date:'dd/MM/yyyy' }}
-          <i class="fas fa-exclamation-triangle" *ngIf="isExpiringSoon(b.expiryDate)" title="Expire dans moins de 30 jours"></i>
+          <i class="fas fa-exclamation-triangle" *ngIf="isExpiringSoon(b.expiryDate)" title="Expire in less than 30 days"></i>
         </span>
         <span *ngIf="!b.expiryDate" class="no-data">-</span>
       </td>
       <td class="note-cell">{{ b.note || '-' }}</td>
       <td>
         <button class="btn-row-consume" (click)="openConsumeFromBatch(b)" [disabled]="(b.quantity ?? 0) <= 0">
-          <i class="fas fa-minus-circle"></i> Consommer
+          <i class="fas fa-minus-circle"></i> Consume
         </button>
       </td>
     </tr>
@@ -80,7 +80,7 @@
     <div class="modal-header">
       <h2>
         <i class="fas fa-plus-circle"></i>
-        Ajouter un stock - {{ product.nom }}
+        Add Stock - {{ product.nom }}
       </h2>
       <button class="close-btn" (click)="cancelAddStock()">
         <i class="fas fa-times"></i>
@@ -90,19 +90,19 @@
     <form [formGroup]="addForm" (ngSubmit)="submitAddStock()" class="modal-body">
       <div class="current-stock-info">
         <i class="fas fa-boxes"></i>
-        Stock actuel : <strong>{{ totalStock }} {{ product.unit }} en stock</strong>
+        Current Stock : <strong>{{ totalStock }} {{ product.unit }} in stock</strong>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Quantite a ajouter *</label>
+          <label>Quantity to Add *</label>
           <input type="number" formControlName="quantity"
                  min="0.01" step="0.01" placeholder="ex: 25"
                  [class.err]="invalid('quantity')">
-          <span class="err-msg" *ngIf="invalid('quantity')">Quantite > 0 requise</span>
+          <span class="err-msg" *ngIf="invalid('quantity')">Quantity > 0 required</span>
         </div>
         <div class="form-group">
-          <label>Prix achat unitaire (DT) *</label>
+          <label>Unit Purchase Price (DT) *</label>
           <input type="number" formControlName="price"
                  min="0" step="0.001" placeholder="ex: 12.500"
                  [class.err]="invalid('price')">
@@ -112,13 +112,13 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>Date d'achat *</label>
+          <label>Purchase Date *</label>
           <input type="date" formControlName="purchaseDate"
                  [class.err]="invalid('purchaseDate')">
-          <span class="err-msg" *ngIf="invalid('purchaseDate')">Date requise</span>
+          <span class="err-msg" *ngIf="invalid('purchaseDate')">Date required</span>
         </div>
         <div class="form-group">
-          <label>Date de peremption <span class="optional">(optionnel)</span></label>
+          <label>Expiry Date <span class="optional">(optional)</span></label>
           <input type="date" formControlName="expiryDate">
         </div>
       </div>
@@ -135,11 +135,11 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" (click)="cancelAddStock()">Annuler</button>
+        <button type="button" class="btn btn-cancel" (click)="cancelAddStock()">Cancel</button>
         <button type="submit" class="btn btn-save" [disabled]="addLoading">
           <i class="fas fa-spinner fa-spin" *ngIf="addLoading"></i>
           <i class="fas fa-check" *ngIf="!addLoading"></i>
-          Ajouter Le Stock
+          Add Stock
         </button>
       </div>
     </form>
@@ -151,7 +151,7 @@
     <div class="modal-header">
       <h2>
         <i class="fas fa-minus-circle"></i>
-        Consommer un lot - {{ selectedBatch?.lotNumber }}
+        Consume a Batch - {{ selectedBatch?.lotNumber }}
       </h2>
       <button class="close-btn" (click)="cancelConsumeFromBatch()">
         <i class="fas fa-times"></i>
@@ -161,29 +161,29 @@
     <form [formGroup]="consumeForm" (ngSubmit)="submitConsumeFromBatch()" class="modal-body">
       <div class="current-stock-info">
         <i class="fas fa-box-open"></i>
-        Disponible dans ce lot :
+        Available in this batch:
         <strong>{{ selectedBatch?.quantity }} {{ product.unit }}</strong>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Quantite a consommer *</label>
+          <label>Quantity to Consume *</label>
           <input type="number" formControlName="quantity" min="0.01" step="0.01" [class.err]="consumeInvalid('quantity')">
-          <span class="err-msg" *ngIf="consumeInvalid('quantity')">Quantite > 0 requise</span>
+          <span class="err-msg" *ngIf="consumeInvalid('quantity')">Quantity > 0 required</span>
         </div>
         <div class="form-group">
-          <label>Raison *</label>
+          <label>Reason *</label>
           <select formControlName="reason" [class.err]="consumeInvalid('reason')">
             <option *ngFor="let r of consumeReasons" [value]="r">{{ consumeReasonLabels[r] }}</option>
           </select>
-          <span class="err-msg" *ngIf="consumeInvalid('reason')">Raison requise</span>
+          <span class="err-msg" *ngIf="consumeInvalid('reason')">Reason required</span>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group full">
-          <label>Note <span class="optional">(optionnel)</span></label>
-          <input formControlName="note" placeholder="ex: Utilisation directe sur lot">
+          <label>Note <span class="optional">(optional)</span></label>
+          <input formControlName="note" placeholder="ex: Direct usage on batch">
         </div>
       </div>
 
@@ -192,11 +192,11 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" (click)="cancelConsumeFromBatch()">Annuler</button>
+        <button type="button" class="btn btn-cancel" (click)="cancelConsumeFromBatch()">Cancel</button>
         <button type="submit" class="btn btn-warning" [disabled]="consumeLoading">
           <i class="fas fa-spinner fa-spin" *ngIf="consumeLoading"></i>
           <i class="fas fa-check" *ngIf="!consumeLoading"></i>
-          Consommer ce lot
+          Consume this batch
         </button>
       </div>
     </form>

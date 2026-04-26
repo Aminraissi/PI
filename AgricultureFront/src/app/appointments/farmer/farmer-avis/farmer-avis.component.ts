@@ -101,7 +101,7 @@ export class FarmerAvisComponent implements OnInit {
   }
 
   noteLabel(n: number): string {
-    return ['', 'Mauvais', 'Insuffisant', 'Bien', 'Très bien', 'Excellent'][n] || '';
+    return ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][n] || '';
   }
 
   distributionWidth(star: number): number {
@@ -125,13 +125,13 @@ export class FarmerAvisComponent implements OnInit {
 
   submitAvis() {
     if (this.newNote === 0) {
-      this.avisError = 'Veuillez sélectionner une note.'; return;
+      this.avisError = 'Please select a rating.'; return;
     }
     if (!this.newCommentaire.trim()) {
-      this.avisError = 'Veuillez écrire un commentaire.'; return;
+      this.avisError = 'Please write a comment.'; return;
     }
     if (this.badWords.containsBadWord(this.newCommentaire)) {
-      this.avisError = '⚠️ Votre commentaire contient des mots inappropriés. Veuillez le reformuler.'; return;
+      this.avisError = '⚠️ Your comment contains inappropriate words. Please rephrase it.'; return;
     }
 
     this.submittingAvis = true;
@@ -153,7 +153,7 @@ export class FarmerAvisComponent implements OnInit {
       },
       error: e => {
         this.submittingAvis = false;
-        this.avisError = e.error?.message || 'Erreur lors de l\'envoi de votre avis';
+        this.avisError = e.error?.message || 'Error occurred while submitting your review';
       }
     });
   }
@@ -196,7 +196,7 @@ export class FarmerAvisComponent implements OnInit {
         if (translated.toUpperCase().startsWith('QUERY LENGTH') ||
             translated.toUpperCase().includes('MYMEMORY WARNING')) {
           this.translatingId[a.id]     = false;
-          this.translationErrors[a.id] = 'Limite de traduction gratuite atteinte. Réessayez plus tard.';
+          this.translationErrors[a.id] = 'Free translation limit reached. Please try again later.';
           return;
         }
 
@@ -229,13 +229,13 @@ export class FarmerAvisComponent implements OnInit {
             this.tryTranslate(a, 'fr|en', false);
           } else {
             this.translatingId[a.id]     = false;
-            this.translationErrors[a.id] = 'Traduction indisponible pour ce texte.';
+            this.translationErrors[a.id] = 'Translation unavailable for this text.';
           }
         }
       },
       error: () => {
         this.translatingId[a.id]     = false;
-        this.translationErrors[a.id] = 'Erreur de connexion. Vérifiez votre réseau.';
+        this.translationErrors[a.id] = 'Connection error. Please check your network.';
       }
     });
   }
@@ -250,8 +250,8 @@ export class FarmerAvisComponent implements OnInit {
   /** Libellé du badge selon la langue cible */
   translationBadgeLabel(avisId: number): string {
     return this.translationLang[avisId] === 'en'
-      ? '🇬🇧 Traduit en anglais · MyMemory'
-      : '🇫🇷 Traduit en français · MyMemory';
+      ? '🇬🇧 Translated to English · MyMemory'
+      : '🇫🇷 Translated to French · MyMemory';
   }
 
   // ── Commentaire d'agriculteur ────────────────────────────
@@ -264,7 +264,7 @@ export class FarmerAvisComponent implements OnInit {
     const contenu = (this.commentInputs[a.id] || '').trim();
     if (!contenu) return;
     if (this.badWords.containsBadWord(contenu)) {
-      alert('⚠️ Votre réponse contient des mots inappropriés. Veuillez la reformuler.');
+      alert('⚠️ Your response contains inappropriate language. Please rephrase it.');
       return;
     }
     this.submittingComment[a.id] = true;
@@ -279,7 +279,7 @@ export class FarmerAvisComponent implements OnInit {
     });
   }
 
-  // ── Like ─────────────────────────────────────────────────
+
   toggleLike(a: AvisResponse) {
     if (a.agriculteurId === this.currentUserId) return;
     this.likingId = a.id;
@@ -293,7 +293,6 @@ export class FarmerAvisComponent implements OnInit {
     });
   }
 
-  // ── Helpers ──────────────────────────────────────────────
   initials(nom: string, prenom: string): string {
     return ((prenom?.charAt(0) || '') + (nom?.charAt(0) || '')).toUpperCase();
   }
