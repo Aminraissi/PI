@@ -49,11 +49,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
                 { label: 'Add Terrain', icon: 'fas fa-plus', route: '/farm/add'  },
                 { label: 'My Terrains', icon: 'fas fa-list', route: '/farm/list' }
             ]},
-        { label: 'Inventory',         icon: 'fas fa-boxes',          route: '/inventory'         },
-        { label: 'Appointments',      icon: 'fas fa-calendar-check', route: '/appointments'      },
-        { label: 'Animals',           icon: 'fas fa-paw',            route: '/animals'           },
+        { label: 'Inventory & Animals',         icon: 'fas fa-boxes',          route: '/inventory'         },
+        { label: 'Veterinaire & IA',      icon: 'fas fa-calendar-check', route: '/appointments'      },
+
+             
+
         { label: 'Disease Predictor', icon: 'fas fa-microscope',     route: '/disease-predictor' },
         { label: 'Help Request',      icon: 'fas fa-hands-helping',  route: '/help-request'      },
+        
     ];
 
     private readonly protectedRoutes = [
@@ -115,7 +118,40 @@ export class NavbarComponent implements OnInit, OnDestroy {
         }
         this.isMobileMenuOpen = false;
         this.moreDropdownOpen = false;
+
+         // Handle routes with ?tab= query param (e.g. /inventory?tab=animals)
+        if (route.includes('?tab=')) {
+            const [basePath, tabParam] = route.split('?tab=');
+            if (!this.authService.hasActiveSession()) {
+                localStorage.setItem('authMode', 'signin');
+                localStorage.setItem('postLoginRoute', basePath);
+                this.router.navigate(['/auth']);
+            } else {
+                localStorage.setItem('inventoryDefaultTab', tabParam);
+                this.router.navigate([basePath]);
+            }
+            this.isMobileMenuOpen = false;
+            this.moreDropdownOpen = false;
+            return;
+        }
+         if (route.includes('?view=')) {
+            const [basePath, viewParam] = route.split('?view=');
+            if (!this.authService.hasActiveSession()) {
+                localStorage.setItem('authMode', 'signin');
+                localStorage.setItem('postLoginRoute', basePath);
+                localStorage.setItem('apptDefaultView', viewParam);
+                this.router.navigate(['/auth']);
+            } else {
+                // Use real queryParam so navigation always triggers ngOnInit reload
+                this.router.navigate([basePath], { queryParams: { view: viewParam } });
+            }
+            this.isMobileMenuOpen = false;
+            this.moreDropdownOpen = false;
+            return;
+        }
+
     }
+    
 
     toggleDropdown(event: MouseEvent): void {
         event.stopPropagation();

@@ -50,6 +50,25 @@
 
 /* Stat chips */
 .stats-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.plan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(45, 106, 45, .22);
+  transition: transform .15s, filter .2s;
+}
+.plan-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
 .stat-chip {
   display: flex; align-items: center; gap: 6px;
   padding: 6px 14px; border-radius: 20px;

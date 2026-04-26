@@ -47,6 +47,12 @@ export class VetPostListComponent implements OnInit {
   openPost(post: VetPost) { this.selectedPost = post; }
   closePost() { this.selectedPost = null; }
 
+  descriptionText(post: VetPost): string {
+    const div = document.createElement('div');
+    div.innerHTML = post.description || '';
+    return div.textContent || div.innerText || '';
+  }
+
   formatDate(d: string): string {
     return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   }

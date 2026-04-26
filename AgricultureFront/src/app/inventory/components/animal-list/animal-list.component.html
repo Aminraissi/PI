@@ -1,6 +1,9 @@
 <!-- ── Campaigns view ─────────────────────────────────────────── -->
 <ng-container *ngIf="view === 'campaigns'">
-  <app-campaign-list (back)="backToList()"></app-campaign-list>
+  <app-campaign-list
+    (back)="backToList()"
+    (planCampaign)="showCampaignForm = true">
+  </app-campaign-list>
 </ng-container>
 
 <!-- ── Animals List view ──────────────────────────────────────── -->
@@ -12,21 +15,11 @@
       <p class="page-sub">Gérez votre cheptel</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-appt" (click)="goToAppointments()">
-        <i class="fas fa-calendar-check"></i> Mes rendez-vous
-      </button>
-      <button class="btn btn-appt-book" (click)="goToBookRdv()">
-        <i class="fas fa-user-md"></i> Prendre RDV
-      </button>
-      <button class="btn btn-outline" (click)="openCampaigns()">
-        <i class="fas fa-syringe"></i> Campagnes vaccination
-      </button>
+    
       <button class="btn btn-primary" (click)="openAdd()">
         <i class="fas fa-plus"></i> Ajouter un animal
       </button>
-      <button class="btn btn-secondary" (click)="showCampaignForm = true">
-        <i class="fas fa-calendar-plus"></i> Planifier campagne
-      </button>
+     
     </div>
   </div>
 

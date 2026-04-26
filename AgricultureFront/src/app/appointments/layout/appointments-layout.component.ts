@@ -36,6 +36,7 @@ export class AppointmentsLayoutComponent implements OnInit {
   get isFarmer() { return this.role === 'AGRICULTEUR'; }
 
   setView(v: string) { this.view = v; }
+  goHome()  { this.router.navigate(['/']); }
   goBack()  { this.router.navigate(['/inventory']); }
   logout()  { this.auth.logout(); this.router.navigate(['/']); }
 }

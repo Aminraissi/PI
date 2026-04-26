@@ -66,7 +66,7 @@
 
       <div class="post-body">
         <h3 class="post-title">{{ post.titre }}</h3>
-        <p class="post-desc" *ngIf="post.description">{{ post.description }}</p>
+        <p class="post-desc" *ngIf="post.description">{{ descriptionText(post) }}</p>
         <div class="post-date">
           <i class="fas fa-calendar-alt"></i> {{ formatDate(post.createdAt) }}
         </div>
@@ -128,8 +128,53 @@
       <!-- Description -->
       <div class="field-group">
         <label class="field-label"><i class="fas fa-align-left"></i> Description</label>
-        <textarea formControlName="description" class="field-input field-ta" rows="4"
-          placeholder="Décrivez le contenu de votre publication…"></textarea>
+        <div class="rich-editor">
+          <div class="editor-toolbar" (click)="$event.stopPropagation()">
+            <select class="toolbar-select" title="Style" (change)="setBlock($event)">
+              <option value="p">Paragraphe</option>
+              <option value="h2">Titre</option>
+              <option value="h3">Sous-titre</option>
+              <option value="blockquote">Citation</option>
+            </select>
+            <select class="toolbar-select" title="Police" (change)="setFont($event)">
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Courier New">Courier</option>
+            </select>
+            <select class="toolbar-select small" title="Taille" (change)="setFontSize($event)">
+              <option value="3">Normal</option>
+              <option value="2">Petit</option>
+              <option value="4">Grand</option>
+              <option value="5">Tres grand</option>
+            </select>
+            <input class="toolbar-color" type="color" value="#374151" title="Couleur" (input)="setColor($event)">
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" title="Gras" (click)="formatText('bold')"><i class="fas fa-bold"></i></button>
+            <button type="button" class="toolbar-btn" title="Italique" (click)="formatText('italic')"><i class="fas fa-italic"></i></button>
+            <button type="button" class="toolbar-btn" title="Souligne" (click)="formatText('underline')"><i class="fas fa-underline"></i></button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" title="Liste a puces" (click)="formatText('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+            <button type="button" class="toolbar-btn" title="Liste numerotee" (click)="formatText('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+            <button type="button" class="toolbar-btn" title="Aligner a gauche" (click)="formatText('justifyLeft')"><i class="fas fa-align-left"></i></button>
+            <button type="button" class="toolbar-btn" title="Centrer" (click)="formatText('justifyCenter')"><i class="fas fa-align-center"></i></button>
+            <button type="button" class="toolbar-btn" title="Aligner a droite" (click)="formatText('justifyRight')"><i class="fas fa-align-right"></i></button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" title="Lien" (click)="addLink()"><i class="fas fa-link"></i></button>
+            <button type="button" class="toolbar-btn" title="Effacer le style" (click)="formatText('removeFormat')"><i class="fas fa-eraser"></i></button>
+            <button type="button" class="toolbar-btn" title="Annuler" (click)="formatText('undo')"><i class="fas fa-undo"></i></button>
+          </div>
+          <div
+            #descriptionEditor
+            class="editor-area"
+            contenteditable="true"
+            data-placeholder="Decrivez le contenu de votre publication..."
+            (input)="syncDescriptionFromEditor()"
+            (keyup)="saveEditorSelection()"
+            (mouseup)="saveEditorSelection()"
+            (blur)="syncDescriptionFromEditor()"></div>
+        </div>
       </div>
 
       <!-- Média -->

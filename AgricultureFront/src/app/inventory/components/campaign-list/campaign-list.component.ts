@@ -10,6 +10,7 @@ import { VaccinationCampaign } from '../../models/inventory.models';
 })
 export class CampaignListComponent implements OnInit {
   @Output() back = new EventEmitter<void>();
+  @Output() planCampaign = new EventEmitter<void>();
 
   campaigns: VaccinationCampaign[] = [];
   loading = true;

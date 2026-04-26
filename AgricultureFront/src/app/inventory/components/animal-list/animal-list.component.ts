@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Router } from '@angular/router';
 import { InventoryApiService } from '../../services/inventory-api.service';
 import { Animal } from '../../models/inventory.models';
@@ -9,7 +9,10 @@ import { Animal } from '../../models/inventory.models';
   templateUrl: './animal-list.component.html',
   styleUrls: ['./animal-list.component.css']
 })
-export class AnimalListComponent implements OnInit {
+export class AnimalListComponent implements OnInit, OnChanges {
+  @Input() initialView: 'list' | 'campaigns' = 'list';
+  @Output() viewChanged = new EventEmitter<'list' | 'campaigns'>();
+
   animals: Animal[] = [];
   loading = true;
   error   = '';
@@ -27,7 +30,17 @@ export class AnimalListComponent implements OnInit {
 
   constructor(private api: InventoryApiService, private router: Router) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.view = this.initialView;
+    this.load();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['initialView'] && !changes['initialView'].firstChange) {
+      this.view = changes['initialView'].currentValue;
+      this.viewChanged.emit(this.view);
+    }
+  }
 
   load() {
     this.loading = true;
@@ -57,8 +70,8 @@ export class AnimalListComponent implements OnInit {
   openDetail(a: Animal)   { this.selectedAnimal = a; this.showAnimalDetail = true; }
   openVaccine(a: Animal)  { this.selectedAnimal = a; this.showVaccModal = true; }
 
-  openCampaigns() { this.view = 'campaigns'; }
-  backToList()    { this.view = 'list'; }
+  openCampaigns() { this.view = 'campaigns'; this.viewChanged.emit(this.view); }
+  backToList()    { this.view = 'list'; this.viewChanged.emit(this.view); }
 
   age(dateNaissance: string): number {
     const now  = new Date();

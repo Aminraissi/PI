@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth/auth.service';
 })
 export class InventoryLayoutComponent {
   activeTab: 'inventory' | 'animals' | 'statistics' | 'boutique' = 'inventory';
+  animalView: 'list' | 'campaigns' = 'list';
 
   constructor(private auth: AuthService, private router: Router) {}
 
@@ -26,5 +27,13 @@ export class InventoryLayoutComponent {
 
  setTab(tab: 'inventory' | 'animals' | 'statistics' | 'boutique') {
     this.activeTab = tab;
+    if (tab === 'animals') {
+      this.animalView = 'list';
+    }
+  }
+
+  openAnimalCampaigns() {
+    this.activeTab = 'animals';
+    this.animalView = 'campaigns';
   }
 }

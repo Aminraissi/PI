@@ -33,6 +33,7 @@ export class ClaimDetailComponent implements OnInit {
   statuses: ReclamationStatus[] = ['EN_ATTENTE', 'EN_COURS', 'RESOLUE', 'REJETEE'];
   selectedStatus: ReclamationStatus | null = null;
   updatingStatus = false;
+  private readonly reclamationBase = 'http://localhost:8095';
 
   constructor(
     private route: ActivatedRoute,
@@ -123,6 +124,12 @@ export class ClaimDetailComponent implements OnInit {
 
   priorityClass(p: string): string {
     return { BASSE: 'prio-low', MOYENNE: 'prio-medium', HAUTE: 'prio-high' }[p] || '';
+  }
+
+  attachmentUrl(): string {
+    if (!this.claim?.attachmentUrl) return '';
+    if (this.claim.attachmentUrl.startsWith('http')) return this.claim.attachmentUrl;
+    return this.reclamationBase + this.claim.attachmentUrl;
   }
 
   private scrollToBottom(): void {

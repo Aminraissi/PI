@@ -212,10 +212,29 @@
   color: #4caf50;
 }
 
+/* Submenu panel — hidden by default, appears to the right of dropdown-menu */
+.submenu {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 4px);
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #e4ede4;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(46,125,50,0.12);
+  padding: 8px;
+  list-style: none;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
 .submenu.active {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .submenu-item {

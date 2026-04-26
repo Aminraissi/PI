@@ -5,6 +5,9 @@
       <span class="logo-txt">GreenRoots</span>
     </div>
     <nav class="nav">
+      <button class="ni" (click)="goHome()">
+        <i class="fas fa-home"></i><span>Home</span>
+      </button>
 
       <!-- AGRICULTEUR -->
       <ng-container *ngIf="isFarmer">
@@ -75,6 +78,9 @@
         <button class="ni" [class.active]="view==='messages'" (click)="setView('messages')">
           <i class="fas fa-comments"></i><span>Messagerie</span>
         </button>
+        <button class="ni" [class.active]="view==='posts'" (click)="setView('posts')">
+          <i class="fas fa-newspaper"></i><span>Mes publications</span>
+        </button>
         <button class="ni" [class.active]="view==='ai-vet'" (click)="setView('ai-vet')">
           <i class="fas fa-microscope"></i><span>IA Clinique Image</span>
         </button>
@@ -134,6 +140,7 @@
       <!-- Autres -->
       <app-vet-profile-form        *ngIf="view==='profile'"></app-vet-profile-form>
       <app-chat                    *ngIf="view==='messages'"></app-chat>
+      <app-vet-post-manager        *ngIf="view==='posts'"></app-vet-post-manager>
       <app-vet-image-chatbot       *ngIf="view==='ai-vet'"></app-vet-image-chatbot>
       <app-vet-poultry-chatbot     *ngIf="view==='ai-vet-poultry'"></app-vet-poultry-chatbot>
       <app-vet-avis                *ngIf="view==='avis'"></app-vet-avis>

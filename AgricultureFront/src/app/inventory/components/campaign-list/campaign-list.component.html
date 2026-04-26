@@ -14,13 +14,13 @@
 
     <!-- Badges stats -->
     <div class="stats-row" *ngIf="!loading">
-      <div class="stat-chip planned">
-        <i class="fas fa-clock"></i>
-        <span>{{ totalPlanned }}</span> Planifiée{{ totalPlanned !== 1 ? 's' : '' }}
-      </div>
+      <button class="plan-btn" (click)="planCampaign.emit()">
+        <i class="fas fa-calendar-plus"></i> Planifier campagne
+      </button>
+     
       <div class="stat-chip progress">
         <i class="fas fa-spinner"></i>
-        <span>{{ totalInProgress }}</span> En cours
+        <span>{{ totalInProgress }}</span> Planifiée{{ totalInProgress !== 1 ? 's' : '' }}
       </div>
       <div class="stat-chip done">
         <i class="fas fa-check-circle"></i>
@@ -98,8 +98,8 @@
 
       <!-- Légende statuts -->
       <div class="legend">
-        <div class="leg-item"><span class="dot st-planned"></span> Planifiée</div>
-        <div class="leg-item"><span class="dot st-progress"></span> En cours</div>
+      
+        <div class="leg-item"><span class="dot st-progress"></span> Planifiée</div>
         <div class="leg-item"><span class="dot st-done"></span> Terminée</div>
       </div>
     </div>

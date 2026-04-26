@@ -96,7 +96,7 @@
         </div>
 
         <div class="post-desc" *ngIf="post.description">
-          {{ post.description }}
+          {{ descriptionText(post) }}
         </div>
       </div>
 
@@ -137,7 +137,7 @@
       <div class="post-date">
         <i class="fas fa-calendar-alt"></i> {{ formatDate(selectedPost.createdAt) }}
       </div>
-      <p class="detail-desc" *ngIf="selectedPost.description">{{ selectedPost.description }}</p>
+      <div class="detail-desc" *ngIf="selectedPost.description" [innerHTML]="selectedPost.description"></div>
     </div>
   </article>
 </div>

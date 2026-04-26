@@ -95,6 +95,21 @@
           </span>
         </div>
       </div>
+
+      <div class="field-group">
+        <label class="field-label">PiÃ¨ce jointe <span class="optional">(optionnel)</span></label>
+        <label class="attachment-zone" [class.has-file]="selectedAttachment">
+          <input type="file" (change)="onAttachmentChange($event)">
+          <i class="fas" [class.fa-paperclip]="!selectedAttachment" [class.fa-file-alt]="selectedAttachment"></i>
+          <span *ngIf="!selectedAttachment">Ajouter une piÃ¨ce jointe (image, PDF, document...)</span>
+          <span *ngIf="selectedAttachment">{{ selectedAttachment.name }}</span>
+          <small>Max 10 Mo</small>
+        </label>
+        <button type="button" class="btn-remove-attachment" *ngIf="selectedAttachment" (click)="removeAttachment()">
+          <i class="fas fa-times"></i> Retirer la piÃ¨ce jointe
+        </button>
+        <span class="field-error" *ngIf="attachmentError">{{ attachmentError }}</span>
+      </div>
     </div>
 
     <div class="form-divider"></div>

@@ -94,6 +94,7 @@
         <tr>
           <th>ID</th>
           <th>Utilisateur</th>
+          <th>RÃ´le</th>
           <th>Sujet</th>
           <th>Catégorie</th>
           <th>Priorité</th>
@@ -115,6 +116,7 @@
               </div>
             </div>
           </td>
+          <td><span class="role-tag">{{ c.userRole || 'Non defini' }}</span></td>
           <td><span class="subject-cell">{{ c.subject }}</span></td>
           <td><span class="cat-tag">{{ CATEGORY_LABELS[c.category] }}</span></td>
           <td>

@@ -65,6 +65,14 @@
             <div class="desc-label">Description initiale</div>
             <p class="desc-text">{{ claim.description }}</p>
           </div>
+
+          <div class="attachment-block" *ngIf="claim.attachmentUrl">
+            <div class="desc-label">PiÃ¨ce jointe</div>
+            <a class="attachment-link" [href]="attachmentUrl()" target="_blank" rel="noopener">
+              <i class="fas fa-paperclip"></i>
+              {{ claim.attachmentFileName || 'Ouvrir la piÃ¨ce jointe' }}
+            </a>
+          </div>
         </div>
 
         <!-- Messages thread -->

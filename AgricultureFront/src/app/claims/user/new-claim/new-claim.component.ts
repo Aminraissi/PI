@@ -17,6 +17,8 @@ export class NewClaimComponent implements OnInit {
   submitting = false;
   submitError: string | null = null;
   submitSuccess = false;
+  selectedAttachment: File | null = null;
+  attachmentError: string | null = null;
 
   categories: { value: ReclamationCategory; label: string }[] = [
     { value: 'COMMANDE',     label: CATEGORY_LABELS.COMMANDE },
@@ -54,6 +56,29 @@ export class NewClaimComponent implements OnInit {
     this.form.patchValue({ priority: p });
   }
 
+  onAttachmentChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.attachmentError = null;
+    this.selectedAttachment = null;
+
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      this.attachmentError = 'La piÃ¨ce jointe ne doit pas dÃ©passer 10 Mo.';
+      input.value = '';
+      return;
+    }
+
+    this.selectedAttachment = file;
+  }
+
+  removeAttachment(): void {
+    this.selectedAttachment = null;
+    this.attachmentError = null;
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -65,7 +90,12 @@ export class NewClaimComponent implements OnInit {
     this.submitting = true;
     this.submitError = null;
 
-    this.claimsService.create({ userId, ...this.form.value }).subscribe({
+    const request = { userId, ...this.form.value };
+    const create$ = this.selectedAttachment
+      ? this.claimsService.createWithAttachment(request, this.selectedAttachment)
+      : this.claimsService.create(request);
+
+    create$.subscribe({
       next: (rec) => {
         this.submitting = false;
         this.submitSuccess = true;

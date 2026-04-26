@@ -386,8 +386,39 @@
   color: #374151;
   font-size: 0.95rem;
   line-height: 1.8;
-  white-space: pre-wrap;
   word-break: break-word;
+}
+
+.detail-desc p,
+.detail-desc h2,
+.detail-desc h3,
+.detail-desc blockquote {
+  margin-top: 0;
+}
+
+.detail-desc ul,
+.detail-desc ol {
+  margin: 10px 0;
+  padding-left: 24px;
+}
+
+.detail-desc ul {
+  list-style: disc outside;
+}
+
+.detail-desc ol {
+  list-style: decimal outside;
+}
+
+.detail-desc li {
+  display: list-item;
+  margin: 4px 0;
+}
+
+.detail-desc blockquote {
+  border-left: 3px solid #0f5c3f;
+  padding-left: 12px;
+  color: #4b5563;
 }
 
 /* ── Responsive ── */

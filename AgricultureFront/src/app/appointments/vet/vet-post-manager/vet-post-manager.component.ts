@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AppointmentsApiService } from '../../services/appointments-api.service';
 import { AuthService } from '../../../services/auth/auth.service';
@@ -12,6 +12,8 @@ import { ToastService } from 'src/app/core/services/toast.service';
   styleUrls: ['./vet-post-manager.component.css']
 })
 export class VetPostManagerComponent implements OnInit {
+  @ViewChild('descriptionEditor') descriptionEditor?: ElementRef<HTMLDivElement>;
+  private savedEditorRange: Range | null = null;
 
   posts: VetPost[] = [];
   loading = true;
@@ -60,6 +62,7 @@ export class VetPostManagerComponent implements OnInit {
     this.filePreviewUrl = null;
     this.fileError = '';
     this.showForm = true;
+    setTimeout(() => this.setEditorContent(''));
   }
 
   openEdit(post: VetPost) {
@@ -69,6 +72,7 @@ export class VetPostManagerComponent implements OnInit {
     this.filePreviewUrl = post.mediaUrl ? this.mediaUrl(post) : null;
     this.fileError = '';
     this.showForm = true;
+    setTimeout(() => this.setEditorContent(post.description || ''));
   }
 
   closeForm() { this.showForm = false; this.editingPost = null; }
@@ -99,6 +103,7 @@ export class VetPostManagerComponent implements OnInit {
 
   submit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    this.syncDescriptionFromEditor();
     this.submitting = true;
 
     const formData = new FormData();
@@ -154,6 +159,81 @@ export class VetPostManagerComponent implements OnInit {
     if (post.mediaUrl.startsWith('http')) return post.mediaUrl;
     if (post.mediaUrl.startsWith('/inventaires/')) return this.BASE + post.mediaUrl;
     return `${this.BASE}/inventaires${post.mediaUrl}`;
+  }
+
+  setEditorContent(value: string) {
+    if (this.descriptionEditor?.nativeElement) {
+      this.descriptionEditor.nativeElement.innerHTML = value || '';
+    }
+    this.savedEditorRange = null;
+  }
+
+  syncDescriptionFromEditor() {
+    const html = this.descriptionEditor?.nativeElement.innerHTML || '';
+    this.form.patchValue({ description: html.trim() });
+    this.saveEditorSelection();
+  }
+
+  saveEditorSelection() {
+    const editor = this.descriptionEditor?.nativeElement;
+    const selection = window.getSelection();
+    if (!editor || !selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer)) {
+      this.savedEditorRange = range.cloneRange();
+    }
+  }
+
+  restoreEditorSelection() {
+    const editor = this.descriptionEditor?.nativeElement;
+    const selection = window.getSelection();
+    if (!editor || !selection) return;
+
+    editor.focus();
+    selection.removeAllRanges();
+    if (this.savedEditorRange) {
+      selection.addRange(this.savedEditorRange);
+      return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection.addRange(range);
+  }
+
+  formatText(command: string, value?: string) {
+    this.restoreEditorSelection();
+    document.execCommand(command, false, value);
+    this.syncDescriptionFromEditor();
+  }
+
+  setBlock(event: Event) {
+    this.formatText('formatBlock', (event.target as HTMLSelectElement).value);
+  }
+
+  setFont(event: Event) {
+    this.formatText('fontName', (event.target as HTMLSelectElement).value);
+  }
+
+  setFontSize(event: Event) {
+    this.formatText('fontSize', (event.target as HTMLSelectElement).value);
+  }
+
+  setColor(event: Event) {
+    this.formatText('foreColor', (event.target as HTMLInputElement).value);
+  }
+
+  addLink() {
+    const url = window.prompt('Lien URL');
+    if (url) this.formatText('createLink', url);
+  }
+
+  descriptionText(post: VetPost): string {
+    const div = document.createElement('div');
+    div.innerHTML = post.description || '';
+    return div.textContent || div.innerText || '';
   }
 
   formatDate(d: string): string {
