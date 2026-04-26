@@ -108,22 +108,34 @@ public class ForumAiSuggestionService {
             String groupName,
             List<String> groupRules
     ) {
+        return reviewContentForPublishing(title, content, tags, groupName, groupRules, "post");
+    }
+
+    public PostPublicationReview reviewContentForPublishing(
+            String title,
+            String content,
+            List<String> tags,
+            String groupName,
+            List<String> groupRules,
+            String contentLabel
+    ) {
         String safeTitle = title == null ? "" : title.trim();
         String safeContent = content == null ? "" : content.trim();
         String rawText = (safeTitle + "\n" + safeContent).trim();
         String normalizedText = normalizeForModeration(rawText);
+        String safeContentLabel = (contentLabel == null || contentLabel.isBlank()) ? "content" : contentLabel.trim().toLowerCase();
 
         if (rawText.isBlank()) {
             return new PostPublicationReview(true, "");
         }
 
         if (containsHarmfulSignals(normalizedText)) {
-            return new PostPublicationReview(false, MODERATION_BLOCK_MESSAGE);
+            return new PostPublicationReview(false, buildModerationBlockMessage(safeContentLabel));
         }
 
         if (hasStrongNonAgricultureSignals(normalizedText) && !hasAgricultureSignals(normalizedText)) {
             return new PostPublicationReview(false,
-                    "This post appears outside the agriculture forum scope. Please keep questions focused on farming or rural operations.");
+                    buildScopeBlockMessage(safeContentLabel));
         }
 
         if (aiEnabled && geminiApiKey != null && !geminiApiKey.isBlank()) {
@@ -133,7 +145,7 @@ public class ForumAiSuggestionService {
 
             String prompt = """
                     You are a strict publication moderator for an agriculture forum.
-                    Decide whether this post can be published.
+                    Decide whether this %s can be published.
 
                     You must detect:
                     - toxicity, harassment, hate, slurs, threats, abuse, bullying
@@ -155,15 +167,17 @@ public class ForumAiSuggestionService {
                     Raw title:
                     %s
 
-                    Raw content:
+                    Raw %s content:
                     %s
 
                     Normalized text for moderation:
                     %s
                     """.formatted(
+                    safeContentLabel,
                     safeGroupName.isBlank() ? "general" : safeGroupName,
                     rulesText,
                     safeTitle,
+                    safeContentLabel,
                     safeContent,
                     normalizedText.isBlank() ? "none" : normalizedText
             );
@@ -176,7 +190,7 @@ public class ForumAiSuggestionService {
             }
         }
 
-        return buildHeuristicPublicationReview(normalizedText);
+        return buildHeuristicPublicationReview(normalizedText, safeContentLabel);
     }
 
 
@@ -745,17 +759,27 @@ public class ForumAiSuggestionService {
         );
     }
 
-    private PostPublicationReview buildHeuristicPublicationReview(String normalizedText) {
+    private PostPublicationReview buildHeuristicPublicationReview(String normalizedText, String contentLabel) {
         if (containsHarmfulSignals(normalizedText)) {
-            return new PostPublicationReview(false, MODERATION_BLOCK_MESSAGE);
+            return new PostPublicationReview(false, buildModerationBlockMessage(contentLabel));
         }
 
         if (hasStrongNonAgricultureSignals(normalizedText) && !hasAgricultureSignals(normalizedText)) {
             return new PostPublicationReview(false,
-                    "This post appears outside the agriculture forum scope. Please keep questions focused on farming or rural operations.");
+                    buildScopeBlockMessage(contentLabel));
         }
 
         return new PostPublicationReview(true, "");
+    }
+
+    private String buildModerationBlockMessage(String contentLabel) {
+        return "This %s violates community guidelines. Please remove the offensive or unsafe language and try again."
+                .formatted(contentLabel);
+    }
+
+    private String buildScopeBlockMessage(String contentLabel) {
+        return "This %s appears outside the agriculture forum scope. Please keep it focused on farming or rural operations."
+                .formatted(contentLabel);
     }
 
         private String buildGroupContext(

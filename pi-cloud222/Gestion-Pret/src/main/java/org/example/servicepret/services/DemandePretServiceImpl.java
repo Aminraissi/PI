@@ -1,6 +1,8 @@
 package org.example.servicepret.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.servicepret.DTO.DemandePretDTO;
+import org.example.servicepret.DTO.FraudAnalysisResult;
 import org.example.servicepret.DTO.User;
 import org.example.servicepret.entities.*;
 import org.example.servicepret.repositories.*;
@@ -33,6 +35,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
     private final DocumentAccessLogRepo logRepo;
     private final ScoringClientService scoringClientService;
     private final IUserClient userClient;
+    private final FraudDetectionService fraudDetectionService;
 
     @Value("${crypto.master.secret}")
     private String masterSecret;
@@ -43,7 +46,8 @@ public class DemandePretServiceImpl implements IDemandePretService {
             DocumentAccessLogRepo logRepo,
             ServiceRepo servicePretRepo,
             ScoringClientService scoringClientService,
-            IUserClient userClient
+            IUserClient userClient,
+            FraudDetectionService fraudDetectionService
     ) {
         this.demandePretRepo = demandePretRepo;
         this.documentRepo = documentRepo;
@@ -51,6 +55,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
         this.servicePretRepo = servicePretRepo;
         this.scoringClientService = scoringClientService;
         this.userClient = userClient;
+        this.fraudDetectionService = fraudDetectionService;
     }
 
 
@@ -139,7 +144,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
 
     @Override
     public DemandePret addDocuments(long id, List<MultipartFile> files) {
-
+        System.out.println("🚨🚨🚨 [FRAUD] addDocuments CALLED for id=" + id + " with " + files.size() + " files 🚨🚨🚨");
         DemandePret demande = demandePretRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Demande not found"));
 
@@ -178,6 +183,8 @@ public class DemandePretServiceImpl implements IDemandePretService {
                 documentRepo.save(doc);
             }
             DemandePret scored = scorerDemande(id);
+            System.out.println("🚨 [FRAUD] About to call analyzeAndUpdateFraudStatus");
+            analyzeAndUpdateFraudStatus(scored);
             return scored;
 
         } catch (Exception e) {
@@ -215,6 +222,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
             log.setTimestamp(LocalDateTime.now());
 
             logRepo.save(log);
+
 
             return decrypted;
 
@@ -326,10 +334,10 @@ public class DemandePretServiceImpl implements IDemandePretService {
                 fileNames.add(doc.getNomFichier()); // ex: "1732456789_cin.pdf"
             }
 
-            // ← CORRIGÉ : passe les noms à l'API Python
+
             Map<String, Object> result = scoringClientService.callScoringAPI(
                     decryptedFiles,
-                    fileNames,                        // ← NOUVEAU
+                    fileNames,
                     demande.getService().getId(),
                     demande.getMontantDemande(),
                     demande.getDureeMois()
@@ -383,12 +391,12 @@ public class DemandePretServiceImpl implements IDemandePretService {
         dto.setStatut(
                 d.getStatut() != null ? d.getStatut().name() : "EN_ATTENTE"
         );
-        // service safe
+
         dto.setServiceName(
                 d.getService() != null ? d.getService().getNom() : "No service"
         );
 
-        // user safe
+
         User user = null;
         try {
             user = userClient.getUser(d.getAgriculteurId());
@@ -399,10 +407,73 @@ public class DemandePretServiceImpl implements IDemandePretService {
         dto.setFarmerName(user != null ? user.getNom() : "Unknown");
         dto.setFarmerLastName(user != null ? user.getPrenom() : "Unknown");
 
+        dto.setFraudRiskLevel(d.getFraudRiskLevel());
+        dto.setFraudScore(d.getFraudScore());
+        dto.setFraudConfirmed(d.getFraudConfirmed());
+        dto.setFraudAnalysisResult(d.getFraudAnalysisResult());
+
         return dto;
     }
     @Override
     public List<DemandePret> getDemandesByAgriculteur(Long agriculteurId) {
         return demandePretRepo.findByAgriculteurIdOrderByDateDemandeDesc(agriculteurId);
+    }
+
+    private void analyzeAndUpdateFraudStatus(DemandePret demande) {
+        try {
+            // Récupérer les documents déchiffrés
+            String dataKey = decryptDataKey(demande.getEncryptedDataKey());
+            List<DemandePretDocument> docs = documentRepo.findByDemandePret_Id(demande.getId());
+
+            List<byte[]> decryptedFiles = new ArrayList<>();
+            List<String> fileNames = new ArrayList<>();
+
+            for (DemandePretDocument doc : docs) {
+                Path path = Paths.get("uploads/demandes/" + demande.getId() + "/" + doc.getNomFichier());
+                byte[] encrypted = Files.readAllBytes(path);
+                byte[] decrypted = CryptoService.decrypt(encrypted, dataKey);
+                decryptedFiles.add(decrypted);
+                fileNames.add(doc.getNomFichier());
+            }
+
+            // Analyse fraud
+            FraudAnalysisResult fraudResult = fraudDetectionService.analyzeDocuments(
+                    decryptedFiles,
+                    fileNames,
+                    demande.getAgriculteurId(),
+                    demande.getId()
+            );
+
+            // Mettre à jour la demande avec les résultats fraud
+            demande.setFraudRiskLevel(fraudResult.getGlobalRisk());
+            demande.setFraudScore(fraudResult.getGlobalScore());
+            demande.setFraudConfirmed(fraudResult.isFraudConfirmed());
+            demande.setFraudAnalysisResult(convertToJson(fraudResult));
+
+            // Ajuster la décision en fonction de la fraude
+            if (fraudResult.isFraudConfirmed() || "HIGH".equals(fraudResult.getGlobalRisk())) {
+                demande.setDecision("REFUSE_FRAUDE");
+                demande.setStatut(StatutDemande.REJETEE);
+                demande.setMotifRejet("Fraude documentaire détectée: " +
+                        fraudResult.getRecommendationJustification());
+            } else if ("MEDIUM".equals(fraudResult.getGlobalRisk())) {
+                demande.setDecision("EXAMEN_MANUEL");
+                demande.setStatut(StatutDemande.EN_ATTENTE);
+            }
+
+            demandePretRepo.save(demande);
+
+        } catch (Exception e) {
+            System.err.println("Fraud analysis error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private String convertToJson(FraudAnalysisResult result) {
+        try {
+            return new ObjectMapper().writeValueAsString(result);
+        } catch (Exception e) {
+            return "{}";
+        }
     }
 }

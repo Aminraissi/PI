@@ -16,7 +16,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        LoginResponse response = authFacade.login(request.getEmail(), request.getMotDePasse());
+        LoginResponse response = authFacade.login(request.getEmail(), request.getMotDePasse(),request.getCaptchaToken());
 
         // if (response.getToken() == null) {
         //     if (response.isVerificationRequired()) {

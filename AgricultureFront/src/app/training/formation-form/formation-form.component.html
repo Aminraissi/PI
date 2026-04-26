@@ -2,12 +2,12 @@
 
 <div class="form-container">
   <button (click)="goBack()" class="btn-back">
-    <i class="fas fa-arrow-left"></i> Retour
+    <i class="fas fa-arrow-left"></i> Back
   </button>
 
   <div class="form-header">
-    <h1>{{ isEditMode ? 'Modifier la formation' : 'Créer une nouvelle formation' }}</h1>
-    <p>Remplissez tous les champs pour continuer</p>
+    <h1>{{ isEditMode ? 'Edit training' : 'Create a new training' }}</h1>
+    <p>Fill in all required fields to continue</p>
   </div>
 
   <div *ngIf="error" class="alert alert-error">
@@ -22,21 +22,20 @@
 
   <div *ngIf="isLoading" class="loading-state">
     <div class="spinner"></div>
-    <p>Chargement...</p>
+    <p>Loading...</p>
   </div>
 
   <form (ngSubmit)="onSubmit()" *ngIf="!isLoading" class="formation-form">
-    <!-- Section Information Générale -->
     <div class="form-section">
-      <h2><i class="fas fa-info-circle"></i> Informations Générale</h2>
+      <h2><i class="fas fa-info-circle"></i> General Information</h2>
 
       <div class="form-group">
-        <label>Titre de la formation *</label>
+        <label>Training title *</label>
         <input
           [(ngModel)]="formation.titre"
           name="titre"
           type="text"
-          placeholder="Titre de la formation"
+          placeholder="Training title"
           required
         />
       </div>
@@ -46,7 +45,7 @@
         <textarea
           [(ngModel)]="formation.description"
           name="description"
-          placeholder="Décrivez votre formation..."
+          placeholder="Describe your training..."
           rows="5"
           required
         ></textarea>
@@ -54,18 +53,18 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>Thématique *</label>
+          <label>Topic *</label>
           <input
             [(ngModel)]="formation.thematique"
             name="thematique"
             type="text"
-            placeholder="Ex: Agr. Durable"
+            placeholder="Example: Sustainable farming"
             required
           />
         </div>
 
         <div class="form-group">
-          <label>Langue *</label>
+          <label>Language *</label>
           <select [(ngModel)]="formation.langue" name="langue" required>
             <option *ngFor="let lang of langues">{{ lang }}</option>
           </select>
@@ -73,17 +72,15 @@
       </div>
 
       <div class="form-group">
-        <label>Image de la formation</label>
+        <label>Training image</label>
         <div class="image-upload-container">
-          <!-- Image Preview -->
           <div *ngIf="imagePreview || formation.imageUrl" class="image-preview">
             <img [src]="imagePreview || formation.imageUrl" [alt]="formation.titre" class="preview-image" />
-            <button type="button" (click)="removeImage()" class="remove-image-btn" title="Supprimer l'image">
+            <button type="button" (click)="removeImage()" class="remove-image-btn" title="Remove image">
               <i class="fas fa-times"></i>
             </button>
           </div>
 
-          <!-- File Input -->
           <div class="file-input-wrapper">
             <input
               type="file"
@@ -94,22 +91,21 @@
             />
             <label for="imageFile" class="file-input-label">
               <i class="fas fa-cloud-upload-alt"></i>
-              <span *ngIf="!selectedImageFile && !formation.imageUrl">Choisir une image</span>
+              <span *ngIf="!selectedImageFile && !formation.imageUrl">Choose an image</span>
               <span *ngIf="selectedImageFile">{{ selectedImageFile.name }}</span>
             </label>
           </div>
         </div>
-        <small>Formats acceptes: JPG, PNG, GIF. L'image est optimisee automatiquement avant l'envoi.</small>
+        <small>Accepted formats: JPG, PNG, GIF. The image is optimized automatically before upload.</small>
       </div>
     </div>
 
-    <!-- Section Détails Pédagogiques -->
     <div class="form-section">
-      <h2><i class="fas fa-graduation-cap"></i> Détails Pédagogiques</h2>
+      <h2><i class="fas fa-graduation-cap"></i> Learning Details</h2>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Niveau *</label>
+          <label>Level *</label>
           <select [(ngModel)]="formation.niveau" name="niveau" required>
             <option *ngFor="let niveau of niveaux">{{ niveau }}</option>
           </select>
@@ -118,14 +114,14 @@
         <div class="form-group">
           <label>Type *</label>
           <select [(ngModel)]="formation.type" name="type" required>
-            <option value="PRESENTIEL">Présentiel</option>
-            <option value="EN_LIGNE">En ligne</option>
-            <option value="HYBRIDE">Hybride</option>
+            <option value="PRESENTIEL">In person</option>
+            <option value="EN_LIGNE">Online</option>
+            <option value="HYBRIDE">Hybrid</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Statut *</label>
+          <label>Status *</label>
           <select [(ngModel)]="formation.statut" name="statut" required>
             <option *ngFor="let status of statuts">{{ status }}</option>
           </select>
@@ -133,9 +129,8 @@
       </div>
     </div>
 
-    <!-- Section Tarification -->
     <div class="form-section">
-      <h2><i class="fas fa-euro-sign"></i> Tarification</h2>
+      <h2><i class="fas fa-euro-sign"></i> Pricing</h2>
 
       <div class="form-group checkbox">
         <input
@@ -143,11 +138,11 @@
           name="estPayante"
           type="checkbox"
         />
-        <label>Cette formation est payante</label>
+        <label>This training is paid</label>
       </div>
 
       <div *ngIf="formation.estPayante" class="form-group">
-        <label>Prix (en €) *</label>
+        <label>Price (EUR) *</label>
         <input
           [(ngModel)]="formation.prix"
           name="prix"
@@ -160,17 +155,16 @@
 
       <div *ngIf="!formation.estPayante" class="info-box">
         <i class="fas fa-gift"></i>
-        <p>Cette formation sera proposée gratuitement</p>
+        <p>This training will be offered for free</p>
       </div>
     </div>
 
-    <!-- Form Actions -->
     <div class="form-actions">
       <button type="button" (click)="goBack()" class="btn-cancel" [disabled]="isSubmitting">
-        <i class="fas fa-times"></i> Annuler
+        <i class="fas fa-times"></i> Cancel
       </button>
       <button type="submit" class="btn-submit" [disabled]="isSubmitting">
-        <i class="fas fa-save"></i> {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer') }}
+        <i class="fas fa-save"></i> {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Create') }}
       </button>
     </div>
   </form>
