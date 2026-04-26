@@ -1,7 +1,7 @@
 <div class="calendar-header">
-  <button type="button" class="secondary" (click)="monthPrevious.emit()">Précédent</button>
+  <button type="button" class="secondary" (click)="monthPrevious.emit()">Previous</button>
   <h2>{{ monthLabel }}</h2>
-  <button type="button" class="secondary" (click)="monthNext.emit()">Suivant</button>
+  <button type="button" class="secondary" (click)="monthNext.emit()">Next</button>
 </div>
 
 <div class="weekdays">
@@ -23,8 +23,8 @@
 </div>
 
 <div class="selected-events">
-  <h3>Événements du {{ selectedDateKey || '…' }}</h3>
-  <div *ngIf="getEventsForDay(selectedDateKey).length === 0" class="empty">Aucun événement ce jour.</div>
+  <h3>Events for {{ selectedDateKey || '...' }}</h3>
+  <div *ngIf="getEventsForDay(selectedDateKey).length === 0" class="empty">No events for this day.</div>
   <div class="event-list compact">
     <article class="event-item" *ngFor="let event of getEventsForDay(selectedDateKey)">
       <div>
@@ -33,8 +33,8 @@
         <small *ngIf="event.notes">{{ event.notes }}</small>
       </div>
       <div class="event-actions">
-        <button type="button" class="secondary tiny" (click)="editEvent.emit(event)">Modifier</button>
-        <button type="button" class="danger tiny" (click)="deleteEvent.emit(event.id)">Supprimer</button>
+        <button type="button" class="secondary tiny" (click)="editEvent.emit(event)">Edit</button>
+        <button type="button" class="danger tiny" (click)="deleteEvent.emit(event.id)">Delete</button>
       </div>
     </article>
   </div>

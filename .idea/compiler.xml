@@ -26,6 +26,7 @@
         </processorPath>
         <module name="GestionEvenement" />
         <module name="GestionEvenement (1)" />
+        <module name="GestionEvenement" />
         <module name="gestionUser" />
       </profile>
       <profile name="Annotation profile for Payment-Service" enabled="true">
@@ -50,14 +51,18 @@
         <module name="Gestion-Formation (1)" />
         <module name="Gestion-Inventaire" />
         <module name="farmer-support (1)" />
+
         <module name="Gestion-Formation" />
         <module name="Gestion-Inventaire (1)" />
+
         <module name="Assistance-Service" />
         <module name="farmer-support" />
         <module name="Assistance-Service (1)" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Explorer" target="17" />
+      <module name="Livraison" target="17" />
       <module name="Livraison (1)" target="17" />
     </bytecodeTargetLevel>
   </component>

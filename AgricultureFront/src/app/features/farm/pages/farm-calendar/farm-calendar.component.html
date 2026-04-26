@@ -3,21 +3,21 @@
 
   <div class="page-subnav-outer">
     <div class="page-subnav-scroll">
-      <nav class="page-subnav" aria-label="Sections du calendrier">
+      <nav class="page-subnav" aria-label="Calendar sections">
         <button type="button" class="subnav-btn" (click)="scrollToSection('section-calendar')">
-          <i class="fas fa-calendar-alt"></i> Calendrier
+          <i class="fas fa-calendar-alt"></i> Calendar
         </button>
         <button type="button" class="subnav-btn" (click)="scrollToSection('section-events')">
-          <i class="fas fa-list"></i> Mes dates
+          <i class="fas fa-list"></i> My events
         </button>
         <button type="button" class="subnav-btn" (click)="scrollToSection('section-weather')">
-          <i class="fas fa-cloud-sun"></i> Météo
+          <i class="fas fa-cloud-sun"></i> Weather
         </button>
         <button type="button" class="subnav-btn" (click)="scrollToSection('section-fao')">
           <i class="fas fa-seedling"></i> FAO
         </button>
         <button type="button" class="subnav-btn" (click)="scrollToSection('section-climate')">
-          <i class="fas fa-temperature-high"></i> Climat
+          <i class="fas fa-temperature-high"></i> Climate
         </button>
       </nav>
     </div>
@@ -26,9 +26,65 @@
   <main class="calendar-main">
     <section class="calendar-page">
       <header class="page-intro">
-        <h1>Calendrier agricole</h1>
-        <p class="subtitle">Ajoutez vos événements par jour. Météo, périodes FAO (Tunisie) et climat local sont sur cette page.</p>
+        <div class="intro-copy">
+          <span class="eyebrow">Farm planning</span>
+          <h1>Calendar, weather, and Tunisia climate in one workspace</h1>
+          <p class="subtitle">
+            Plan your field work, review the upcoming weather, and browse a Tunisia climate
+            section with a more realistic national map directly inside the page.
+          </p>
+        </div>
+
+        <div class="intro-panel">
+          <div class="intro-stat">
+            <span class="stat-label">Active field</span>
+            <strong>{{ selectedTerrain?.nom || 'No field selected' }}</strong>
+            <small>{{ selectedTerrain?.localisation || 'Select a field to load weather and climate data.' }}</small>
+          </div>
+
+          <div class="intro-stat">
+            <span class="stat-label">Events this month</span>
+            <strong>{{ totalEventsThisMonth }}</strong>
+            <small *ngIf="nextPlannedEvent">Next: {{ nextPlannedEvent.title }} on {{ nextPlannedEvent.date }}</small>
+            <small *ngIf="!nextPlannedEvent">No upcoming events at the moment.</small>
+          </div>
+
+          <div class="intro-stat">
+            <span class="stat-label">Weather trend</span>
+            <strong *ngIf="forecastHighlight">{{ forecastHighlight.tempMin }} to {{ forecastHighlight.tempMax }} deg</strong>
+            <strong *ngIf="!forecastHighlight">Pending</strong>
+            <small *ngIf="forecastHighlight">Rain {{ forecastHighlight.precipitation }} mm on the first forecast day.</small>
+            <small *ngIf="!forecastHighlight">Weather data appears after a field is selected.</small>
+          </div>
+        </div>
       </header>
+
+      <section class="hero-strip">
+        <article class="hero-card hero-card-primary">
+          <span class="hero-kicker">Field overview</span>
+          <h2>Quick monitoring for {{ selectedTerrain?.nom || 'your farm' }}</h2>
+          <p>
+            Working coordinates, immediate weather trend, and annual climate references
+            gathered in one place for faster farm decisions.
+          </p>
+          <div class="hero-meta">
+            <span><i class="fas fa-map-marker-alt"></i> {{ selectedTerrain?.localisation || 'Tunisia' }}</span>
+            <span *ngIf="selectedTerrain"><i class="fas fa-location-arrow"></i> {{ selectedTerrain.latitude }}, {{ selectedTerrain.longitude }}</span>
+          </div>
+        </article>
+
+        <article class="hero-card">
+          <span class="hero-kicker">Annual rainfall</span>
+          <h2>{{ climateRainTotal | number:'1.0-0' }} mm</h2>
+          <p>Reconstructed rainfall total for {{ climateYear || 'the latest full year' }}.</p>
+        </article>
+
+        <article class="hero-card">
+          <span class="hero-kicker">Average max temperature</span>
+          <h2>{{ climateAverageMax | number:'1.0-1' }} deg</h2>
+          <p>Average monthly maximum temperature at the selected location.</p>
+        </article>
+      </section>
 
       <div class="calendar-stack">
         <div id="section-calendar" class="card calendar-card jump-section">
@@ -72,9 +128,13 @@
 
         <div id="section-climate" class="card jump-section">
           <app-farm-calendar-climate
+            [terrains]="terrains"
+            [selectedTerrainId]="selectedTerrainId"
+            [selectedTerrain]="selectedTerrain"
             [climateYear]="climateYear"
             [climateLoading]="climateLoading"
-            [climateMonthly]="climateMonthly">
+            [climateMonthly]="climateMonthly"
+            [weather]="weather">
           </app-farm-calendar-climate>
         </div>
       </div>
@@ -83,15 +143,15 @@
 
   <div class="modal-backdrop" *ngIf="modalOpen" (click)="closeModal()" role="dialog" aria-modal="true">
     <div class="modal-card" (click)="$event.stopPropagation()">
-      <h3>{{ editingEventId ? 'Modifier l’événement' : 'Nouvel événement' }}</h3>
+      <h3>{{ editingEventId ? 'Edit event' : 'New event' }}</h3>
       <div class="form-grid">
         <label>
           Date
           <input type="date" [(ngModel)]="newEvent.date" />
         </label>
         <label>
-          Titre
-          <input type="text" [(ngModel)]="newEvent.title" placeholder="ex. Irrigation parcelle nord" />
+          Title
+          <input type="text" [(ngModel)]="newEvent.title" placeholder="e.g. North parcel irrigation" />
         </label>
         <label>
           Type
@@ -100,17 +160,17 @@
           </select>
         </label>
         <label>
-          Rappel (minutes avant)
+          Reminder (minutes before)
           <input type="number" min="0" [(ngModel)]="reminderMinutes" />
         </label>
         <label class="full">
           Notes
-          <textarea rows="3" [(ngModel)]="newEvent.notes" placeholder="Optionnel"></textarea>
+          <textarea rows="3" [(ngModel)]="newEvent.notes" placeholder="Optional"></textarea>
         </label>
       </div>
       <div class="actions">
-        <button type="button" (click)="saveEvent()">{{ editingEventId ? 'Enregistrer' : 'Créer' }}</button>
-        <button type="button" class="secondary" (click)="closeModal()">Annuler</button>
+        <button type="button" (click)="saveEvent()">{{ editingEventId ? 'Save' : 'Create' }}</button>
+        <button type="button" class="secondary" (click)="closeModal()">Cancel</button>
       </div>
     </div>
   </div>
