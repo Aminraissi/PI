@@ -1,9 +1,9 @@
 package org.exemple.gestionformation.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.exemple.gestionformation.enums.StatutAcces;
 import jakarta.persistence.*;
 import lombok.*;
+import org.exemple.gestionformation.enums.StatutAcces;
 
 import java.time.LocalDate;
 

@@ -1,10 +1,10 @@
 package org.exemple.gestionformation.entity;
 
+import jakarta.persistence.*;
+import lombok.*;
 import org.exemple.gestionformation.enums.NiveauFormation;
 import org.exemple.gestionformation.enums.StatutFormation;
 import org.exemple.gestionformation.enums.TypeFormation;
-import jakarta.persistence.*;
-import lombok.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
