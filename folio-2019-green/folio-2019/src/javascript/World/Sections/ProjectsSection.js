@@ -3,10 +3,8 @@ import Project from './Project'
 import ProjectBoardMaterial from '../../Materials/ProjectBoard.js'
 import gsap from 'gsap'
 
-export default class ProjectsSection
-{
-    constructor(_options)
-    {
+export default class ProjectsSection {
+    constructor(_options) {
         // Options
         this.time = _options.time
         this.resources = _options.resources
@@ -21,8 +19,7 @@ export default class ProjectsSection
         this.y = _options.y
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             this.debugFolder = this.debug.addFolder('projects')
             this.debugFolder.open()
         }
@@ -45,22 +42,19 @@ export default class ProjectsSection
         this.setZone()
 
         // Add all project from the list
-        for(const _options of this.list)
-        {
+        for (const _options of this.list) {
             this.add(_options)
         }
 
         this.setFinalShowcase()
     }
 
-    setGeometries()
-    {
+    setGeometries() {
         this.geometries = {}
         this.geometries.floor = new THREE.PlaneGeometry(16, 8)
     }
 
-    setMeshes()
-    {
+    setMeshes() {
         this.meshes = {}
 
         // this.meshes.boardStructure = this.objects.getConvertedMesh(this.resources.items.projectsBoardStructure.scene.children, { floorShadowTexture: this.resources.items.projectsBoardStructureFloorShadowTexture })
@@ -71,24 +65,23 @@ export default class ProjectsSection
         this.meshes.areaLabel.matrixAutoUpdate = false
     }
 
-    setList()
-    {
+    setList() {
         this.list = [
             {
                 name: 'Three.js Journey',
                 imageSources:
-                [
-                    './models/projects/threejsJourney/slideA.webp',
-                    './models/projects/threejsJourney/slideB.webp',
-                    './models/projects/threejsJourney/slideC.webp',
-                    './models/projects/threejsJourney/slideD.webp'
-                ],
+                    [
+                        './models/projects/threejsJourney/slideA.webp',
+                        './models/projects/threejsJourney/slideB.webp',
+                        './models/projects/threejsJourney/slideC.webp',
+                        './models/projects/threejsJourney/slideD.webp'
+                    ],
                 floorTexture: this.resources.items.projectsThreejsJourneyFloorTexture,
                 floorTextParagraphs:
-                [
-                    'Around 10,000 BC, humans in the Fertile Crescent began cultivating wheat and barley, shifting from hunting and gathering to permanent settlements.',
-                    'By domesticating animals like oxen and inventing the plow, early farmers increased food production, enabling the rise of the first cities in Mesopotamia.'
-                ],
+                    [
+                        'Around 10,000 BC, humans in the Fertile Crescent began cultivating wheat and barley, shifting from hunting and gathering to permanent settlements.',
+                        'By domesticating animals like oxen and inventing the plow, early farmers increased food production, enabling the rise of the first cities in Mesopotamia.'
+                    ],
                 link:
                 {
                     href: 'https://threejs-journey.com?c=p3',
@@ -101,24 +94,24 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'fwa', x: 3.95, y: 4.15 }
-                ]
+                    [
+                        { type: 'fwa', x: 3.95, y: 4.15 }
+                    ]
             },
             {
                 name: 'Chartogne Taillet',
                 imageSources:
-                [
-                    './models/projects/chartogne/slideA.jpg',
-                    './models/projects/chartogne/slideB.jpg',
-                    './models/projects/chartogne/slideC.jpg'
-                ],
+                    [
+                        './models/projects/chartogne/slideA.jpg',
+                        './models/projects/chartogne/slideB.jpg',
+                        './models/projects/chartogne/slideC.jpg'
+                    ],
                 floorTexture: this.resources.items.projectsChartogneFloorTexture,
                 floorTextParagraphs:
-                [
-                    'As farming spread, river societies learned to guide water with canals and dikes, turning seasonal floods into reliable harvests and stabilizing food supplies.',
-                    'Granaries, the wheel, and written records helped communities store grain, move harvests, and count taxes, making agriculture the backbone of the first cities.'
-                ],
+                    [
+                        'As farming spread, river societies learned to guide water with canals and dikes, turning seasonal floods into reliable harvests and stabilizing food supplies.',
+                        'Granaries, the wheel, and written records helped communities store grain, move harvests, and count taxes, making agriculture the backbone of the first cities.'
+                    ],
                 link:
                 {
                     href: 'https://chartogne-taillet.com',
@@ -131,27 +124,27 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 },
-                    { type: 'cssda', x: 7.2, y: 4.15 }
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 },
+                        { type: 'cssda', x: 7.2, y: 4.15 }
+                    ]
             },
             {
                 name: 'Bonhomme | 10 ans',
                 imageSources:
-                [
-                    './models/projects/bonhomme10ans/slideA.webp',
-                    './models/projects/bonhomme10ans/slideB.webp',
-                    './models/projects/bonhomme10ans/slideC.webp',
-                    './models/projects/bonhomme10ans/slideD.webp'
-                ],
+                    [
+                        './models/projects/bonhomme10ans/slideA.webp',
+                        './models/projects/bonhomme10ans/slideB.webp',
+                        './models/projects/bonhomme10ans/slideC.webp',
+                        './models/projects/bonhomme10ans/slideD.webp'
+                    ],
                 floorTexture: this.resources.items.projectsBonhomme10ansFloorTexture,
                 floorTextParagraphs:
-                [
-                    'Over time, farmers improved the plow, shaped hills into terraces, and adapted crops to dry slopes, wetlands, and river valleys.',
-                    'Animal traction and stronger tools increased the area a family could cultivate, while specialized landscapes like vineyards and orchards tied farming to local climates.'
-                ],
+                    [
+                        'Over time, farmers improved the plow, shaped hills into terraces, and adapted crops to dry slopes, wetlands, and river valleys.',
+                        'Animal traction and stronger tools increased the area a family could cultivate, while specialized landscapes like vineyards and orchards tied farming to local climates.'
+                    ],
                 link:
                 {
                     href: 'https://anniversary.bonhommeparis.com/',
@@ -164,26 +157,26 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 },
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 },
+                    ]
             },
             {
                 name: 'Luni.app',
                 imageSources:
-                [
-                    './models/projects/luni/slideA.webp',
-                    './models/projects/luni/slideB.webp',
-                    './models/projects/luni/slideC.webp',
-                    './models/projects/luni/slideD.webp'
-                ],
+                    [
+                        './models/projects/luni/slideA.webp',
+                        './models/projects/luni/slideB.webp',
+                        './models/projects/luni/slideC.webp',
+                        './models/projects/luni/slideD.webp'
+                    ],
                 floorTexture: this.resources.items.projectsLuniFloorTexture,
                 floorTextParagraphs:
-                [
-                    'In medieval agriculture, the three-field system reduced exhaustion of the soil by rotating crops and leaving only part of the land to rest.',
-                    'Watermills and windmills mechanized grinding, while better crop rotation steadily improved yields, nutrition, and resilience against poor seasons.'
-                ],
+                    [
+                        'In medieval agriculture, the three-field system reduced exhaustion of the soil by rotating crops and leaving only part of the land to rest.',
+                        'Watermills and windmills mechanized grinding, while better crop rotation steadily improved yields, nutrition, and resilience against poor seasons.'
+                    ],
                 link:
                 {
                     href: 'https://luni.app',
@@ -196,25 +189,25 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 },
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 },
+                    ]
             },
             {
                 name: 'Madbox',
                 imageSources:
-                [
-                    './models/projects/madbox/slideA.jpg',
-                    './models/projects/madbox/slideB.jpg',
-                    './models/projects/madbox/slideC.jpg'
-                ],
+                    [
+                        './models/projects/madbox/slideA.jpg',
+                        './models/projects/madbox/slideB.jpg',
+                        './models/projects/madbox/slideC.jpg'
+                    ],
                 floorTexture: this.resources.items.projectsMadboxFloorTexture,
                 floorTextParagraphs:
-                [
-                    'Early modern agriculture became more scientific as farmers tested seed selection, observed soils more carefully, and designed tools to place seed with greater regularity.',
-                    'The seed drill, studies of soil, and selective breeding turned farming from inherited habit into a field increasingly guided by experiment and measurement.'
-                ],
+                    [
+                        'Early modern agriculture became more scientific as farmers tested seed selection, observed soils more carefully, and designed tools to place seed with greater regularity.',
+                        'The seed drill, studies of soil, and selective breeding turned farming from inherited habit into a field increasingly guided by experiment and measurement.'
+                    ],
                 link:
                 {
                     href: 'https://madbox.io',
@@ -227,25 +220,25 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 }
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 }
+                    ]
             },
             {
                 name: 'Scout',
                 imageSources:
-                [
-                    './models/projects/scout/slideA.jpg',
-                    './models/projects/scout/slideB.jpg',
-                    './models/projects/scout/slideC.jpg'
-                ],
+                    [
+                        './models/projects/scout/slideA.jpg',
+                        './models/projects/scout/slideB.jpg',
+                        './models/projects/scout/slideC.jpg'
+                    ],
                 floorTexture: this.resources.items.projectsScoutFloorTexture,
                 floorTextParagraphs:
-                [
-                    'The industrial age transformed agriculture through threshing machines, mechanical reapers, steam traction, and eventually tractors.',
-                    'Tasks that once required many hands could now be completed faster and over larger fields, pushing farms toward mechanization and commercial scale.'
-                ],
+                    [
+                        'The industrial age transformed agriculture through threshing machines, mechanical reapers, steam traction, and eventually tractors.',
+                        'Tasks that once required many hands could now be completed faster and over larger fields, pushing farms toward mechanization and commercial scale.'
+                    ],
                 link:
                 {
                     href: 'https://fromscout.com',
@@ -258,8 +251,8 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                ]
+                    [
+                    ]
             },
             // {
             //     name: 'Zenly',
@@ -291,17 +284,17 @@ export default class ProjectsSection
             {
                 name: 'priorHoldings',
                 imageSources:
-                [
-                    './models/projects/priorHoldings/slideA.jpg',
-                    './models/projects/priorHoldings/slideB.jpg',
-                    './models/projects/priorHoldings/slideC.jpg'
-                ],
+                    [
+                        './models/projects/priorHoldings/slideA.jpg',
+                        './models/projects/priorHoldings/slideB.jpg',
+                        './models/projects/priorHoldings/slideC.jpg'
+                    ],
                 floorTexture: this.resources.items.projectsPriorHoldingsFloorTexture,
                 floorTextParagraphs:
-                [
-                    'In the late nineteenth and early twentieth centuries, chemistry and cold storage changed what agriculture could produce, preserve, and transport.',
-                    'Synthetic nitrogen from the Haber process boosted plant growth, while refrigeration extended the life of milk, meat, fruit, and vegetables beyond the farm gate.'
-                ],
+                    [
+                        'In the late nineteenth and early twentieth centuries, chemistry and cold storage changed what agriculture could produce, preserve, and transport.',
+                        'Synthetic nitrogen from the Haber process boosted plant growth, while refrigeration extended the life of milk, meat, fruit, and vegetables beyond the farm gate.'
+                    ],
                 link:
                 {
                     href: 'https://prior.co.jp/discover/',
@@ -314,26 +307,26 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 },
-                    { type: 'cssda', x: 7.2, y: 4.15 }
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 },
+                        { type: 'cssda', x: 7.2, y: 4.15 }
+                    ]
             },
             {
                 name: 'orano',
                 imageSources:
-                [
-                    './models/projects/orano/slideA.jpg',
-                    './models/projects/orano/slideB.jpg',
-                    './models/projects/orano/slideC.jpg'
-                ],
+                    [
+                        './models/projects/orano/slideA.jpg',
+                        './models/projects/orano/slideB.jpg',
+                        './models/projects/orano/slideC.jpg'
+                    ],
                 floorTexture: this.resources.items.projectsOranoFloorTexture,
                 floorTextParagraphs:
-                [
-                    'During the twentieth century, combines united cutting, threshing, and cleaning in a single machine, dramatically increasing harvesting speed.',
-                    'At the same time, the Green Revolution spread improved varieties, irrigation, and inputs, lifting yields in many regions while also raising new environmental questions.'
-                ],
+                    [
+                        'During the twentieth century, combines united cutting, threshing, and cleaning in a single machine, dramatically increasing harvesting speed.',
+                        'At the same time, the Green Revolution spread improved varieties, irrigation, and inputs, lifting yields in many regions while also raising new environmental questions.'
+                    ],
                 link:
                 {
                     href: 'https://orano.imm-g-prod.com/experience/innovation/en',
@@ -346,26 +339,26 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 },
-                    { type: 'cssda', x: 7.2, y: 4.15 }
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 },
+                        { type: 'cssda', x: 7.2, y: 4.15 }
+                    ]
             },
             {
                 name: 'citrixRedbull',
                 imageSources:
-                [
-                    './models/projects/citrixRedbull/slideA.jpg',
-                    './models/projects/citrixRedbull/slideB.jpg',
-                    './models/projects/citrixRedbull/slideC.jpg'
-                ],
+                    [
+                        './models/projects/citrixRedbull/slideA.jpg',
+                        './models/projects/citrixRedbull/slideB.jpg',
+                        './models/projects/citrixRedbull/slideC.jpg'
+                    ],
                 floorTexture: this.resources.items.projectsCitrixRedbullFloorTexture,
                 floorTextParagraphs:
-                [
-                    'Late modern agriculture became data-driven as center-pivot irrigation, plant breeding, and satellite positioning helped farmers manage fields more precisely.',
-                    'With remote sensing and digital mapping, decisions about water, seed, and fertilizer could be adjusted parcel by parcel instead of treating every hectare the same way.'
-                ],
+                    [
+                        'Late modern agriculture became data-driven as center-pivot irrigation, plant breeding, and satellite positioning helped farmers manage fields more precisely.',
+                        'With remote sensing and digital mapping, decisions about water, seed, and fertilizer could be adjusted parcel by parcel instead of treating every hectare the same way.'
+                    ],
                 link:
                 {
                     href: 'https://thenewmobileworkforce.imm-g-prod.com/',
@@ -378,27 +371,27 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 },
-                    { type: 'cssda', x: 7.2, y: 4.15 }
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 },
+                        { type: 'cssda', x: 7.2, y: 4.15 }
+                    ]
             },
             {
                 name: 'gleecChat',
                 imageSources:
-                [
-                    './models/projects/gleecChat/slideA.jpg',
-                    './models/projects/gleecChat/slideB.jpg',
-                    './models/projects/gleecChat/slideC.jpg',
-                    './models/projects/gleecChat/slideD.jpg'
-                ],
+                    [
+                        './models/projects/gleecChat/slideA.jpg',
+                        './models/projects/gleecChat/slideB.jpg',
+                        './models/projects/gleecChat/slideC.jpg',
+                        './models/projects/gleecChat/slideD.jpg'
+                    ],
                 floorTexture: this.resources.items.projectsGleecChatFloorTexture,
                 floorTextParagraphs:
-                [
-                    'Today, agriculture is entering a new phase in which sensors, genome editing, vertical farms, and precision software aim to produce more with fewer resources.',
-                    'Robots, connected machines, and controlled environments are turning the farm into a living innovation map, where each new tool responds to climate, soil, and food demand.'
-                ],
+                    [
+                        'Today, agriculture is entering a new phase in which sensors, genome editing, vertical farms, and precision software aim to produce more with fewer resources.',
+                        'Robots, connected machines, and controlled environments are turning the farm into a living innovation map, where each new tool responds to climate, soil, and food demand.'
+                    ],
                 link:
                 {
                     href: 'http://gleec.imm-g-prod.com',
@@ -411,11 +404,11 @@ export default class ProjectsSection
                     }
                 },
                 distinctions:
-                [
-                    { type: 'awwwards', x: 3.95, y: 4.15 },
-                    { type: 'fwa', x: 5.6, y: 4.15 },
-                    { type: 'cssda', x: 7.2, y: 4.15 }
-                ]
+                    [
+                        { type: 'awwwards', x: 3.95, y: 4.15 },
+                        { type: 'fwa', x: 5.6, y: 4.15 },
+                        { type: 'cssda', x: 7.2, y: 4.15 }
+                    ]
             },
             // {
             //     name: 'keppler',
@@ -442,8 +435,7 @@ export default class ProjectsSection
         ]
     }
 
-    setZone()
-    {
+    setZone() {
         const totalWidth = (this.list.length + 10) * (this.interDistance / 2)
 
         const zone = this.zones.add({
@@ -452,23 +444,20 @@ export default class ProjectsSection
             data: { cameraAngle: 'projects' }
         })
 
-        zone.on('in', (_data) =>
-        {
+        zone.on('in', (_data) => {
             this.camera.angle.set(_data.cameraAngle)
             gsap.to(this.passes.horizontalBlurPass.material.uniforms.uStrength.value, { x: 0, duration: 2 })
             gsap.to(this.passes.verticalBlurPass.material.uniforms.uStrength.value, { y: 0, duration: 2 })
         })
 
-        zone.on('out', () =>
-        {
+        zone.on('out', () => {
             this.camera.angle.set('default')
             gsap.to(this.passes.horizontalBlurPass.material.uniforms.uStrength.value, { x: this.passes.horizontalBlurPass.strength, duration: 2 })
             gsap.to(this.passes.verticalBlurPass.material.uniforms.uStrength.value, { y: this.passes.verticalBlurPass.strength, duration: 2 })
         })
     }
 
-    setFinalShowcaseConfig()
-    {
+    setFinalShowcaseConfig() {
         const lastProject = this.items[this.items.length - 1]
 
         this.finalShowcase = {
@@ -512,12 +501,10 @@ export default class ProjectsSection
         }
     }
 
-    add(_options)
-    {
+    add(_options) {
         const x = this.x + this.items.length * this.interDistance
         let y = this.y
-        if(this.items.length > 0)
-        {
+        if (this.items.length > 0) {
             y += (Math.random() - 0.5) * this.positionRandomess
         }
 
@@ -539,8 +526,7 @@ export default class ProjectsSection
         this.container.add(project.container)
 
         // Add tiles
-        if(this.items.length >= 1)
-        {
+        if (this.items.length >= 1) {
             const previousProject = this.items[this.items.length - 1]
             const start = new THREE.Vector2(previousProject.x + this.projectHalfWidth, previousProject.y)
             const end = new THREE.Vector2(project.x - this.projectHalfWidth, project.y)
@@ -555,8 +541,7 @@ export default class ProjectsSection
         this.items.push(project)
     }
 
-    setFinalShowcase()
-    {
+    setFinalShowcase() {
         const showcase = new Project({
             time: this.time,
             resources: this.resources,
@@ -575,8 +560,7 @@ export default class ProjectsSection
         this.container.add(showcase.container)
 
         const previousProject = this.items[this.items.length - 1]
-        if(previousProject)
-        {
+        if (previousProject) {
             const scaledHalfWidth = this.projectHalfWidth * this.finalShowcase.scale
             const start = new THREE.Vector2(previousProject.x + this.projectHalfWidth, previousProject.y)
             const end = new THREE.Vector2(this.finalShowcase.x - scaledHalfWidth, this.finalShowcase.y)
@@ -587,15 +571,13 @@ export default class ProjectsSection
         }
     }
 
-    createFinaleTextTexture(_paragraphs)
-    {
+    createFinaleTextTexture(_paragraphs) {
         const canvas = document.createElement('canvas')
         canvas.width = 2048
         canvas.height = 1024
         const context = canvas.getContext('2d')
 
-        if(!context)
-        {
+        if (!context) {
             return this.resources.items.projectsThreejsJourneyFloorTexture
         }
 
@@ -607,25 +589,20 @@ export default class ProjectsSection
 
         const lines = []
         const maxWidth = canvas.width * 0.78
-        for(const paragraph of _paragraphs)
-        {
+        for (const paragraph of _paragraphs) {
             const words = paragraph.split(/\s+/)
             let currentLine = ''
-            for(const word of words)
-            {
+            for (const word of words) {
                 const testLine = currentLine ? `${currentLine} ${word}` : word
-                if(context.measureText(testLine).width <= maxWidth || !currentLine)
-                {
+                if (context.measureText(testLine).width <= maxWidth || !currentLine) {
                     currentLine = testLine
                 }
-                else
-                {
+                else {
                     lines.push(currentLine)
                     currentLine = word
                 }
             }
-            if(currentLine)
-            {
+            if (currentLine) {
                 lines.push(currentLine)
             }
             lines.push('')
@@ -636,10 +613,8 @@ export default class ProjectsSection
         const totalHeight = (filteredLines.length - 1) * lineHeight
         let y = canvas.height * 0.5 - totalHeight * 0.5
 
-        for(const line of filteredLines)
-        {
-            if(line === '')
-            {
+        for (const line of filteredLines) {
+            if (line === '') {
                 y += lineHeight * 0.45
                 continue
             }
@@ -651,15 +626,13 @@ export default class ProjectsSection
         return new THREE.CanvasTexture(canvas)
     }
 
-    createArrowTexture(_direction)
-    {
+    createArrowTexture(_direction) {
         const canvas = document.createElement('canvas')
         canvas.width = 256
         canvas.height = 256
         const context = canvas.getContext('2d')
 
-        if(!context)
-        {
+        if (!context) {
             return this.resources.items.areaOpenTexture
         }
 
@@ -667,8 +640,7 @@ export default class ProjectsSection
         context.fillStyle = '#ffffff'
         context.beginPath()
 
-        if(_direction === 'left')
-        {
+        if (_direction === 'left') {
             context.moveTo(58, 128)
             context.lineTo(170, 48)
             context.lineTo(170, 92)
@@ -677,8 +649,7 @@ export default class ProjectsSection
             context.lineTo(170, 164)
             context.lineTo(170, 208)
         }
-        else
-        {
+        else {
             context.moveTo(198, 128)
             context.lineTo(86, 48)
             context.lineTo(86, 92)
@@ -694,15 +665,13 @@ export default class ProjectsSection
         return new THREE.CanvasTexture(canvas)
     }
 
-    createFinaleTitleTexture(_title)
-    {
+    createFinaleTitleTexture(_title) {
         const canvas = document.createElement('canvas')
         canvas.width = 1024
         canvas.height = 256
         const context = canvas.getContext('2d')
 
-        if(!context)
-        {
+        if (!context) {
             return this.resources.items.areaOpenTexture
         }
 
