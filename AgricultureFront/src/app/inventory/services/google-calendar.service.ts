@@ -3,8 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from, throwError } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 
-declare const google: any;
-
 export interface GCalEvent {
   summary: string;
   description?: string;
@@ -28,17 +26,22 @@ export class GoogleCalendarService {
   private SCOPES    = 'https://www.googleapis.com/auth/calendar.events';
   private TZ        = 'Africa/Tunis';
   private accessToken: string | null = null;
+  private googleIdentityLoader?: Promise<void>;
 
   constructor(private http: HttpClient) {}
 
   // ── Autorisation OAuth2 ─────────────────────────────────────
-  authorize(): Promise<string> {
+  async authorize(): Promise<string> {
+    await this.loadGoogleIdentityServices();
+
     return new Promise((resolve, reject) => {
-      if (!google?.accounts?.oauth2) {
+      const googleApi = (window as any).google;
+
+      if (!googleApi?.accounts?.oauth2) {
         reject(new Error('Google Identity Services non chargé. Vérifie index.html'));
         return;
       }
-      const client = google.accounts.oauth2.initTokenClient({
+      const client = googleApi.accounts.oauth2.initTokenClient({
         client_id: this.CLIENT_ID,
         scope: this.SCOPES,
         callback: (resp: any) => {
@@ -233,5 +236,38 @@ export class GoogleCalendarService {
       THURSDAY: 'Jeudi', FRIDAY: 'Vendredi', SATURDAY: 'Samedi', SUNDAY: 'Dimanche'
     };
     return day ? (map[day] || day) : '';
+  }
+
+  private loadGoogleIdentityServices(): Promise<void> {
+    const googleApi = (window as any).google;
+    if (googleApi?.accounts?.oauth2) {
+      return Promise.resolve();
+    }
+
+    if (this.googleIdentityLoader) {
+      return this.googleIdentityLoader;
+    }
+
+    this.googleIdentityLoader = new Promise((resolve, reject) => {
+      const existingScript = document.getElementById('google-identity-services') as HTMLScriptElement | null;
+      const script = existingScript || document.createElement('script');
+
+      script.id = 'google-identity-services';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+
+      script.onload = () => resolve();
+      script.onerror = () => {
+        this.googleIdentityLoader = undefined;
+        reject(new Error('Impossible de charger Google Identity Services.'));
+      };
+
+      if (!existingScript) {
+        document.head.appendChild(script);
+      }
+    });
+
+    return this.googleIdentityLoader;
   }
 }

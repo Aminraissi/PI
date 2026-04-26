@@ -116,30 +116,3 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!-- MES PUBLICATIONS (articles / vidéos)          -->
-<!-- ══════════════════════════════════════════════ -->
-<div style="margin-top: 32px;">
-  <app-vet-post-manager></app-vet-post-manager>
-</div>
-
-<!-- Refuse modal -->
-<div class="modal-overlay" *ngIf="showRefuseModal" (click)="closeRefuse()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Refuser le rendez-vous</h3>
-      <button class="modal-close" (click)="closeRefuse()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <p class="modal-desc">Veuillez indiquer la raison du refus :</p>
-      <textarea [(ngModel)]="refuseReason" rows="3" class="reason-ta"
-        placeholder="Ex: Absence, créneau incompatible…"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel-modal" (click)="closeRefuse()">Annuler</button>
-      <button class="btn-refuse-confirm" (click)="confirmRefuse()" [disabled]="!refuseReason.trim()">
-        Confirmer le refus
-      </button>
-    </div>
-  </div>
-</div>
