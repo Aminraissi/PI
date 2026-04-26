@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
+import { BehaviorSubject, Observable, from } from 'rxjs';
+import { map, tap, switchMap } from 'rxjs/operators';
 
 export type BackendRole =
     | 'AGRICULTEUR'
@@ -38,6 +39,11 @@ export interface SignupResponse {
     message:                  string;
 }
 
+export interface FileUploadResponse {
+    url:      string;
+    fileName: string;
+}
+
 export interface SignupStep1Request {
     nom:        string;
     prenom:     string;
@@ -49,47 +55,84 @@ export interface SignupStep1Request {
 }
 
 export interface SignupStep2Request {
-    photo?:               string | null;
-    telephone?:           string | null;
-    region?:              string | null;
-    diplomeExpert?:       string | null;
-    documentUrl?:         string | null;
-    vehicule?:            string | null;
-    capacite?:            number | null;
-    agence?:              string | null;
-    certificatTravail?:   string | null;
-    organizationLogo?:    string | null;
-    cin?:                 string | null;
-    adresseCabinet?:      string | null;
+    photo?:                string | null;
+    telephone?:            string | null;
+    region?:               string | null;
+    diplomeExpert?:        string | null;
+    documentUrl?:          string | null;
+    vehicule?:             string | null;
+    capacite?:             number | null;
+    agence?:               string | null;
+    certificatTravail?:    string | null;
+    organizationLogo?:     string | null;
+    cin?:                  string | null;
+    adresseCabinet?:       string | null;
     presentationCarriere?: string | null;
-    telephoneCabinet?:    string | null;
-    nomOrganisation?:     string | null;
-    description?:         string | null;
+    telephoneCabinet?:     string | null;
+    nomOrganisation?:      string | null;
+    description?:          string | null;
 }
 
 export interface AuthUser {
-    userId:       number;
-    username:     string;
-    email:        string;
-    role:         BackendRole;
+    userId:        number;
+    username:      string;
+    email:         string;
+    role:          BackendRole;
     statutCompte?: string;
 }
+
+export interface TokenValidationResponse {
+    valid:   boolean;
+    userId:  number | null;
+    email:   string | null;
+    message: string;
+}
+
+declare var grecaptcha: any;
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
     private apiUrl = 'http://localhost:8089/user/api/auth';
+    private readonly tokenKey = 'authToken';
+    private readonly userKey  = 'authUser';
     private currentUserSubject = new BehaviorSubject<AuthUser | null>(this.getUserFromStorage());
     public currentUser$ = this.currentUserSubject.asObservable();
 
+    siteKey = environment.siteKey;
+
     constructor(private http: HttpClient) {}
 
-    login(email: string, password: string): Observable<LoginResponse> {
-        return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
-            email,
-            motDePasse: password
-        }).pipe(
+    private getCaptchaToken(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            if (typeof grecaptcha === 'undefined') {
+                if (!environment.production) {
+                    console.warn('Mode dev: simulation CAPTCHA');
+                    resolve('dev-simulated-token');
+                } else {
+                    reject('reCAPTCHA not loaded');
+                }
+                return;
+            }
+            const token = grecaptcha.getResponse();
+            if (token) {
+                resolve(token);
+            } else {
+                reject('CAPTCHA not completed by user');
+            }
+        });
+    }
+
+    login(email: string, password: string, rememberSession = true): Observable<LoginResponse> {
+        return from(this.getCaptchaToken()).pipe(
+            switchMap(captchaToken => {
+                return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
+                    email,
+                    motDePasse: password,
+                    captchaToken: captchaToken
+                });
+            }),
             map(response => {
                 if (response.token && response.userId !== null && response.role) {
                     const user: AuthUser = {
@@ -99,15 +142,13 @@ export class AuthService {
                         role:         response.role as BackendRole,
                         statutCompte: response.statutCompte || undefined
                     };
-                    this.storeToken(response.token);
-                    this.storeUser(user);
+                    this.storeSession(response.token, user, rememberSession);
                     this.currentUserSubject.next(user);
-
                     console.log('🔐 User logged in successfully!');
                     console.log('👤 User Role:', response.role);
                     console.log('🆔 User ID:', response.userId);
                     console.log('📧 User Email:', response.email);
-                    console.log('📊 Account Status (Statut Compte):', response.statutCompte || 'Not provided');
+                    console.log('📊 Account Status:', response.statutCompte || 'Not provided');
                     console.log('✅ Is Approved:', response.statutCompte === 'APPROUVE');
                 }
                 return response;
@@ -127,9 +168,36 @@ export class AuthService {
         return this.http.post<SignupResponse>(`${this.apiUrl}/verify-email/${userId}`, {});
     }
 
+    uploadUserFile(file: File): Observable<FileUploadResponse> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<FileUploadResponse>('http://localhost:8089/user/api/user/upload', formData);
+    }
+
+    validateCurrentSession(): Observable<TokenValidationResponse> {
+        return this.http.get<TokenValidationResponse>(`${this.apiUrl}/validate`).pipe(
+            tap(response => {
+                if (!response.valid) {
+                    this.setAuthNotice(response.message || 'Your session is no longer valid.');
+                    this.logout();
+                }
+            })
+        );
+    }
+
     logout(): void {
         this.clearSession();
         this.currentUserSubject.next(null);
+    }
+
+    setAuthNotice(message: string): void {
+        sessionStorage.setItem('authNotice', message);
+    }
+
+    consumeAuthNotice(): string | null {
+        const message = sessionStorage.getItem('authNotice');
+        if (message) sessionStorage.removeItem('authNotice');
+        return message;
     }
 
     hasActiveSession(): boolean {
@@ -140,9 +208,8 @@ export class AuthService {
         return !!this.getToken();
     }
 
-    // ← Defensive version from second file: guards against 'null'/'undefined' strings in localStorage
     getToken(): string | null {
-        const token = localStorage.getItem('authToken');
+        const token = this.readStoredValue(this.tokenKey);
         if (token && token !== 'null' && token !== 'undefined') {
             return token;
         }
@@ -194,21 +261,26 @@ export class AuthService {
         }
     }
 
-    private storeToken(token: string): void {
-        localStorage.setItem('authToken', token);
+    private storeSession(token: string, user: AuthUser, rememberSession: boolean): void {
+        this.clearSession();
+        const storage = rememberSession ? localStorage : sessionStorage;
+        storage.setItem(this.tokenKey, token);
+        storage.setItem(this.userKey, JSON.stringify(user));
     }
 
-    private storeUser(user: AuthUser): void {
-        localStorage.setItem('authUser', JSON.stringify(user));
+    private readStoredValue(key: string): string | null {
+        return localStorage.getItem(key) ?? sessionStorage.getItem(key);
     }
 
     private getUserFromStorage(): AuthUser | null {
-        const user = localStorage.getItem('authUser');
+        const user = this.readStoredValue(this.userKey);
         return user ? JSON.parse(user) as AuthUser : null;
     }
 
     private clearSession(): void {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
+        localStorage.removeItem(this.tokenKey);
+        localStorage.removeItem(this.userKey);
+        sessionStorage.removeItem(this.tokenKey);
+        sessionStorage.removeItem(this.userKey);
     }
 }

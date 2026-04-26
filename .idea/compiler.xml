@@ -14,6 +14,8 @@
         <module name="eureka" />
         <module name="Gateway" />
         <module name="Gateway (1)" />
+        <module name="Livraison" />
+        <module name="Explorer" />
       </profile>
       <profile name="Annotation profile for GestionEvenement" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -22,6 +24,7 @@
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
+        <module name="GestionEvenement" />
         <module name="GestionEvenement (1)" />
         <module name="GestionEvenement" />
         <module name="gestionUser" />
@@ -48,8 +51,10 @@
         <module name="Gestion-Formation (1)" />
         <module name="Gestion-Inventaire" />
         <module name="farmer-support (1)" />
-        <module name="Gestion-Inventaire (1)" />
+
         <module name="Gestion-Formation" />
+        <module name="Gestion-Inventaire (1)" />
+
         <module name="Assistance-Service" />
         <module name="farmer-support" />
         <module name="Assistance-Service (1)" />

@@ -7,7 +7,8 @@ import org.example.gestionuser.dtos.SignupStep2Request;
 import org.example.gestionuser.dtos.TokenValidationResponse;
 
 public interface AuthFacade {
-    LoginResponse login(String email, String motDePasse);
+//    LoginResponse login(String email, String motDePasse);
+    LoginResponse login(String email, String motDePasse, String captchaToken);
     SignupResponse signupStep1(SignupStep1Request request);
     SignupResponse signupStep2(Long userId, SignupStep2Request request);
     SignupResponse verifyEmail(Long userId);

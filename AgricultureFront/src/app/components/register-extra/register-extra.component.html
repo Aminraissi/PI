@@ -62,6 +62,10 @@
             <p *ngIf="submitError" class="field-error submit-error">{{ submitError }}</p>
             <p *ngIf="isLoading">Submitting your profile details...</p>
           </div>
+          <div class="form-head" *ngIf="uploadError || uploadingField">
+            <p *ngIf="uploadingField">Uploading selected file...</p>
+            <p *ngIf="uploadError" class="field-error submit-error">{{ uploadError }}</p>
+          </div>
 
           <!-- REGION -->
           <div class="form-group" *ngIf="extraForm.get('region')" [class.has-error]="invalid('region')">
@@ -87,13 +91,15 @@
                 <span class="upload-hint">PDF, JPG, PNG — max 2MB</span>
               </ng-container>
               <ng-container *ngIf="previewDoc">
-                <img [src]="previewDoc" class="upload-preview" alt="Doc preview">
+                <img *ngIf="previewDocType === 'image'" [src]="previewDoc" class="upload-preview" alt="Doc preview">
+                <iframe *ngIf="previewDocType === 'pdf'" [src]="previewDocResource" class="upload-preview-frame" title="Document preview"></iframe>
                 <div class="upload-change"><i class="fas fa-redo"></i> Change</div>
               </ng-container>
             </div>
             <span class="field-error" *ngIf="invalid('documentUrl')">
               <i class="fas fa-exclamation-circle"></i>
               <span *ngIf="extraForm.get('documentUrl')?.hasError('required')">Supporting document is required.</span>
+              <span *ngIf="extraForm.get('documentUrl')?.hasError('uploadFailed')">The document upload failed. Please try again.</span>
             </span>
           </div>
 
@@ -171,13 +177,15 @@
                 <span class="upload-hint">PDF, JPG, PNG — max 2MB</span>
               </ng-container>
               <ng-container *ngIf="previewCert">
-                <img [src]="previewCert" class="upload-preview" alt="Certificate preview">
+                <img *ngIf="previewCertType === 'image'" [src]="previewCert" class="upload-preview" alt="Certificate preview">
+                <iframe *ngIf="previewCertType === 'pdf'" [src]="previewCertResource" class="upload-preview-frame" title="Certificate preview"></iframe>
                 <div class="upload-change"><i class="fas fa-redo"></i> Change</div>
               </ng-container>
             </div>
             <span class="field-error" *ngIf="invalid('workCertificate')">
               <i class="fas fa-exclamation-circle"></i>
               <span *ngIf="extraForm.get('workCertificate')?.hasError('required')">Work certificate is required.</span>
+              <span *ngIf="extraForm.get('workCertificate')?.hasError('uploadFailed')">The certificate upload failed. Please try again.</span>
             </span>
           </div>
 
@@ -287,13 +295,15 @@
                 <span class="upload-hint">JPG, PNG, PDF — max 2MB</span>
               </ng-container>
               <ng-container *ngIf="previewCin">
-                <img [src]="previewCin" class="upload-preview" alt="CIN preview">
+                <img *ngIf="previewCinType === 'image'" [src]="previewCin" class="upload-preview" alt="CIN preview">
+                <iframe *ngIf="previewCinType === 'pdf'" [src]="previewCinResource" class="upload-preview-frame" title="CIN preview"></iframe>
                 <div class="upload-change"><i class="fas fa-redo"></i> Change</div>
               </ng-container>
             </div>
             <span class="field-error" *ngIf="invalid('cin')">
               <i class="fas fa-exclamation-circle"></i>
               <span *ngIf="extraForm.get('cin')?.hasError('required')">National ID (CIN) is required.</span>
+              <span *ngIf="extraForm.get('cin')?.hasError('uploadFailed')">The CIN upload failed. Please try again.</span>
             </span>
           </div>
 

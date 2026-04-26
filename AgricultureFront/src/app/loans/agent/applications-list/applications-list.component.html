@@ -1,4 +1,3 @@
-<!-- HERO -->
 <div class="hero">
   <div class="hero-overlay"></div>
   <div class="hero-content">
@@ -21,15 +20,21 @@
       [(ngModel)]="searchText" class="search-bar" />
     <select [(ngModel)]="selectedStatus" class="filter">
       <option value="">All status</option>
-          <option value="APPROUVEE">Accepted</option>
-    <option value="REJETEE">Refused</option>
-    <option value="EN_ATTENTE">Pending</option>
+      <option value="APPROUVEE">Accepted</option>
+      <option value="REJETEE">Refused</option>
+      <option value="EN_ATTENTE">Pending</option>
     </select>
     <select [(ngModel)]="scoreFilter" class="filter">
       <option value="">All scores</option>
       <option value="HIGH">Score > 70</option>
       <option value="MEDIUM">Score 50 - 70</option>
       <option value="LOW">Score &lt; 50</option>
+    </select>
+    <select [(ngModel)]="fraudFilter" class="filter">
+      <option value="">All fraud risks</option>
+      <option value="HIGH"> High fraud risk</option>
+      <option value="MEDIUM"> Medium fraud risk</option>
+      <option value="LOW"> Low fraud risk</option>
     </select>
   </div>
 
@@ -41,7 +46,31 @@
           <div class="card-name">{{ app.farmerName }} {{ app.farmerLastName }}</div>
           <div class="card-service">{{ app.serviceName || 'No service' }} · submitted on {{ app.dateDemande }}</div>
         </div>
-        <span class="badge" [ngClass]="badgeClass(app.statut)">{{ badgeLabel(app.statut) }}</span>
+        <div class="header-badges">
+          <span class="badge" [ngClass]="badgeClass(app.statut)">{{ badgeLabel(app.statut) }}</span>
+          
+          <!--  Badge validation admin (ajouté) -->
+          <span class="badge-validation" *ngIf="app.contratGenere && app.contratSigne" 
+                [ngClass]="{
+                  'badge-pending': app.validationAdmin === 'PENDING',
+                  'badge-approved': app.validationAdmin === 'APPROVED',
+                  'badge-rejected': app.validationAdmin === 'REJECTED'
+                }">
+            <ng-container *ngIf="app.validationAdmin === 'PENDING'">
+              ⏳ Admin: Pending
+            </ng-container>
+            <ng-container *ngIf="app.validationAdmin === 'APPROVED'">
+               Admin: Approved
+            </ng-container>
+            <ng-container *ngIf="app.validationAdmin === 'REJECTED'">
+               Admin: Rejected
+            </ng-container>
+          </span>
+          
+          <span class="fraud-badge" [ngClass]="getFraudClass(app.fraudRiskLevel)">
+            {{ getFraudLabel(app.fraudRiskLevel) }}
+          </span>
+        </div>
       </div>
 
       <div class="card-stats">
@@ -67,10 +96,29 @@
             </div>
           </div>
         </div>
+        <div class="fraud-score-wrap" *ngIf="app.fraudScore">
+          <div class="stat-label">
+            Fraud score
+            <span class="score-num" [style.color]="getFraudColor(app.fraudScore)">
+              {{ app.fraudScore }}/100
+            </span>
+          </div>
+          <div class="score-bar-bg">
+            <div class="score-bar"
+                 [style.width.%]="app.fraudScore"
+                 [style.background]="getFraudColor(app.fraudScore)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerte fraude -->
+      <div class="fraud-alert" *ngIf="app.fraudConfirmed">
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-text">FRAUD ALERT: {{ app.fraudRiskLevel }} risk detected - {{ app.fraudAnalysisResult?.recommendationJustification | slice:0:100 }}...</span>
       </div>
 
      <div class="card-actions">
-
   <ng-container *ngIf="app.statut === 'REJETEE'">
   </ng-container>
 
@@ -85,41 +133,34 @@
       <button class="btn btn-accept" (click)="acceptAndGenerateContract(app)">
         Generate Contract
       </button>
-
-      <button class="btn btn-refuse"
-              *ngIf="app.statut !== 'APPROUVEE'"
-              (click)="openRefuseModal(app.id)">
+      <button class="btn btn-refuse" *ngIf="app.statut !== 'APPROUVEE'" (click)="openRefuseModal(app.id)">
         ✕ Refuse
       </button>
     </ng-container>
 
-    <!-- STEP 2 : contrat en attente signature -->
-    <ng-container *ngIf="app.contratGenere && !app.contratSigne">
-      <button class="btn btn-pending" disabled>
-        ⏳ Awaiting Farmer Signature...
-      </button>
-
-      <button class="btn btn-refresh"
-              (click)="refreshContratStatus(app)">
-        🔄 Refresh
+    <!-- STEP 2 : contrat généré - Refresh visible SEULEMENT si PAS rejeté ET PAS encore validé -->
+    <ng-container *ngIf="app.contratGenere && !app.contratValide && !app.loanCreated && app.validationAdmin !== 'REJECTED'">
+      <button class="btn btn-refresh" (click)="refreshContratStatus(app)">
+        🔄 Refresh Status
       </button>
     </ng-container>
 
-    <!-- STEP 3 : prêt possible -->
-     <ng-container *ngIf="app.contratGenere && app.contratSigne && !app.loanCreated">
-      <button class="btn btn-pay"
-              (click)="openPretForm(app.id)">
+    <!-- STEP 3 : contrat signé ET validé par admin - bouton Pay apparaît -->
+    <ng-container *ngIf="app.contratValide && !app.loanCreated">
+      <button class="btn btn-pay" (click)="openPretForm(app.id)">
         💳 Pay & Create Loan
       </button>
     </ng-container>
 
   </ng-container>
 
-
   <button class="btn btn-docs" (click)="viewDocuments(app.id)">
     📁 Documents
   </button>
 
+  <button class="btn btn-fraud" (click)="viewFraudReport(app)">
+    🔍 Fraud Report
+  </button>
 </div>
     </div>
 
@@ -243,5 +284,93 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ─── MODAL FRAUD REPORT ─── -->
+<div class="modal-overlay" *ngIf="showFraudModal">
+  <div class="modal-box fraud-report-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">🔍 Fraud Analysis Report</h2>
+    </div>
+
+    <div class="fraud-report-content" *ngIf="selectedFraudReport">
+      <!-- Résumé global -->
+      <div class="report-section">
+        <h3>📊 Global Assessment</h3>
+        <div class="risk-badge" [ngClass]="'risk-' + selectedFraudReport.globalRisk?.toLowerCase()">
+          {{ selectedFraudReport.globalRisk }} RISK - Score: {{ selectedFraudReport.globalScore }}/100
+        </div>
+        <p class="narrative">{{ selectedFraudReport.dossierNarrative }}</p>
+        <p class="recommendation"><strong>Recommendation:</strong> {{ selectedFraudReport.recommendation }}</p>
+        <p class="justification">{{ selectedFraudReport.recommendationJustification }}</p>
+      </div>
+
+      <!-- Documents critiques -->
+      <div class="report-section" *ngIf="selectedFraudReport.criticalDocuments?.length">
+        <h3>⚠️ Critical Documents</h3>
+        <ul>
+          <li *ngFor="let doc of selectedFraudReport.criticalDocuments">📄 {{ doc }}</li>
+        </ul>
+      </div>
+
+      <!-- Champs suspects -->
+      <div class="report-section" *ngIf="selectedFraudReport.allSuspiciousFields?.length">
+        <h3>📝 Suspicious Fields</h3>
+        <table class="suspicious-table">
+          <thead>
+            <tr><th>Document</th><th>Field</th><th>Suspicious Value</th><th>Reason</th><th>Severity</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let field of selectedFraudReport.allSuspiciousFields">
+              <td>{{ field.document }}</td>
+              <td>{{ field.fieldName }}</td>
+              <td class="suspicious-value">{{ field.suspiciousValue }}</td>
+              <td>{{ field.reason }}</td>
+              <td><span class="severity" [ngClass]="'sev-' + field.severity?.toLowerCase()">{{ field.severity }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Incohérences inter-documents -->
+      <div class="report-section" *ngIf="selectedFraudReport.crossDocumentInconsistencies?.length">
+        <h3>🔄 Cross-Document Inconsistencies</h3>
+        <ul>
+          <li *ngFor="let inc of selectedFraudReport.crossDocumentInconsistencies">🔴 {{ inc }}</li>
+        </ul>
+      </div>
+
+      <!-- Détail par document -->
+      <div class="report-section">
+        <h3>📄 Per-Document Analysis</h3>
+        <div class="document-list">
+          <div class="doc-card" *ngFor="let doc of selectedFraudReport.documents">
+            <div class="doc-header">
+              <strong>{{ doc.filename }}</strong>
+              <span class="doc-risk" [ngClass]="'risk-' + doc.riskLevel?.toLowerCase()">
+                {{ doc.riskLevel }} ({{ doc.riskScore }}/100)
+              </span>
+            </div>
+            <div class="doc-meta" *ngIf="doc.metadata?.creator">
+              <span>Creator: {{ doc.metadata.creator }}</span>
+              <span *ngIf="doc.metadata?.producer"> | Producer: {{ doc.metadata.producer }}</span>
+              <span *ngIf="doc.metadata?.metadataRisk"> | Metadata Risk: {{ doc.metadata.metadataRisk }}</span>
+            </div>
+            <div class="doc-narrative">{{ doc.documentNarrative }}</div>
+            <div class="doc-signals" *ngIf="doc.fraudSignals?.length">
+              <strong>Fraud Signals:</strong>
+              <span class="signal" *ngFor="let signal of doc.fraudSignals">
+                🔴 {{ signal }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="close-btn" (click)="showFraudModal = false">Close</button>
+    </div>
   </div>
 </div>
