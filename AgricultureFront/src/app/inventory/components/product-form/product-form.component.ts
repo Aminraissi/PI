@@ -71,10 +71,7 @@ export class ProductFormComponent implements OnInit {
     obs.subscribe({
       next: () => {
         this.loading = false;
-        this.toast.success(this.isEdit
-          ? `Product "${val.nom}" updated successfully!`
-          : `Product "${val.nom}" created successfully!`
-        );
+        
         this.saved.emit();
       },
       error: (e) => {
@@ -82,7 +79,7 @@ export class ProductFormComponent implements OnInit {
         
         
         this.error = e.error?.message || 'Error';
-        this.toast.error(this.error);
+        
       }
     });
   }
