@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 
 export type BackendRole =
     | 'AGRICULTEUR'
@@ -211,4 +211,134 @@ export class AuthService {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
     }
+
+    forgotPasswordCheckEmail(email: string) {
+    return this.http.post<any>(
+        `${this.apiUrl}/forgot-password/email`,
+        { email }
+    );
+    }
+
+    forgotPasswordByPhone(email: string, telephone: string) {
+    return this.http.post<any>(
+        `${this.apiUrl}/forgot-password/phone`,
+        { email, telephone }
+    );
+    }
+
+    resetPasswordByPhone(email: string, telephone: string, code: string, newPassword: string) {
+    return this.http.post<any>(
+        `${this.apiUrl}/reset-password/phone`,
+        { email, telephone, code, newPassword }
+    );
+    }
+
+    loginWithGoogle(credential: string): Observable<LoginResponse> {
+  return this.http.post<LoginResponse>(
+    `${this.apiUrl}/google`,
+    { credential }
+  ).pipe(
+    map(response => {
+      if (response.token && response.userId !== null && response.role) {
+        const user: AuthUser = {
+          userId: response.userId,
+          username: response.username || response.email,
+          email: response.email,
+          role: response.role as BackendRole,
+          statutCompte: response.statutCompte || undefined
+        };
+
+        this.storeToken(response.token);
+        this.storeUser(user);
+        this.currentUserSubject.next(user);
+      }
+
+      return response;
+    })
+  );
+}
+
+completeGoogleSignup(payload: {
+  credential: string;
+  telephone: string;
+  role: string;
+}): Observable<LoginResponse | SignupResponse> {
+  return this.http.post<LoginResponse | SignupResponse>(
+    `${this.apiUrl}/google/complete-signup`,
+    payload
+  ).pipe(
+    map((response: any) => {
+      if (response.token && response.userId !== null && response.role) {
+        const user: AuthUser = {
+          userId: response.userId,
+          username: response.username || response.email,
+          email: response.email,
+          role: response.role as BackendRole,
+          statutCompte: response.statutCompte || undefined
+        };
+
+        this.storeToken(response.token);
+        this.storeUser(user);
+        this.currentUserSubject.next(user);
+      }
+
+      return response;
+    })
+  );
+}
+
+
+completeFacebookSignup(payload: {
+  accessToken: string;
+  telephone: string;
+  role: string;
+}): Observable<LoginResponse | SignupResponse> {
+  return this.http.post<LoginResponse | SignupResponse>(
+    `${this.apiUrl}/facebook/complete-signup`,
+    payload
+  ).pipe(
+    map((response: any) => {
+      if (response.token && response.userId !== null && response.role) {
+        const user: AuthUser = {
+          userId: response.userId,
+          username: response.username || response.email,
+          email: response.email,
+          role: response.role as BackendRole,
+          statutCompte: response.statutCompte || undefined
+        };
+
+        this.storeToken(response.token);
+        this.storeUser(user);
+        this.currentUserSubject.next(user);
+      }
+
+      return response;
+    })
+  );
+}
+
+loginWithFacebook(accessToken: string): Observable<LoginResponse> {
+  return this.http.post<LoginResponse>(
+    `${this.apiUrl}/facebook`,
+    { accessToken }
+  ).pipe(
+    map(response => {
+      if (response.token && response.userId !== null && response.role) {
+        const user: AuthUser = {
+          userId: response.userId,
+          username: response.username || response.email,
+          email: response.email,
+          role: response.role as BackendRole,
+          statutCompte: response.statutCompte || undefined
+        };
+
+        this.storeToken(response.token);
+        this.storeUser(user);
+        this.currentUserSubject.next(user);
+      }
+
+      return response;
+    })
+  );
+}
 }

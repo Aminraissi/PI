@@ -20,4 +20,5 @@ public interface RentalPaymentService {
     void activateAutoPayment(Long propositionId, String customerId, String paymentMethodId);
 
     void chargeDuePayments();
+    List<PaiementLocation> getAllPayments();
 }
