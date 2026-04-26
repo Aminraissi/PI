@@ -65,7 +65,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         {
             label: 'Terrain',
             icon: 'fas fa-leaf',
-            route: '/farm',
+            route: '/farm/list',
             roles: ['AGRICULTEUR']
         },
         {
@@ -97,7 +97,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
             icon: 'fas fa-clipboard-list',
             route: '/expert/assistance-requests',
             roles: ['EXPERT_AGRICOLE']
+        },
+       {
+            label: 'Calendar',
+            icon: 'fas fa-calendar',
+            route: '/farm/calendar',
+            roles: ['AGRICULTEUR']
         }
+           
+
     ];
 
     private readonly protectedRoutes = [

@@ -1,9 +1,9 @@
 package org.exemple.gestionformation.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.exemple.gestionformation.enums.TypeResource;
 import jakarta.persistence.*;
 import lombok.*;
+import org.exemple.gestionformation.enums.TypeResource;
 
 @Entity
 @Table(name = "ressources")
