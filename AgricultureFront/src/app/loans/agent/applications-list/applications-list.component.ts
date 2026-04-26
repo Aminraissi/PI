@@ -58,6 +58,11 @@ export class ApplicationsListComponent implements OnInit {
   isProcessing: boolean = false;
   isDevMode: boolean = true; 
 
+
+  fraudFilter: string = '';
+showFraudModal = false;
+selectedFraudReport: any = null;
+
   constructor(
     private pretService: PretService,
     private service: DemandePretService,
@@ -92,43 +97,40 @@ export class ApplicationsListComponent implements OnInit {
 loadApplications(serviceId: number) {
   this.service.getByService(serviceId).subscribe({
     next: (data: any[]) => {
-
-      this.applications = data;
+      this.applications = data.map(app => ({
+        ...app,
+        fraudRiskLevel: app.fraudRiskLevel || null,
+        fraudScore: app.fraudScore || null,
+        fraudConfirmed: app.fraudConfirmed || false,
+        fraudAnalysisResult: app.fraudAnalysisResult ? 
+          (typeof app.fraudAnalysisResult === 'string' ? 
+            JSON.parse(app.fraudAnalysisResult) : app.fraudAnalysisResult) : null,
+        contratGenere: false,
+        contratSigne: false,
+        contratValide: false,
+        contratPending: true,
+        validationAdmin: 'PENDING',
+        loanStatus: null,
+        loanCreated: false,
+        canCreateLoan: false
+      }));
 
       this.applications.forEach(app => {
-
-        // INIT STATE SAFE
-        app.contratGenere = false;
-        app.contratSigne = false;
-        app.loanStatus = null;
-        app.loanCreated = false;
-        app.canCreateLoan = false;
-
-        // CONTRAT
         this.contratService.getContratByDemande(app.id).subscribe({
           next: (contrat: any) => {
-
             app.contratGenere = !!contrat;
             app.contratSigne = contrat?.statutContrat === 'SIGNE';
-
-            // PRET
+            app.validationAdmin = contrat?.validationAdmin || 'PENDING';
+            app.contratValide = app.validationAdmin === 'APPROVED';
+            app.contratPending = app.validationAdmin === 'PENDING';
+            
             this.pretService.getByDemande(app.id).subscribe({
               next: (pret: any) => {
-
-              
-                if (pret) {
-                  app.loanStatus = 'ACTIF';
-                }
-
+                if (pret) app.loanStatus = 'ACTIF';
                 this.updateLoanState(app);
               },
-
-              error: () => {
-                // garder état actuel
-                this.updateLoanState(app);
-              }
+              error: () => this.updateLoanState(app)
             });
-
           },
           error: () => {
             app.contratGenere = false;
@@ -136,9 +138,7 @@ loadApplications(serviceId: number) {
             this.updateLoanState(app);
           }
         });
-
       });
-
     },
     error: err => console.error(err)
   });
@@ -161,43 +161,83 @@ loadApplications(serviceId: number) {
   });
 }
   
+  
 refreshContratStatus(app: any) {
-
   this.contratService.getContratByDemande(app.id).subscribe({
     next: (contrat: any) => {
-
-      if (!contrat) return;
+      if (!contrat) {
+        alert("No contract found for this application");
+        return;
+      }
 
       app.contratGenere = true;
       app.contratSigne = contrat.statutContrat === 'SIGNE';
+      app.validationAdmin = contrat.validationAdmin; // 'PENDING', 'APPROVED', 'REJECTED'
+      app.contratValide = app.validationAdmin === 'APPROVED';
+      app.contratPending = app.validationAdmin === 'PENDING';
 
+      console.log('Contract status:', {
+        signe: app.contratSigne,
+        validationAdmin: app.validationAdmin,
+        valide: app.contratValide,
+        pending: app.contratPending
+      });
+
+      // Contrat non signé par l'agriculteur
       if (!app.contratSigne) {
+        alert('⏳ Waiting for farmer signature...');
         this.updateLoanState(app);
         return;
       }
 
-      this.pretService.getByDemande(app.id).subscribe({
-        next: (pret: any) => {
+      //  Contrat signé mais en attente validation admin 
+      if (app.contratSigne && app.contratPending) {
+        alert('⏳ Waiting for admin approval...');
+        this.updateLoanState(app);
+        return;
+      }
 
-          if (pret) {
-            app.loanStatus = 'ACTIF';
-          }
+      //  Contrat rejeté par admin
+      if (app.validationAdmin === 'REJECTED') {
+        alert(' Contract rejected by admin');
+        this.updateLoanState(app);
+        return;
+      }
 
-          this.updateLoanState(app);
-        },
-        error: (err) => {
-          if (err.status === 404) {
-            app.loanStatus = null;
-            app.loanCreated = false;
+      // Contrat signé ET validé par l'admin 
+      if (app.contratSigne && app.contratValide) {
+        this.pretService.getByDemande(app.id).subscribe({
+          next: (pret: any) => {
+            if (pret) {
+              app.loanStatus = 'ACTIF';
+              app.loanCreated = true;
+              alert(' Loan already created.');
+            } else {
+              app.loanStatus = null;
+              app.loanCreated = false;
+              alert(' Contract signed and validated by admin! You can now create the loan.');
+            }
             this.updateLoanState(app);
-          } else {
-            console.error(err);
+          },
+          error: (err) => {
+            if (err.status === 404) {
+              app.loanStatus = null;
+              app.loanCreated = false;
+              alert(' Contract signed and validated by admin! You can now create the loan.');
+              this.updateLoanState(app);
+            } else {
+              console.error(err);
+              alert('❌ Error checking loan status');
+            }
           }
-        }
-      });
-
+        });
+        return;
+      }
     },
-    error: err => console.error(err)
+    error: err => {
+      console.error('Error refreshing contract:', err);
+      alert(' Error refreshing contract status');
+    }
   });
 }
   
@@ -489,23 +529,31 @@ async prepareStripe(amount: number) {
 
  
   filteredApplications() {
-    if (!this.applications) return [];
-    const filtered = this.applications.filter(app => {
-      const score = app.scoreSolvabilite ?? 0;
-      const matchesSearch = !this.searchText ||
-        app.farmerName?.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        app.montantDemande?.toString().includes(this.searchText) ||
-        app.dureeMois?.toString().includes(this.searchText);
-      const matchesStatus = !this.selectedStatus || app.statut === this.selectedStatus;
-      let matchesScore = true;
-      if (this.scoreFilter === 'HIGH') matchesScore = score > 60;
-      else if (this.scoreFilter === 'MEDIUM') matchesScore = score >= 40 && score <= 60;
-      else if (this.scoreFilter === 'LOW') matchesScore = score < 40;
-      return matchesSearch && matchesStatus && matchesScore;
-    });
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return filtered.slice(start, start + this.itemsPerPage);
-  }
+  if (!this.applications) return [];
+  const filtered = this.applications.filter(app => {
+    const score = app.scoreSolvabilite ?? 0;
+    const matchesSearch = !this.searchText ||
+      app.farmerName?.toLowerCase().includes(this.searchText.toLowerCase()) ||
+      app.montantDemande?.toString().includes(this.searchText) ||
+      app.dureeMois?.toString().includes(this.searchText);
+    const matchesStatus = !this.selectedStatus || app.statut === this.selectedStatus;
+    let matchesScore = true;
+    if (this.scoreFilter === 'HIGH') matchesScore = score > 70;
+    else if (this.scoreFilter === 'MEDIUM') matchesScore = score >= 50 && score <= 70;
+    else if (this.scoreFilter === 'LOW') matchesScore = score < 50;
+    
+    
+    let matchesFraud = true;
+    if (this.fraudFilter === 'HIGH') matchesFraud = app.fraudRiskLevel === 'HIGH';
+    else if (this.fraudFilter === 'MEDIUM') matchesFraud = app.fraudRiskLevel === 'MEDIUM';
+    else if (this.fraudFilter === 'LOW') matchesFraud = app.fraudRiskLevel === 'LOW';
+    
+    return matchesSearch && matchesStatus && matchesScore && matchesFraud;
+  });
+  const start = (this.currentPage - 1) * this.itemsPerPage;
+  return filtered.slice(start, start + this.itemsPerPage);
+}
+
 
   getTotalPages(): number {
     const len = this.applications.filter(app => {
@@ -578,18 +626,53 @@ async prepareStripe(amount: number) {
   }
 
 updateLoanState(app: any) {
-
   const status = (app.loanStatus ?? '').toString().toUpperCase();
-
   const isActive = status === 'ACTIF';
-
   app.loanCreated = isActive;
-
-  app.canCreateLoan =
+  
+  app.canCreateLoan = 
     app.contratGenere === true &&
     app.contratSigne === true &&
+    app.contratValide === true &&
     isActive === false &&
     app.statut !== 'REJETEE';
 }
+
+getFraudClass(riskLevel: string): string {
+  switch(riskLevel) {
+    case 'HIGH': return 'fraud-high';
+    case 'MEDIUM': return 'fraud-medium';
+    case 'LOW': return 'fraud-low';
+    default: return 'fraud-unknown';
+  }
+}
+
+getFraudLabel(riskLevel: string): string {
+  switch(riskLevel) {
+    case 'HIGH': return ' HIGH RISK';
+    case 'MEDIUM': return ' MEDIUM RISK';
+    case 'LOW': return ' LOW RISK';
+    default: return ' UNKNOWN';
+  }
+}
+
+getFraudColor(score: number): string {
+  if (score >= 70) return '#e74c3c';
+  if (score >= 40) return '#f39c12';
+  return '#2ecc71';
+}
+
+viewFraudReport(app: any) {
+  try {
+    this.selectedFraudReport = typeof app.fraudAnalysisResult === 'string' 
+      ? JSON.parse(app.fraudAnalysisResult) 
+      : app.fraudAnalysisResult;
+    this.showFraudModal = true;
+  } catch(e) {
+    console.error('Error parsing fraud report:', e);
+    this.selectedFraudReport = null;
+  }
+}
+
 
 }

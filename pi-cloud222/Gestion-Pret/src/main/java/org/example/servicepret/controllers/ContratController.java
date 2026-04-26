@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 
 import org.example.servicepret.DTO.ContratResponseDTO;
 import org.example.servicepret.entities.Contrat;
+import org.example.servicepret.entities.StatutContrat;
 import org.example.servicepret.services.IContratService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -71,6 +73,72 @@ public class ContratController {
     public ResponseEntity<ContratResponseDTO> getContrat(@PathVariable Long id) {
         return ResponseEntity.ok(contratService.getContrat(id));
     }
+    @PostMapping("/sign-with-pdf")
+    public ResponseEntity<?> signWithPdf(
+            @RequestParam("contratId") Long contratId,
+            @RequestParam("signatureBase64") String signatureBase64,
+            @RequestParam("pdfFile") MultipartFile pdfFile) {
+
+        try {
+            Contrat contrat = contratService.signContratWithPDF(contratId, signatureBase64, pdfFile);
+            return ResponseEntity.ok(contrat);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    @GetMapping("/download-pdf/{contratId}")
+    public ResponseEntity<byte[]> downloadPDF(@PathVariable Long contratId) {
+        try {
+            byte[] pdfBytes = contratService.getContratPDF(contratId);
+
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/pdf")
+                    .header("Content-Disposition", "inline; filename=contrat_" + contratId + ".pdf")
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+    @GetMapping("/validated-contracts")
+    public List<ContratResponseDTO> getValidatedContracts() {
+        return contratService.getValidatedContracts();
+    }
+
+    @GetMapping("/rejected-contracts")
+    public List<ContratResponseDTO> getRejectedContracts() {
+        return contratService.getRejectedContracts();
+    }
+
+    @GetMapping("/all-with-details")
+    public List<Contrat> getAllContractsWithDetails() {
+        return contratService.getAllContractsWithDetails();
+    }
+
+    @GetMapping("/by-status/{statut}")
+    public List<Contrat> getContractsByStatus(@PathVariable StatutContrat statut) {
+        return contratService.getContractsByStatus(statut);
+    }
+    @GetMapping("/pending-validation")
+    public List<ContratResponseDTO> getPendingContracts() {
+        return contratService.getContratsEnAttenteValidation();
+    }
+    @PostMapping("/validate/{contratId}")
+    public ResponseEntity<?> validateContract(
+            @PathVariable Long contratId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            boolean valide = (boolean) body.getOrDefault("valide", false);
+            Contrat contrat = contratService.validerContratParAdmin(contratId, valide);
+            return ResponseEntity.ok(contrat);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+
 
 
 
