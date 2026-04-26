@@ -3,6 +3,7 @@ package org.example.gestioninventaire.dtos.response;
 import lombok.Builder;
 import lombok.Data;
 import org.example.gestioninventaire.enums.ProductCategory;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -15,6 +16,10 @@ public class InventoryProductResponse {
     private Double currentQuantity;
     private Double minThreshold;
     private UserSummaryResponse owner;
+    private LocalDate dateAchat;
+    private LocalDate datePeremption;
+    private Double prixAchat;
+    private String note;
 
     // Boutique fields
     private Double prixVente;

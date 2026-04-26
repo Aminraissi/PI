@@ -14,6 +14,10 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
     // JOIN FETCH product pour éviter LazyInitializationException
     @Query("SELECT b FROM Batch b JOIN FETCH b.product WHERE b.product.id = :productId ORDER BY b.purchaseDate ASC")
     List<Batch> findByProductIdOrderByPurchaseDateAsc(@Param("productId") Long productId);
+
+    @Query("SELECT b FROM Batch b JOIN FETCH b.product WHERE b.id = :batchId AND b.product.id = :productId")
+    java.util.Optional<Batch> findByIdAndProductId(@Param("batchId") Long batchId, @Param("productId") Long productId);
+
     @Query("select coalesce(sum(b.quantity), 0) from Batch b where b.product.id = :productId")
     Double sumQuantityByProductId(@Param("productId") Long productId);
     void deleteByProductId(Long productId);

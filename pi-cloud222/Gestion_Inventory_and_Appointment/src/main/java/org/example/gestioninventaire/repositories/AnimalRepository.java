@@ -14,6 +14,8 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
     java.util.Optional<Animal> findByIdAndOwnerIdAndIsDeletedFalse(Long id, Long ownerId);
 
     boolean existsByReference(String reference);
+    @Query("SELECT a.reference FROM Animal a WHERE a.reference LIKE CONCAT(:prefix, '-%')")
+    List<String> findReferencesByPrefix(@Param("prefix") String prefix);
     // Agriculteur : uniquement les animaux non supprimés
     List<Animal> findByOwnerIdAndIsDeletedFalse(Long ownerId);
 

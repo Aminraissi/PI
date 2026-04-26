@@ -48,6 +48,9 @@ public class AvailabilityService {
             throw new BadRequestException("L'utilisateur sélectionné n'est pas un vétérinaire");
         }
 
+        if (request.getDate().isBefore(LocalDate.now())) {
+            throw new BadRequestException("La date de disponibilite ne peut pas etre inferieure a la date d'aujourd'hui");
+        }
         // 2. Validate time range
         if (!request.getStartTime().isBefore(request.getEndTime())) {
             throw new BadRequestException("L'heure de début doit être avant l'heure de fin");
@@ -176,3 +179,5 @@ public class AvailabilityService {
         }
     }
 }
+
+

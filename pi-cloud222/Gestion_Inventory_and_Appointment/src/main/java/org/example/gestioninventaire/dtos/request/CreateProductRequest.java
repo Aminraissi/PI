@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import org.example.gestioninventaire.enums.ProductCategory;
+import java.time.LocalDate;
 
 @Data
 public class CreateProductRequest {
@@ -27,6 +28,12 @@ public class CreateProductRequest {
     @NotNull
     @PositiveOrZero
     private Double minThreshold;
+
+    private LocalDate dateAchat;
+    private LocalDate datePeremption;
+    @PositiveOrZero
+    private Double prixAchat;
+    private String note;
 
     private Long ownerId;
 }

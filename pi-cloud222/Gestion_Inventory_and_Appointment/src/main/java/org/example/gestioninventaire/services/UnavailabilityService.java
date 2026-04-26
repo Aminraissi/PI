@@ -16,6 +16,7 @@ import org.example.gestioninventaire.repositories.VeterinarianAvailabilityReposi
 import org.example.gestioninventaire.repositories.VeterinarianUnavailabilityRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -29,22 +30,27 @@ public class UnavailabilityService {
     private final TimeSlotRepository timeSlotRepository;
     private final UnavailabilityMapper unavailabilityMapper;
 
-
     @Transactional
     public void createUnavailability(Long veterinarianId, CreateUnavailabilityRequest request) {
+
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new BadRequestException("La date de debut doit etre avant ou egale a la date de fin");
+        }
 
         if (!request.getFullDay()) {
             if (request.getStartTime() == null || request.getEndTime() == null) {
                 throw new BadRequestException("Les heures sont obligatoires pour un blocage partiel");
             }
             if (!request.getStartTime().isBefore(request.getEndTime())) {
-                throw new BadRequestException("L'heure de début doit être avant l'heure de fin");
+                throw new BadRequestException("L'heure de debut doit etre avant l'heure de fin");
             }
         }
 
         if (request.getRecurringWeekly() && request.getDayOfWeek() == null) {
-            throw new BadRequestException("Le jour de semaine est obligatoire pour un blocage récurrent");
+            throw new BadRequestException("Le jour de semaine est obligatoire pour un blocage recurrent");
         }
+
+        ensureNoOverlappingDates(veterinarianId, request);
 
         VeterinarianUnavailability unavailability = VeterinarianUnavailability.builder()
                 .veterinarianId(veterinarianId)
@@ -60,7 +66,6 @@ public class UnavailabilityService {
 
         unavailabilityRepository.save(unavailability);
 
-        // appliquer seulement sur les disponibilités déjà créées
         LocalDate current = request.getStartDate();
         while (!current.isAfter(request.getEndDate())) {
 
@@ -74,6 +79,69 @@ public class UnavailabilityService {
 
             current = current.plusDays(1);
         }
+    }
+
+    private void ensureNoOverlappingDates(Long veterinarianId, CreateUnavailabilityRequest request) {
+        List<VeterinarianUnavailability> existingUnavailabilities =
+                unavailabilityRepository.findByVeterinarianId(veterinarianId);
+
+        for (VeterinarianUnavailability existing : existingUnavailabilities) {
+            if (hasDateConflict(existing, request)) {
+                throw new BadRequestException(
+                        "Impossible de creer l'indisponibilite : une periode existe deja sur ces dates"
+                );
+            }
+        }
+    }
+
+    private boolean hasDateConflict(VeterinarianUnavailability existing, CreateUnavailabilityRequest request) {
+        if (existing.getStartDate() == null || existing.getEndDate() == null) {
+            return false;
+        }
+
+        LocalDate overlapStart = maxDate(existing.getStartDate(), request.getStartDate());
+        LocalDate overlapEnd = minDate(existing.getEndDate(), request.getEndDate());
+
+        if (overlapStart.isAfter(overlapEnd)) {
+            return false;
+        }
+
+        boolean existingRecurring = Boolean.TRUE.equals(existing.getRecurringWeekly());
+        boolean requestRecurring = Boolean.TRUE.equals(request.getRecurringWeekly());
+
+        if (!existingRecurring && !requestRecurring) {
+            return true;
+        }
+
+        if (existingRecurring && requestRecurring) {
+            return existing.getDayOfWeek() != null
+                    && request.getDayOfWeek() != null
+                    && existing.getDayOfWeek().equals(request.getDayOfWeek());
+        }
+
+        if (existingRecurring) {
+            return existing.getDayOfWeek() != null
+                    && rangeContainsDay(overlapStart, overlapEnd, existing.getDayOfWeek());
+        }
+
+        return request.getDayOfWeek() != null
+                && rangeContainsDay(overlapStart, overlapEnd, request.getDayOfWeek());
+    }
+
+    private boolean rangeContainsDay(LocalDate start, LocalDate end, DayOfWeek dayOfWeek) {
+        int currentValue = start.getDayOfWeek().getValue();
+        int targetValue = dayOfWeek.getValue();
+        int delta = (targetValue - currentValue + 7) % 7;
+        LocalDate firstMatch = start.plusDays(delta);
+        return !firstMatch.isAfter(end);
+    }
+
+    private LocalDate maxDate(LocalDate left, LocalDate right) {
+        return left.isAfter(right) ? left : right;
+    }
+
+    private LocalDate minDate(LocalDate left, LocalDate right) {
+        return left.isBefore(right) ? left : right;
     }
 
     private void applyBlockingToDate(Long veterinarianId, LocalDate date, CreateUnavailabilityRequest request) {
@@ -111,10 +179,10 @@ public class UnavailabilityService {
     @Transactional
     public void deleteUnavailability(Long veterinarianId, Long unavailabilityId) {
         VeterinarianUnavailability unavailability = unavailabilityRepository.findById(unavailabilityId)
-                .orElseThrow(() -> new ResourceNotFoundException("Indisponibilité non trouvée"));
+                .orElseThrow(() -> new ResourceNotFoundException("Indisponibilite non trouvee"));
 
         if (!unavailability.getVeterinarianId().equals(veterinarianId)) {
-            throw new BadRequestException("Vous ne pouvez pas supprimer cette indisponibilité");
+            throw new BadRequestException("Vous ne pouvez pas supprimer cette indisponibilite");
         }
 
         LocalDate current = unavailability.getStartDate();
@@ -172,13 +240,11 @@ public class UnavailabilityService {
 
     public boolean isBlocked(Long veterinarianId, LocalDate date, LocalTime startTime, LocalTime endTime) {
 
-        // Blocs directs sur cette date (startDate et endDate NOT NULL garantis par la query)
         List<VeterinarianUnavailability> directBlocks =
                 unavailabilityRepository.findByVeterinarianIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                         veterinarianId, date, date
                 );
 
-        // Blocs récurrents pour ce jour de semaine (NOT NULL garantis par la query)
         List<VeterinarianUnavailability> recurringBlocks =
                 unavailabilityRepository.findByVeterinarianIdAndRecurringWeeklyTrueAndDayOfWeek(
                         veterinarianId, date.getDayOfWeek()
@@ -189,22 +255,20 @@ public class UnavailabilityService {
         allBlocks.addAll(recurringBlocks);
 
         for (VeterinarianUnavailability block : allBlocks) {
-            // Bloc journée entière → bloqué
             if (Boolean.TRUE.equals(block.getFullDay())) {
                 return true;
             }
-            // Bloc horaire → vérifier le chevauchement
             if (block.getStartTime() != null && block.getEndTime() != null) {
                 boolean overlap = startTime.isBefore(block.getEndTime())
                         && endTime.isAfter(block.getStartTime());
-                if (overlap) return true;
+                if (overlap) {
+                    return true;
+                }
             }
         }
 
         return false;
     }
-
-
 
     public List<UnavailabilityResponse> getByVeterinarian(Long veterinarianId) {
         return unavailabilityRepository.findByVeterinarianId(veterinarianId)
@@ -212,5 +276,4 @@ public class UnavailabilityService {
                 .map(unavailabilityMapper::toResponse)
                 .toList();
     }
-
 }

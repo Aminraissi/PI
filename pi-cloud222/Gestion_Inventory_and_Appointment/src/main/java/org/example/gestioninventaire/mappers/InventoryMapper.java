@@ -39,6 +39,10 @@ public class InventoryMapper {
                 .currentQuantity(product.getCurrentQuantity())
                 .minThreshold(product.getMinThreshold())
                 .owner(owner)
+                .dateAchat(product.getDateAchat())
+                .datePeremption(product.getDatePeremption())
+                .prixAchat(product.getPrixAchat())
+                .note(product.getNote())
                 // Boutique fields
                 .prixVente(product.getPrixVente())
                 .imageUrl(product.getImageUrl())

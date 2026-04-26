@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.gestioninventaire.dtos.request.AddStockRequest;
 import org.example.gestioninventaire.dtos.request.AdjustStockRequest;
+import org.example.gestioninventaire.dtos.request.ConsumeBatchRequest;
 import org.example.gestioninventaire.dtos.request.ConsumeStockRequest;
 import org.example.gestioninventaire.dtos.response.ApiResponse;
 import org.example.gestioninventaire.dtos.response.BatchResponse;
@@ -47,6 +48,20 @@ public class InventoryController {
         return ApiResponse.<InventoryProductResponse>builder()
                 .message("Consommation enregistrée avec succès")
                 .data(inventoryService.consumeStock(productId, request, userId))
+                .build();
+    }
+
+    @PostMapping("/{productId}/batches/{batchId}/consume")
+    public ApiResponse<InventoryProductResponse> consumeFromBatch(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long productId,
+            @PathVariable Long batchId,
+            @Valid @RequestBody ConsumeBatchRequest request
+    ) {
+        Long userId = jwtUtils.extractUserId(authHeader);
+        return ApiResponse.<InventoryProductResponse>builder()
+                .message("Consommation du lot enregistree avec succes")
+                .data(inventoryService.consumeStockFromBatch(productId, batchId, request, userId))
                 .build();
     }
 
