@@ -28,6 +28,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     isMobileMenuOpen  = false;
     isLoggedIn        = false;
     isHomePage        = true;
+     canEditProfile    = false;
     activeLink        = '/';
     moreDropdownOpen  = false;
     activeSubmenu: any[] | null = null;
@@ -70,15 +71,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.isLoggedIn = this.authService.hasActiveSession();
+        this.syncProfileAccess();
         this.syncExpertLink();
         this.isHomePage = this.router.url === '/';
         this.activeLink = this.router.url;
+        
 
         // Reactively sync isLoggedIn when auth state changes
         this.authService.currentUser$
             .pipe(takeUntil(this.destroy$))
             .subscribe(user => {
                 this.isLoggedIn = !!user && this.authService.hasActiveSession();
+                this.syncProfileAccess();
             });
 
         this.router.events
@@ -88,6 +92,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
             )
             .subscribe((e: any) => {
                 this.isLoggedIn       = this.authService.hasActiveSession();
+                 this.syncProfileAccess();
                 this.isHomePage       = e.urlAfterRedirects === '/';
                 this.activeLink       = e.urlAfterRedirects;
                 this.moreDropdownOpen = false;
@@ -219,9 +224,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     logout(): void {
         this.authService.logout();   // ← proper service logout, not localStorage.clear()
         this.isLoggedIn       = false;
+         this.canEditProfile   = false;
         this.isMobileMenuOpen = false;
         this.moreDropdownOpen = false;
         this.router.navigate(['/']);
+    }
+     editProfile(): void {
+        this.router.navigate(['/profile/edit']);
+        this.isMobileMenuOpen = false;
+        this.moreDropdownOpen = false;
     }
 
     private syncExpertLink(): void {
@@ -246,4 +257,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.destroy$.next();
         this.destroy$.complete();
     }
+    private syncProfileAccess(): void {
+  const role = this.authService.getCurrentRole();
+  this.canEditProfile = this.authService.hasActiveSession() && role !== null && role !== 'ADMIN';
+
+  const profileRoute = '/profile/edit';
+  const hasProfileLink = this.navLinks.some(link => link.route === profileRoute);
+
+  if (this.canEditProfile && !hasProfileLink) {
+    this.navLinks.splice(1, 0, { label: 'Profil', route: profileRoute });
+  }
+
+  if (!this.canEditProfile && hasProfileLink) {
+    this.navLinks = this.navLinks.filter(link => link.route !== profileRoute);
+  }
+}
+
+
 }

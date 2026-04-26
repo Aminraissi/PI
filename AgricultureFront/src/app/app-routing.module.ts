@@ -13,6 +13,8 @@ import { ExplorerHostComponent }             from './components/explorer-host/ex
 import { DiseasePredictorComponent }         from './components/disease-predictor/disease-predictor.component';
 import { HelpRequestComponent }              from './components/help-request/help-request.component';
 import { ExpertAssistanceRequestsComponent } from './components/expert-assistance-requests/expert-assistance-requests.component';
+import { ProfileEditComponent }              from './components/profile-edit/profile-edit.component';
+
 
 const routes: Routes = [
   { path: '',         component: HomeComponent,  pathMatch: 'full' },
@@ -57,6 +59,7 @@ const routes: Routes = [
     path: 'formations',
     loadChildren: () => import('./training/training.module').then(m => m.TrainingModule)
   },
+  
   {
     path: 'farm',
     loadChildren: () => import('./features/farm/farm.module').then(m => m.FarmModule),
@@ -77,10 +80,17 @@ const routes: Routes = [
     loadChildren: () => import('./animals/animals.module').then(m => m.AnimalsModule),
     canActivate: [AuthGuard]
   },
+   {
+    path: 'profile/edit',
+    component: ProfileEditComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT', 'TRANSPORTEUR', 'VETERINAIRE', 'ACHETEUR', 'AGENT'] }
+  },
 
   // Standalone page components declared in AppModule
   { path: 'disease-predictor',          component: DiseasePredictorComponent,         canActivate: [AuthGuard] },
   { path: 'help-request',               component: HelpRequestComponent,               canActivate: [AuthGuard] },
+  
   { path: 'expert/assistance-requests', component: ExpertAssistanceRequestsComponent,  canActivate: [AuthGuard] },
 
   // Role-home placeholders

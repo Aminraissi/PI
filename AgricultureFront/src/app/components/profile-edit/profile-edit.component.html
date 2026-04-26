@@ -1,0 +1,174 @@
+<section class="profile-page">
+  <div class="profile-shell">
+    <header class="profile-header">
+      <div>
+        <span class="profile-kicker">{{ role ? roleLabels[role] : 'Utilisateur' }}</span>
+        <h1>Modifier mon profil</h1>
+      </div>
+      <button type="button" class="back-btn" routerLink="/">
+        <i class="fas fa-arrow-left"></i>
+        Accueil
+      </button>
+    </header>
+
+    <div class="state-panel" *ngIf="isLoading">
+      Chargement du profil...
+    </div>
+
+    <form *ngIf="!isLoading" class="profile-form" [formGroup]="profileForm" (ngSubmit)="submit()" novalidate>
+      <div class="media-panel">
+        <button type="button" class="avatar-upload" (click)="photoInput.click()">
+          <input #photoInput type="file" hidden accept="image/*" (change)="onImageChange($event, 'photo')">
+          <img *ngIf="photoPreview" [src]="photoPreview" alt="Photo de profil">
+          <span *ngIf="!photoPreview" class="avatar-placeholder">
+            <i class="fas fa-user"></i>
+          </span>
+          <span class="avatar-action"><i class="fas fa-camera"></i> Changer la photo</span>
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group" [class.has-error]="invalid('nom')">
+          <label>Nom</label>
+          <div class="input-box">
+            <i class="fas fa-user"></i>
+            <input type="text" formControlName="nom">
+          </div>
+        </div>
+
+        <div class="form-group" [class.has-error]="invalid('prenom')">
+          <label>Prenom</label>
+          <div class="input-box">
+            <i class="fas fa-user-tag"></i>
+            <input type="text" formControlName="prenom">
+          </div>
+        </div>
+
+        <div class="form-group" [class.has-error]="invalid('email')">
+          <label>Email</label>
+          <div class="input-box">
+            <i class="fas fa-envelope"></i>
+            <input type="email" formControlName="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <div class="input-box">
+            <i class="fas fa-lock"></i>
+            <input type="password" formControlName="motDePasse" placeholder="Laisser vide pour garder l'actuel">
+          </div>
+        </div>
+
+        <div class="form-group" [class.has-error]="invalid('telephone')">
+          <label>Telephone</label>
+          <div class="input-box">
+            <i class="fas fa-phone"></i>
+            <input type="tel" formControlName="telephone">
+          </div>
+        </div>
+
+        <div class="form-group" [class.has-error]="invalid('region')">
+          <label>Region</label>
+          <div class="input-box">
+            <i class="fas fa-map-marker-alt"></i>
+            <input type="text" formControlName="region">
+          </div>
+        </div>
+
+        <div class="form-group" [class.has-error]="invalid('cin')">
+          <label>CIN</label>
+          <div class="input-box">
+            <i class="fas fa-id-card"></i>
+            <input type="number" formControlName="cin">
+          </div>
+        </div>
+      </div>
+
+      <div class="role-section" *ngIf="hasRole('VETERINAIRE')">
+        <h2>Informations cabinet</h2>
+        <div class="form-grid">
+          <div class="form-group" [class.has-error]="invalid('adresseCabinet')">
+            <label>Adresse cabinet</label>
+            <div class="input-box">
+              <i class="fas fa-clinic-medical"></i>
+              <input type="text" formControlName="adresseCabinet">
+            </div>
+          </div>
+          <div class="form-group" [class.has-error]="invalid('telephoneCabinet')">
+            <label>Telephone cabinet</label>
+            <div class="input-box">
+              <i class="fas fa-phone-volume"></i>
+              <input type="tel" formControlName="telephoneCabinet">
+            </div>
+          </div>
+          <div class="form-group wide" [class.has-error]="invalid('presentationCarriere')">
+            <label>Presentation carriere</label>
+            <div class="input-box textarea-box">
+              <i class="fas fa-align-left"></i>
+              <textarea rows="4" formControlName="presentationCarriere"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="role-section" *ngIf="hasRole('AGENT')">
+        <h2>Informations agent</h2>
+        <div class="form-grid">
+          <div class="form-group" [class.has-error]="invalid('agence')">
+            <label>Agence</label>
+            <div class="input-box">
+              <i class="fas fa-building"></i>
+              <input type="text" formControlName="agence">
+            </div>
+          </div>
+          <div class="form-group wide" [class.has-error]="invalid('certificatTravail')">
+            <label>Certificat travail</label>
+            <div class="input-box textarea-box">
+              <i class="fas fa-file-alt"></i>
+              <textarea rows="3" formControlName="certificatTravail"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="role-section" *ngIf="hasRole('ORGANISATEUR_EVENEMENT')">
+        <h2>Organisation</h2>
+        <div class="form-grid">
+          <div class="form-group" [class.has-error]="invalid('nomOrganisation')">
+            <label>Nom organisation</label>
+            <div class="input-box">
+              <i class="fas fa-sitemap"></i>
+              <input type="text" formControlName="nomOrganisation">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Logo organisation</label>
+            <button type="button" class="logo-upload" (click)="logoInput.click()">
+              <input #logoInput type="file" hidden accept="image/*" (change)="onImageChange($event, 'logoOrganisation')">
+              <img *ngIf="logoPreview" [src]="logoPreview" alt="Logo organisation">
+              <span *ngIf="!logoPreview"><i class="fas fa-image"></i> Ajouter logo</span>
+            </button>
+          </div>
+          <div class="form-group wide" [class.has-error]="invalid('description')">
+            <label>Description</label>
+            <div class="input-box textarea-box">
+              <i class="fas fa-align-left"></i>
+              <textarea rows="4" formControlName="description"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p *ngIf="submitError" class="message error">{{ submitError }}</p>
+      <p *ngIf="submitSuccess" class="message success">{{ submitSuccess }}</p>
+
+      <div class="form-actions">
+        <button type="submit" class="save-btn" [disabled]="isSaving">
+          <i class="fas fa-save"></i>
+          {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

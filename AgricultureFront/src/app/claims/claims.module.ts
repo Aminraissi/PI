@@ -8,12 +8,15 @@ import { ClaimsLayoutComponent }  from './layout/claims-layout.component';
 import { MyClaimsComponent }      from './user/my-claims/my-claims.component';
 import { NewClaimComponent }      from './user/new-claim/new-claim.component';
 import { ClaimsSharedModule }     from './claims-shared.module';
+import { SharedModule }           from '../shared/shared.module';
 
 @NgModule({
   declarations: [
     ClaimsLayoutComponent,
+
     MyClaimsComponent,
     NewClaimComponent,
+    
   ],
   imports: [
     CommonModule,
@@ -22,6 +25,7 @@ import { ClaimsSharedModule }     from './claims-shared.module';
     HttpClientModule,
     ClaimsSharedModule,
     ClaimsRoutingModule,
+     SharedModule,
   ]
 })
 export class ClaimsModule {}

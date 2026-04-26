@@ -1,5 +1,6 @@
 package org.example.gestionuser.Services;
 
+import org.example.gestionuser.dtos.UserProfileUpdateRequest;
 import org.example.gestionuser.entities.StatutCompte;
 import org.example.gestionuser.entities.User;
 
@@ -14,4 +15,5 @@ public interface IUser {
     User findByEmail(String email);
     List<User> getUsersEnAttente();
     User updateStatut(Long id, StatutCompte statut);
+    User updateProfile(Long id, UserProfileUpdateRequest request);
 }

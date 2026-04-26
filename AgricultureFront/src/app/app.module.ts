@@ -34,6 +34,7 @@ import { ToastComponent }                    from './shared/components/toast/toa
 import { AppToastComponent }                 from './shared/components/app-toast/app-toast.component';
 import { FarmerModule } from './farmer/farmer.module';
 import { AnimalsModule } from './animals/animals.module';
+import { ProfileEditComponent }              from './components/profile-edit/profile-edit.component';
 
 registerLocaleData(localeFr);
 
@@ -46,6 +47,7 @@ registerLocaleData(localeFr);
         ServicesComponent,
         ProductsComponent,
         CounterComponent,
+        ProfileEditComponent,
         TestimonialsComponent,
         BlogComponent,
         BlogDetailComponent,
