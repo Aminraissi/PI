@@ -1,5 +1,7 @@
 package tn.esprit.forums.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,7 @@ import tn.esprit.forums.repository.ForumCommentRepository;
 
 @Service
 public class ForumsService {
+    private static final Logger LOG = LoggerFactory.getLogger(ForumsService.class);
 
     public static final Long AI_ASSISTANT_USER_ID = -100L;
     private static final String REPORT_STATUS_PENDING = "PENDING";
@@ -50,6 +55,10 @@ public class ForumsService {
     private final UserServiceClient userServiceClient;
     private final ForumReputationService reputationService;
     private final ForumAiSuggestionService forumAiSuggestionService;
+    private final ForumImageModerationService forumImageModerationService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Value("${forums.moderation.report-threshold.post:5}")
     private int postReportThreshold;
@@ -68,8 +77,9 @@ public class ForumsService {
             ForumCommentRepository forumCommentRepository,
             ForumReportRepository forumReportRepository,
             UserServiceClient userServiceClient,
-                ForumReputationService reputationService,
-                ForumAiSuggestionService forumAiSuggestionService
+            ForumReputationService reputationService,
+            ForumAiSuggestionService forumAiSuggestionService,
+            ForumImageModerationService forumImageModerationService
     ) {
         this.forumPostRepository = forumPostRepository;
         this.forumGroupRepository = forumGroupRepository;
@@ -80,6 +90,7 @@ public class ForumsService {
         this.userServiceClient = userServiceClient;
         this.reputationService = reputationService;
         this.forumAiSuggestionService = forumAiSuggestionService;
+        this.forumImageModerationService = forumImageModerationService;
     }
 
     @Transactional(readOnly = true)
@@ -109,23 +120,33 @@ public class ForumsService {
         return posts;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ForumPost getPostById(Long postId, Long currentUserId) {
+        LOG.info("ForumsService.getPostById start postId={} currentUserId={}", postId, currentUserId);
         boolean adminView = isAdminView(currentUserId);
         ForumPost post = forumPostRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
 
+        LOG.info("ForumsService.getPostById found post id={} title='{}' replies={}", post.getId(), post.getTitle(), post.getReplies().size());
+        initializeMediaCollections(post);
         post.getReplies().forEach(reply -> reply.getComments().size());
-        post.setViews(post.getViews() + 1);
-        ForumPost saved = forumPostRepository.save(post);
-        applyBestAnswerRule(saved);
-        hydrateReportState(List.of(saved), currentUserId);
-        applyCurrentUserVotes(List.of(saved), currentUserId);
+        LOG.info("ForumsService.getPostById comments initialized for postId={}", postId);
+        hydrateReportState(List.of(post), currentUserId);
+        LOG.info("ForumsService.getPostById report state hydrated for postId={}", postId);
+        applyCurrentUserVotes(List.of(post), currentUserId);
+        LOG.info("ForumsService.getPostById user votes applied for postId={}", postId);
+        entityManager.detach(post);
+        LOG.info("ForumsService.getPostById entity detached for postId={}", postId);
 
         // Apply response masking after persistence updates so hidden placeholders are never stored in DB.
-        enforceModerationVisibility(saved, adminView);
-        enforceDeletedContentPolicy(saved);
-        return saved;
+        enforceModerationVisibility(post, adminView);
+        enforceDeletedContentPolicy(post);
+        LOG.info("ForumsService.getPostById success postId={} mediaCount={} deleted={} hidden={}",
+                postId,
+                post.getMediaUrls() == null ? 0 : post.getMediaUrls().size(),
+                post.isDeleted(),
+                post.isHiddenByReports());
+        return post;
     }
 
     @Transactional
@@ -155,12 +176,20 @@ public class ForumsService {
             throw new IllegalArgumentException(publicationReview.reason());
         }
 
+        ForumImageModerationService.ModerationOutcome mediaModerationOutcome =
+                forumImageModerationService.moderatePostMedia(safeMediaUrls);
+        if (mediaModerationOutcome.status() == ForumImageModerationService.ModerationStatus.REJECTED) {
+            throw new IllegalArgumentException(mediaModerationOutcome.reason());
+        }
+
         ForumPost post = new ForumPost();
         post.setTitle(safeTitle);
         post.setContent(safeContent);
         post.setTags(safeTags);
         post.setMediaUrls(safeMediaUrls);
-        post.setMediaApproved(safeMediaUrls.isEmpty());
+        post.setMediaApproved(mediaModerationOutcome.status() != ForumImageModerationService.ModerationStatus.REVIEW_REQUIRED);
+        post.setMediaPendingReview(!safeMediaUrls.isEmpty()
+                && mediaModerationOutcome.status() == ForumImageModerationService.ModerationStatus.REVIEW_REQUIRED);
         post.setAuthorId(authorId);
         post.setGroupId(request.groupId());
         post.setCreatedAt(nowIso());
@@ -315,10 +344,32 @@ public class ForumsService {
             throw new IllegalArgumentException("Post has been removed");
         }
 
+        ForumAiSuggestionService.PostPublicationReview publicationReview = forumAiSuggestionService.reviewContentForPublishing(
+                post.getTitle(),
+                sanitizeRichText(request.content()),
+                post.getTags(),
+                resolveGroupName(post.getGroupId()),
+                resolveGroupRules(post.getGroupId()),
+                "reply"
+        );
+        if (!publicationReview.allowed()) {
+            throw new IllegalArgumentException(publicationReview.reason());
+        }
+
+        List<String> safeMediaUrls = sanitizeMediaUrls(request.mediaUrls());
+        ForumImageModerationService.ModerationOutcome mediaModerationOutcome =
+                forumImageModerationService.moderatePostMedia(safeMediaUrls);
+        if (mediaModerationOutcome.status() == ForumImageModerationService.ModerationStatus.REJECTED) {
+            throw new IllegalArgumentException(mediaModerationOutcome.reason());
+        }
+
         ForumReply newReply = new ForumReply();
         newReply.setAuthorId(authorId);
         newReply.setContent(sanitizeRichText(request.content()));
-        newReply.setMediaUrls(sanitizeMediaUrls(request.mediaUrls()));
+        newReply.setMediaUrls(safeMediaUrls);
+        newReply.setMediaApproved(mediaModerationOutcome.status() != ForumImageModerationService.ModerationStatus.REVIEW_REQUIRED);
+        newReply.setMediaPendingReview(!safeMediaUrls.isEmpty()
+                && mediaModerationOutcome.status() == ForumImageModerationService.ModerationStatus.REVIEW_REQUIRED);
         newReply.setUpvotes(0);
         newReply.setDownvotes(0);
         newReply.setAccepted(false);
@@ -417,9 +468,21 @@ public class ForumsService {
             throw new IllegalArgumentException("Reply has been removed");
         }
 
+        ForumAiSuggestionService.PostPublicationReview publicationReview = forumAiSuggestionService.reviewContentForPublishing(
+                reply.getPost() == null ? "" : reply.getPost().getTitle(),
+                sanitizeRichText(request.content()),
+                reply.getPost() == null ? List.of() : reply.getPost().getTags(),
+                reply.getPost() == null ? null : resolveGroupName(reply.getPost().getGroupId()),
+                reply.getPost() == null ? List.of() : resolveGroupRules(reply.getPost().getGroupId()),
+                "comment"
+        );
+        if (!publicationReview.allowed()) {
+            throw new IllegalArgumentException(publicationReview.reason());
+        }
+
         ForumComment comment = new ForumComment();
         comment.setAuthorId(authorId);
-        comment.setContent(request.content().trim());
+        comment.setContent(sanitizeRichText(request.content()));
         comment.setCreatedAt(nowIso());
         reply.addComment(comment);
 
@@ -631,6 +694,19 @@ public class ForumsService {
         return forumReportRepository.findByTargetTypeAndTargetIdOrderByIdDesc(targetType.toUpperCase(), targetId);
     }
 
+    @Transactional(readOnly = true)
+    public List<ForumReport> getAllReports(Long adminUserId, String status) {
+        ensureAdmin(adminUserId);
+
+        if (status != null && !status.isBlank()) {
+            return forumReportRepository.findByStatusOrderByIdDesc(status.trim().toUpperCase());
+        }
+
+        return forumReportRepository.findAll().stream()
+                .sorted((left, right) -> right.getId().compareTo(left.getId()))
+                .toList();
+    }
+
     @Transactional
     public void approveReportedPost(Long postId, Long adminUserId) {
         ensureAdmin(adminUserId);
@@ -661,6 +737,7 @@ public class ForumsService {
         }
 
         post.setMediaApproved(true);
+        post.setMediaPendingReview(false);
         forumPostRepository.save(post);
     }
 
@@ -670,9 +747,37 @@ public class ForumsService {
         ForumPost post = forumPostRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
 
-        post.setMediaUrls(List.of());
+        post.setMediaUrls(new ArrayList<>());
         post.setMediaApproved(true);
+        post.setMediaPendingReview(false);
         forumPostRepository.save(post);
+    }
+
+    @Transactional
+    public void approveReplyMedia(Long postId, Long replyId, Long adminUserId) {
+        ensureAdmin(adminUserId);
+        ForumReply reply = forumReplyRepository.findByIdAndPostId(replyId, postId)
+                .orElseThrow(() -> new NoSuchElementException("Reply not found: " + replyId));
+
+        if (reply.getMediaUrls() == null || reply.getMediaUrls().isEmpty()) {
+            return;
+        }
+
+        reply.setMediaApproved(true);
+        reply.setMediaPendingReview(false);
+        forumReplyRepository.save(reply);
+    }
+
+    @Transactional
+    public void rejectReplyMedia(Long postId, Long replyId, Long adminUserId) {
+        ensureAdmin(adminUserId);
+        ForumReply reply = forumReplyRepository.findByIdAndPostId(replyId, postId)
+                .orElseThrow(() -> new NoSuchElementException("Reply not found: " + replyId));
+
+        reply.setMediaUrls(new ArrayList<>());
+        reply.setMediaApproved(true);
+        reply.setMediaPendingReview(false);
+        forumReplyRepository.save(reply);
     }
 
     @Transactional
@@ -831,14 +936,42 @@ public class ForumsService {
                 .map(url -> url == null ? "" : url.trim())
                 .filter(url -> !url.isBlank())
                 .filter(url -> url.startsWith("data:") || url.startsWith("http://") || url.startsWith("https://"))
-                .map(url -> url.substring(0, Math.min(url.length(), 4096)))
+                .map(url -> normalizeMediaUrl(url))
                 .distinct()
                 .limit(6)
                 .toList();
     }
 
+    private String normalizeMediaUrl(String url) {
+        if (url.startsWith("data:")) {
+            return url;
+        }
+
+        return url.substring(0, Math.min(url.length(), 4096));
+    }
+
     private String nowIso() {
         return OffsetDateTime.now().toString();
+    }
+
+    private String resolveGroupName(Long groupId) {
+        if (groupId == null) {
+            return null;
+        }
+
+        return forumGroupRepository.findById(groupId)
+                .map(ForumGroup::getName)
+                .orElse(null);
+    }
+
+    private List<String> resolveGroupRules(Long groupId) {
+        if (groupId == null) {
+            return List.of();
+        }
+
+        return forumGroupRepository.findById(groupId)
+                .map(group -> group.getRules() == null ? List.<String>of() : group.getRules())
+                .orElse(List.of());
     }
 
     public Long resolveAuthenticatedUserId(String authorizationHeader) {
@@ -996,6 +1129,41 @@ public class ForumsService {
 
         if (!adminView && mediaPendingReview) {
             post.setMediaUrls(List.of());
+        }
+
+        for (ForumReply reply : post.getReplies()) {
+            boolean replyMediaPendingReview = reply.getMediaUrls() != null
+                    && !reply.getMediaUrls().isEmpty()
+                    && !reply.isMediaApproved();
+            reply.setMediaPendingReview(replyMediaPendingReview);
+
+            if (!adminView && replyMediaPendingReview) {
+                reply.setMediaUrls(List.of());
+            }
+        }
+    }
+
+    private void initializeMediaCollections(ForumPost post) {
+        if (post == null) {
+            return;
+        }
+
+        if (post.getTags() != null) {
+            post.getTags().size();
+        }
+
+        if (post.getMediaUrls() != null) {
+            post.getMediaUrls().size();
+        }
+
+        if (post.getReplies() == null) {
+            return;
+        }
+
+        for (ForumReply reply : post.getReplies()) {
+            if (reply.getMediaUrls() != null) {
+                reply.getMediaUrls().size();
+            }
         }
     }
 

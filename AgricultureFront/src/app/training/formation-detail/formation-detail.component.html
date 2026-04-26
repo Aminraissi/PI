@@ -3,19 +3,19 @@
 <main class="detail-page">
   <div *ngIf="isLoading" class="state-panel">
     <div class="spinner"></div>
-    <p>Chargement de la formation...</p>
+    <p>Loading training...</p>
   </div>
 
   <div *ngIf="error && !isLoading" class="state-panel error-state">
     <i class="fas fa-exclamation-circle"></i>
     <p>{{ error }}</p>
-    <button (click)="goBack()" class="btn-secondary">Retour</button>
+    <button (click)="goBack()" class="btn-secondary">Back</button>
   </div>
 
   <ng-container *ngIf="formation && !isLoading && !error">
     <button (click)="goBack()" class="btn-back">
       <i class="fas fa-arrow-left"></i>
-      Retour aux formations
+      Back to trainings
     </button>
 
     <section class="detail-hero">
@@ -24,7 +24,7 @@
       </div>
 
       <div class="hero-content">
-        <div class="hero-kicker">Formation</div>
+        <div class="hero-kicker">Training</div>
         <h1>{{ formation.titre }}</h1>
 
         <div class="badges-group">
@@ -42,11 +42,11 @@
         <div class="hero-actions">
           <button *ngIf="!isInscribed && !canManage()" (click)="inscribeFormation()" class="btn-primary">
             <i class="fas fa-check-circle"></i>
-            S'inscrire
+            Enroll
           </button>
           <span *ngIf="isInscribed && !canManage()" class="inscribed-label">
             <i class="fas fa-check-double"></i>
-            Inscrit
+            Enrolled
           </span>
           <button *ngIf="canManage()" (click)="activeTab = 'modules'; toggleModuleForm()" class="btn-primary">
             <i class="fas fa-layer-group"></i>
@@ -87,11 +87,11 @@
         </button>
         <button [class.active]="activeTab === 'modules'" (click)="activeTab = 'modules'" class="tab-button">
           <i class="fas fa-layer-group"></i>
-          Modules
+            Modules
         </button>
         <button [class.active]="activeTab === 'resources'" (click)="activeTab = 'resources'" class="tab-button">
           <i class="fas fa-folder-open"></i>
-          Ressources
+          Resources
         </button>
       </nav>
 
@@ -163,10 +163,10 @@
           <div class="form-actions">
             <button type="submit" class="btn-save">
               <i class="fas fa-save"></i>
-              Enregistrer
+              Save
             </button>
             <button type="button" (click)="toggleModuleForm()" class="btn-cancel">
-              Annuler
+              Cancel
             </button>
           </div>
         </form>
@@ -186,24 +186,36 @@
                   <p>{{ module.lecons?.length || 0 }} leçon(s)</p>
                 </div>
               </div>
-              <div *ngIf="canManage()" class="inline-actions">
-                <button type="button" (click)="toggleLeconForm(module.idModule)" class="btn-small">
-                  <i class="fas fa-video"></i>
-                  Ajouter une leçon
+              <div class="module-header-actions">
+                <button
+                  type="button"
+                  class="module-toggle"
+                  (click)="toggleModuleExpanded(module.idModule)"
+                  [attr.aria-expanded]="isModuleExpanded(module.idModule)">
+                  <span>{{ isModuleExpanded(module.idModule) ? 'Close' : 'Open' }}</span>
+                  <i class="fas" [ngClass]="isModuleExpanded(module.idModule) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                 </button>
-                <button type="button" (click)="toggleRessourceForm(module.idModule)" class="btn-small btn-resource">
-                  <i class="fas fa-paperclip"></i>
-                  Ajouter une ressource
-                </button>
-                <button type="button" (click)="editModule(module)" class="btn-icon" aria-label="Modifier le module">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button type="button" (click)="deleteModule(module.idModule)" class="btn-icon btn-delete" aria-label="Supprimer le module">
-                  <i class="fas fa-trash"></i>
-                </button>
+
+                <div *ngIf="canManage()" class="inline-actions">
+                  <button type="button" (click)="toggleLeconForm(module.idModule); expandedModuleIds[module.idModule!] = true" class="btn-small">
+                    <i class="fas fa-video"></i>
+                    Ajouter une leçon
+                  </button>
+                  <button type="button" (click)="toggleRessourceForm(module.idModule); expandedModuleIds[module.idModule!] = true" class="btn-small btn-resource">
+                    <i class="fas fa-paperclip"></i>
+                    Ajouter une ressource
+                  </button>
+                  <button type="button" (click)="editModule(module); expandedModuleIds[module.idModule!] = true" class="btn-icon" aria-label="Modifier le module">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" (click)="deleteModule(module.idModule)" class="btn-icon btn-delete" aria-label="Supprimer le module">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </div>
             </header>
 
+            <div *ngIf="isModuleExpanded(module.idModule)" class="module-body">
             <form *ngIf="showLeconForm && activeLeconModuleId === module.idModule && canManage()" class="edit-form nested-form" (ngSubmit)="saveLecon(module)">
               <h4>{{ editingLeconId ? 'Modifier la leçon' : 'Nouvelle leçon vidéo' }}</h4>
               <div class="lesson-mode-selector">
@@ -433,6 +445,7 @@
                   </div>
                 </article>
               </div>
+            </div>
             </div>
           </article>
         </div>

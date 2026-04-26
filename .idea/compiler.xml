@@ -11,45 +11,58 @@
         <module name="forums-service" />
         <module name="ServicePret" />
         <module name="ServicePret (1)" />
-        <module name="gestionVente" />
         <module name="eureka" />
         <module name="Gateway" />
         <module name="Gateway (1)" />
         <module name="Livraison" />
         <module name="Explorer" />
       </profile>
-      <profile name="Annotation profile for farmer-support" enabled="true">
+      <profile name="Annotation profile for GestionEvenement" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
-        <module name="Gestion-Formation (1)" />
-        <module name="Gestion-Inventaire" />
         <module name="GestionEvenement" />
-        <module name="farmer-support (1)" />
         <module name="GestionEvenement (1)" />
-        <module name="Gestion-Formation" />
-        <module name="Gestion-Inventaire (1)" />
-        <module name="Assistance-Service" />
-        <module name="farmer-support" />
-        <module name="Assistance-Service (1)" />
+        <module name="GestionEvenement" />
+        <module name="gestionUser" />
       </profile>
-      <profile name="Annotation profile for gestion user" enabled="true">
+      <profile name="Annotation profile for Payment-Service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
         </processorPath>
-        <module name="gestionUser" />
+        <module name="gestionVente" />
         <module name="Payment-Service" />
         <module name="Payment-Service (1)" />
         <module name="gestionVente (1)" />
       </profile>
+      <profile name="Annotation profile for farmer-support" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.44/lombok-1.18.44.jar" />
+        </processorPath>
+        <module name="Gestion-Formation (1)" />
+        <module name="Gestion-Inventaire" />
+        <module name="farmer-support (1)" />
+
+        <module name="Gestion-Formation" />
+        <module name="Gestion-Inventaire (1)" />
+
+        <module name="Assistance-Service" />
+        <module name="farmer-support" />
+        <module name="Assistance-Service (1)" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Explorer" target="17" />
+      <module name="Livraison" target="17" />
       <module name="Livraison (1)" target="17" />
     </bytecodeTargetLevel>
   </component>

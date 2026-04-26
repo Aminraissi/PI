@@ -1,45 +1,543 @@
+.climate-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.section-kicker,
+.metric-label,
+.panel-topline span {
+  display: inline-block;
+  color: #1f6b45;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 h2 {
-  margin: 0 0 10px;
-  font-size: 1.05rem;
-  color: #111827;
+  margin: 8px 0 10px;
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  color: #173525;
 }
 
 .muted {
-  color: #6b7280;
+  color: #617168;
 }
 
 .small {
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 780px;
+}
+
+.small a {
+  color: #1f6b45;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.small a:hover {
+  text-decoration: underline;
+}
+
+.climate-badge,
+.overview-card,
+.zone-card,
+.climate-map-panel,
+.rain-chart,
+.table-wrap {
+  border: 1px solid rgba(31, 107, 69, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18px 36px rgba(26, 43, 34, 0.06);
+}
+
+.climate-badge {
+  min-width: 200px;
+  padding: 16px 18px;
+}
+
+.climate-badge strong,
+.overview-card strong {
+  display: block;
+  color: #173525;
+}
+
+.climate-badge span,
+.climate-badge small {
+  display: block;
+  margin-top: 4px;
+  color: #617168;
+}
+
+.climate-layout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 18px;
+}
+
+.climate-map-panel,
+.rain-chart,
+.table-wrap {
+  padding: 20px;
+}
+
+.panel-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.panel-topline strong {
+  color: #173525;
+  font-size: 0.95rem;
+}
+
+.map-interface {
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(30, 96, 147, 0.14);
+  background: linear-gradient(180deg, #d7ebf7 0%, #eaf4fb 100%);
+}
+
+.map-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #cae0f1 0%, #d8ebf7 100%);
+  border-bottom: 1px solid rgba(30, 96, 147, 0.14);
+}
+
+.map-tab {
+  border: none;
+  border-radius: 10px 10px 0 0;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 800;
+  color: #0d5f88;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.map-tab.active {
+  color: #fff;
+  background: linear-gradient(180deg, #2ca6ea 0%, #1387d2 100%);
+}
+
+.map-date {
+  margin-left: auto;
+  color: #23485d;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.map-body {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  min-height: 640px;
+}
+
+.map-sidebar {
+  padding: 16px 10px;
+  background: linear-gradient(180deg, rgba(226, 238, 246, 0.9), rgba(214, 233, 245, 0.85));
+  border-right: 1px solid rgba(30, 96, 147, 0.12);
+}
+
+.sidebar-day,
+.sidebar-slot {
+  border: none;
+  width: 100%;
+  text-align: left;
+  border-radius: 0;
+  padding: 10px 12px;
+  font: inherit;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sidebar-day {
+  color: #1d5f86;
+  background: rgba(255, 255, 255, 0.84);
+  margin-bottom: 6px;
+}
+
+.sidebar-day.active {
+  position: relative;
+  color: #166794;
+}
+
+.sidebar-day.active::before {
+  content: '+';
+  margin-right: 6px;
+  color: #efa726;
+}
+
+.sidebar-slot {
+  margin-bottom: 4px;
+  color: #fff;
+  background: linear-gradient(180deg, #1f76b1 0%, #145f93 100%);
+}
+
+.sidebar-slot.current {
+  background: linear-gradient(180deg, #2aa8ee 0%, #1691de 100%);
+}
+
+.tunisia-map {
+  position: relative;
+  min-height: 640px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at left center, rgba(255, 255, 255, 0.35), transparent 22%),
+    radial-gradient(circle at right center, rgba(255, 255, 255, 0.28), transparent 18%),
+    linear-gradient(180deg, #edf6fb 0%, #d9eaf7 100%);
+}
+
+.tunisia-map::before,
+.tunisia-map::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(188, 214, 234, 0.45);
+  filter: blur(4px);
+}
+
+.tunisia-map::before {
+  width: 220px;
+  height: 220px;
+  left: -90px;
+  top: 90px;
+}
+
+.tunisia-map::after {
+  width: 190px;
+  height: 190px;
+  right: -70px;
+  bottom: 110px;
+}
+
+.map-canvas {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  aspect-ratio: 538 / 1052;
+  height: calc(100% - 20px);
+  max-width: calc(100% - 36px);
+  z-index: 1;
+}
+
+.tunisia-base-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(32, 78, 109, 0.08));
+}
+
+.weather-marker,
+.place-label,
+.terrain-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.place-label {
+  color: #2f5c71;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95);
+  z-index: 2;
+}
+
+.place-label.align-left {
+  transform: translate(0, -50%);
+}
+
+.place-label.align-right {
+  transform: translate(-100%, -50%);
+}
+
+.place-label.emphasis {
+  color: #0f4f78;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.weather-marker {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: #1d1d1d;
+  z-index: 3;
+}
+
+.weather-marker .temp {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.weather-marker i {
+  font-size: 1.2rem;
+  color: #f2b632;
+  text-shadow: 0 2px 6px rgba(255, 255, 255, 0.65);
+}
+
+.weather-marker .fa-cloud {
+  color: #a2acb8;
+}
+
+.weather-marker.wind-view i {
+  color: #4b88b0;
+}
+
+.terrain-marker {
+  z-index: 4;
+}
+
+.terrain-marker span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #d63c2e;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 9px rgba(214, 60, 46, 0.18);
+}
+
+.map-attribution {
+  margin: 10px 0 0;
+  color: #627887;
+  font-size: 0.75rem;
+}
+
+.map-caption {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.map-caption div {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(237, 244, 238, 0.9);
+}
+
+.map-caption strong,
+.zone-card-head h3 {
+  display: block;
+  color: #173525;
+}
+
+.map-caption span,
+.overview-card p,
+.zone-card p,
+.zone-card-head span {
+  color: #617168;
+  line-height: 1.55;
+}
+
+.climate-overview {
+  display: grid;
+  gap: 14px;
+}
+
+.overview-card {
+  padding: 18px;
+}
+
+.overview-card strong {
+  margin-top: 8px;
+  font-size: 1.6rem;
+}
+
+.zone-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.zone-card {
+  padding: 18px;
+}
+
+.zone-card.active {
+  background: linear-gradient(135deg, rgba(31, 107, 69, 0.12), rgba(255, 255, 255, 0.82));
+  border-color: rgba(31, 107, 69, 0.24);
+}
+
+.zone-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.rain-chart {
+  grid-column: 1 / -1;
+}
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.bar-col {
+  text-align: center;
+}
+
+.bar-track {
+  height: 180px;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(211, 229, 218, 0.65), rgba(242, 246, 238, 0.85));
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 14px 14px 8px 8px;
+  background: linear-gradient(180deg, #3f8e63 0%, #1f6b45 100%);
+}
+
+.bar-col strong,
+.bar-col span {
+  display: block;
+}
+
+.bar-col strong {
+  margin-top: 8px;
+  color: #173525;
+  font-size: 0.85rem;
+}
+
+.bar-col span {
+  margin-top: 4px;
+  color: #617168;
+  font-size: 0.8rem;
 }
 
 .table-wrap {
-  margin-top: 12px;
+  grid-column: 1 / -1;
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .data-table th,
 .data-table td {
   text-align: left;
-  padding: 10px 12px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(31, 107, 69, 0.08);
   vertical-align: top;
 }
 
 .data-table th {
-  background: #f9fafb;
-  font-weight: 700;
-  color: #374151;
+  color: #4d5d54;
+  font-weight: 800;
 }
 
 .data-table tbody tr:hover {
-  background: #fafafa;
+  background: rgba(240, 246, 240, 0.8);
+}
+
+@media (max-width: 980px) {
+  .climate-header,
+  .climate-layout,
+  .zone-grid,
+  .map-caption {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .climate-header {
+    gap: 14px;
+  }
+
+  .bars {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .map-body {
+    grid-template-columns: 1fr;
+  }
+
+  .map-sidebar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(30, 96, 147, 0.12);
+  }
+
+  .sidebar-day,
+  .sidebar-slot {
+    white-space: nowrap;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .climate-map-panel,
+  .rain-chart,
+  .table-wrap,
+  .overview-card,
+  .zone-card {
+    border-radius: 20px;
+  }
+
+  .tunisia-map {
+    min-height: 520px;
+  }
+
+  .map-canvas {
+    max-width: calc(100% - 16px);
+  }
+
+  .place-label {
+    font-size: 0.65rem;
+  }
+
+  .place-label.emphasis {
+    font-size: 0.74rem;
+  }
+
+  .bars {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .panel-topline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .map-topbar {
+    flex-wrap: wrap;
+  }
+
+  .map-date {
+    margin-left: 0;
+  }
 }

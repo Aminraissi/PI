@@ -10,17 +10,37 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 public class GatewayCorsConfig {
 
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("Authorization"));
+//    @Bean
+//    public CorsFilter corsFilter() {
+//        CorsConfiguration config = new CorsConfiguration();
+//        config.setAllowCredentials(true);
+//        config.setAllowedOrigins(List.of("http://localhost:4200"));
+//        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+//        config.setAllowedHeaders(List.of("*"));
+//        config.setExposedHeaders(List.of("Authorization"));
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", config);
+//        return new CorsFilter(source);
+//    }
+@Bean
+public CorsFilter corsFilter() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
+    config.setAllowedOriginPatterns(List.of(
+            "http://localhost:4200",
+            "https://localhost:4200",
+            "http://192.168.*.*:4200",
+            "https://192.168.*.*:4200"
+    ));
+
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setExposedHeaders(List.of("Authorization"));
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return new CorsFilter(source);
+}
 }
