@@ -5,6 +5,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { UsersComponent } from './users/users.component';
 import { MarketplaceAdminComponent } from './marketplace-admin/marketplace-admin.component';
 import { DashboardEventComponent } from './dashboard-event/dashboard-event.component';
+import { ContratAdminComponent } from './dashboard-contrat-admin/contrat-admin/contrat-admin.component';
 
 const routes: Routes = [
   {
@@ -22,6 +23,7 @@ const routes: Routes = [
       { path: 'users', component: UsersComponent },
       { path: 'marketplace', component: MarketplaceAdminComponent },
       { path: 'events', component: DashboardEventComponent },
+      {path:'contrats',component: ContratAdminComponent},
 
       { path: '**', redirectTo: '' }
     ]
