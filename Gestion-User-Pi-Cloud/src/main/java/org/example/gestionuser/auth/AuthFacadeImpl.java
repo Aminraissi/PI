@@ -2,6 +2,8 @@ package org.example.gestionuser.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.example.gestionuser.Services.IHachageService;
+import org.example.gestionuser.Services.IRecaptchaService;
 import org.example.gestionuser.Services.IUser;
 import org.example.gestionuser.Services.SmsService;
 import org.example.gestionuser.dtos.*;
@@ -11,16 +13,15 @@ import org.example.gestionuser.entities.Role;
 import org.example.gestionuser.entities.StatutCompte;
 import org.example.gestionuser.entities.User;
 import org.example.gestionuser.util.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
-
 import java.util.Locale;
 import java.util.Map;
 
@@ -30,18 +31,34 @@ public class AuthFacadeImpl implements AuthFacade {
 
     private final IUser userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final IHachageService hachageService;
+    private final IRecaptchaService recaptchaService;
     private final SmsService smsService;
+
 
     @Value("${google.client-id}")
     private String googleClientId;
 
     @Override
-    public LoginResponse login(String email, String motDePasse) {
+    public LoginResponse login(String email, String motDePasse, String captchaToken) {
+
+        boolean isCaptchaValid = recaptchaService.verifyCaptcha(captchaToken);
+        if (!isCaptchaValid) {
+            System.err.println("Échec validation CAPTCHA");
+            return new LoginResponse(null, null, null, email, null, null, null, null,
+                    "LOGIN", false, "Échec de vérification CAPTCHA. Veuillez réessayer.");
+        }
+
         User user = userService.findByEmail(email);
 
-        if (user == null || user.getMotDePasse() == null || !user.getMotDePasse().equals(motDePasse)) {
+        if (user == null) {
             return new LoginResponse(null, null, null, email, null, null, null, null,
-                    "LOGIN", false, "Invalid credentials");
+                    "LOGIN", false, "No account was found for this email address");
+        }
+
+        if (!hachageService.verifyPassword(motDePasse, user.getMotDePasse())) {
+            return new LoginResponse(null, null, null, email, null, null, null, null,
+                    "LOGIN", false, "Incorrect email or password");
         }
 
         if (user.getEmailVerificationStatus() != EmailVerificationStatus.VERIFIED) {
@@ -58,6 +75,24 @@ public class AuthFacadeImpl implements AuthFacade {
                     true,
                     "Email verification required before access"
             );
+        }
+
+        if (user.getStatutCompte() == StatutCompte.SUSPENDU) {
+            return blockedLoginResponse(user, "ACCOUNT_SUSPENDED", "Account suspended by administrator");
+        }
+
+        if (user.getStatutCompte() == StatutCompte.REFUSE) {
+            String message = user.getMotifRefus() != null && !user.getMotifRefus().isBlank()
+                    ? "Account request rejected: " + user.getMotifRefus()
+                    : "Account request rejected by administrator";
+            return blockedLoginResponse(user, "ACCOUNT_REFUSED", message);
+        }
+
+        if (user.getStatutCompte() == StatutCompte.EN_ATTENTE) {
+            String message = user.getProfileValidationStatus() == ProfileValidationStatus.PENDING_VALIDATION
+                    ? "Your account is awaiting document review by an administrator"
+                    : "Account pending administrator review";
+            return blockedLoginResponse(user, "PENDING_ADMIN_REVIEW", message);
         }
 
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail());
@@ -88,9 +123,9 @@ public class AuthFacadeImpl implements AuthFacade {
 
         if (request.getEmail() == null || request.getEmail().isBlank() ||
                 request.getMotDePasse() == null || request.getMotDePasse().isBlank() ||
-            normalizedRole == null) {
+                normalizedRole == null) {
             return new SignupResponse(null, request.getEmail(), null, null,
-                null, null, "SIGNUP_STEP1", "Missing required fields or invalid role");
+                    null, null, "SIGNUP_STEP1", "Missing required fields or invalid role");
         }
 
         User existing = userService.findByEmail(request.getEmail());
@@ -98,17 +133,17 @@ public class AuthFacadeImpl implements AuthFacade {
             return new SignupResponse(existing.getId(), existing.getEmail(),
                     existing.getRole() != null ? existing.getRole().name() : null,
                     existing.getStatutCompte() != null ? existing.getStatutCompte().name() : null,
-                existing.getEmailVerificationStatus() != null ? existing.getEmailVerificationStatus().name() : null,
-                existing.getProfileValidationStatus() != null ? existing.getProfileValidationStatus().name() : null,
-                "LOGIN",
-                "Email already exists");
+                    existing.getEmailVerificationStatus() != null ? existing.getEmailVerificationStatus().name() : null,
+                    existing.getProfileValidationStatus() != null ? existing.getProfileValidationStatus().name() : null,
+                    "LOGIN",
+                    "Email already exists");
         }
 
         User user = new User();
         user.setNom(request.getNom());
         user.setPrenom(request.getPrenom());
         user.setEmail(request.getEmail());
-        user.setMotDePasse(request.getMotDePasse());
+        user.setMotDePasse(hachageService.hashPassword(request.getMotDePasse()));
         if (request.getPhoto() != null) {
             user.setPhoto(request.getPhoto());
         }
@@ -119,8 +154,8 @@ public class AuthFacadeImpl implements AuthFacade {
         user.setStatutCompte(StatutCompte.EN_ATTENTE);
         user.setEmailVerificationStatus(EmailVerificationStatus.PENDING);
         user.setProfileValidationStatus(roleNeedsExtendedProfile(normalizedRole)
-            ? ProfileValidationStatus.INCOMPLETE
-            : ProfileValidationStatus.NOT_REQUIRED);
+                ? ProfileValidationStatus.INCOMPLETE
+                : ProfileValidationStatus.NOT_REQUIRED);
 
         User saved = userService.adduser(user);
 
@@ -129,16 +164,16 @@ public class AuthFacadeImpl implements AuthFacade {
 
         String nextStep = roleNeedsExtendedProfile(saved.getRole()) ? "SIGNUP_STEP2" : "VERIFY_EMAIL";
         return new SignupResponse(
-            saved.getId(),
-            saved.getEmail(),
-            saved.getRole().name(),
-            saved.getStatutCompte().name(),
-            saved.getEmailVerificationStatus().name(),
-            saved.getProfileValidationStatus().name(),
-            nextStep,
-            roleNeedsExtendedProfile(saved.getRole())
-                ? "Step 1 completed. Continue with profile details."
-                : "Account created. Please verify your email before login."
+                saved.getId(),
+                saved.getEmail(),
+                saved.getRole().name(),
+                saved.getStatutCompte().name(),
+                saved.getEmailVerificationStatus().name(),
+                saved.getProfileValidationStatus().name(),
+                nextStep,
+                roleNeedsExtendedProfile(saved.getRole())
+                        ? "Step 1 completed. Continue with profile details."
+                        : "Account created. Please verify your email before login."
         );
     }
 
@@ -202,15 +237,8 @@ public class AuthFacadeImpl implements AuthFacade {
         }
 
         // TODO(email-team): Validate verification token and expiration before marking email as verified.
-        // Current implementation is a dummy switch to allow integration progress.
         user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
-        user.setStatutCompte(StatutCompte.APPROUVE);
-
-        if (user.getProfileValidationStatus() == null) {
-            user.setProfileValidationStatus(roleNeedsDocumentValidation(user.getRole())
-                    ? ProfileValidationStatus.PENDING_VALIDATION
-                    : ProfileValidationStatus.NOT_REQUIRED);
-        }
+        normalizeStatusesAfterEmailVerification(user);
 
         User updated = userService.updateUser(user);
         return new SignupResponse(
@@ -225,130 +253,56 @@ public class AuthFacadeImpl implements AuthFacade {
         );
     }
 
-    private Role parseRole(String rawRole) {
-        if (rawRole == null || rawRole.isBlank()) {
-            return null;
-        }
-
-        String normalized = rawRole
-                .trim()
-                .toUpperCase(Locale.ROOT)
-                .replace("-", "")
-                .replace("_", "")
-                .replace(" ", "");
-
-        return switch (normalized) {
-            case "FARMER", "AGRICULTEUR" -> Role.AGRICULTEUR;
-            case "AGRICULTURALEXPERT", "EXPERTAGRICOLE" -> Role.EXPERT_AGRICOLE;
-            case "EVENTORGANIZER", "ORGANISATEUREVENEMENT" -> Role.ORGANISATEUR_EVENEMENT;
-            case "TRANSPORTER", "TRANSPORTEUR" -> Role.TRANSPORTEUR;
-            case "VETERINARIAN", "VETERINAIRE" -> Role.VETERINAIRE;
-            case "ADMIN" -> Role.ADMIN;
-            case "BUYER", "ACHETEUR" -> Role.ACHETEUR;
-            case "AGENT" -> Role.AGENT;
-            default -> null;
-        };
-    }
-
-    private boolean roleNeedsExtendedProfile(Role role) {
-        return role != null && role != Role.ADMIN && role != Role.ACHETEUR;
-    }
-
-    private boolean roleNeedsDocumentValidation(Role role) {
-        return role == Role.EXPERT_AGRICOLE
-                || role == Role.AGENT
-                || role == Role.ORGANISATEUR_EVENEMENT;
-    }
-
-    private void triggerEmailVerificationEmail(User user) {
-        // TODO(email-team): integrate mail provider here, generate signed token and send verification link.
-    }
-
-    private String buildUsername(User user) {
-        String nom = user.getNom() == null ? "" : user.getNom().trim();
-        String prenom = user.getPrenom() == null ? "" : user.getPrenom().trim();
-        String fullName = (nom + " " + prenom).trim();
-
-        if (!fullName.isEmpty()) {
-            return fullName;
-        }
-
-        return user.getEmail();
-    }
-
     @Override
-    public TokenValidationResponse validateAuthorizationHeader(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return new TokenValidationResponse(false, null, null, "Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        if (!jwtTokenProvider.validateToken(token)) {
-            return new TokenValidationResponse(false, null, null, "Token is invalid or expired");
-        }
-
-        return new TokenValidationResponse(
-                true,
-                jwtTokenProvider.getUserIdFromToken(token),
-                jwtTokenProvider.getEmailFromToken(token),
-                "Token is valid"
-        );
-    }
-
-
-    @Override
-    public SignupResponse forgotPasswordByPhone(String email, String telephone) {
-        if (email == null || email.isBlank()
-                || telephone == null || telephone.isBlank()) {
-            return new SignupResponse(
-                    null,
-                    email,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "FORGOT_PASSWORD_PHONE",
-                    "Email and phone number are required"
-            );
+    public SignupResponse forgotPasswordCheckEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return new SignupResponse(null, null, null, null, null, null,
+                    "FORGOT_PASSWORD_EMAIL", "Email is required");
         }
 
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            return new SignupResponse(
-                    null,
-                    email,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "SIGNUP",
-                    "No account with this email. Please create one."
-            );
+            return new SignupResponse(null, email, null, null, null, null,
+                    "SIGNUP", "No account with this email. Please create one.");
+        }
+
+        return new SignupResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getRole() != null ? user.getRole().name() : null,
+                user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
+                user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
+                user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
+                "FORGOT_PASSWORD_PHONE",
+                "Email found. Please confirm your phone number."
+        );
+    }
+
+    @Override
+    public SignupResponse forgotPasswordByPhone(String email, String telephone) {
+        if (email == null || email.isBlank() || telephone == null || telephone.isBlank()) {
+            return new SignupResponse(null, email, null, null, null, null,
+                    "FORGOT_PASSWORD_PHONE", "Email and phone number are required");
+        }
+
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            return new SignupResponse(null, email, null, null, null, null,
+                    "SIGNUP", "No account with this email. Please create one.");
         }
 
         String savedPhone = user.getTelephone() == null ? "" : user.getTelephone().trim().replace(" ", "");
         String providedPhone = telephone.trim().replace(" ", "");
 
         if (!savedPhone.equals(providedPhone)) {
-            return new SignupResponse(
-                    null,
-                    user.getEmail(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    "FORGOT_PASSWORD_PHONE",
-                    "Wrong phone number for this email account."
-            );
+            return new SignupResponse(null, user.getEmail(), null, null, null, null,
+                    "FORGOT_PASSWORD_PHONE", "Wrong phone number for this email account.");
         }
 
         String smsPhone = normalizePhoneForSms(telephone);
-
-        smsService.sendSms(
-                smsPhone,
-                "Your verification code for GreenRoots website."
-        );
+        smsService.sendSms(smsPhone, "Your verification code for GreenRoots website.");
 
         return new SignupResponse(
                 user.getId(),
@@ -368,80 +322,39 @@ public class AuthFacadeImpl implements AuthFacade {
                 || telephone == null || telephone.isBlank()
                 || code == null || code.isBlank()
                 || newPassword == null || newPassword.isBlank()) {
-            return new SignupResponse(
-                    null,
-                    email,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "RESET_PASSWORD",
-                    "Email, phone, code and new password are required"
-            );
+            return new SignupResponse(null, email, null, null, null, null,
+                    "RESET_PASSWORD", "Email, phone, code and new password are required");
         }
 
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            return new SignupResponse(
-                    null,
-                    email,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "SIGNUP",
-                    "No account with this email. Please create one."
-            );
+            return new SignupResponse(null, email, null, null, null, null,
+                    "SIGNUP", "No account with this email. Please create one.");
         }
 
         String savedPhone = user.getTelephone() == null ? "" : user.getTelephone().trim().replace(" ", "");
         String providedPhone = telephone.trim().replace(" ", "");
 
         if (!savedPhone.equals(providedPhone)) {
-            return new SignupResponse(
-                    null,
-                    user.getEmail(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    "RESET_PASSWORD",
-                    "Wrong phone number for this email account."
-            );
+            return new SignupResponse(null, user.getEmail(), null, null, null, null,
+                    "RESET_PASSWORD", "Wrong phone number for this email account.");
         }
 
         String smsPhone = normalizePhoneForSms(telephone);
-
         boolean validCode = smsService.checkCode(smsPhone, code);
 
         if (!validCode) {
-            return new SignupResponse(
-                    null,
-                    user.getEmail(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    "RESET_PASSWORD",
-                    "Invalid or expired reset code"
-            );
+            return new SignupResponse(null, user.getEmail(), null, null, null, null,
+                    "RESET_PASSWORD", "Invalid or expired reset code");
         }
 
         if (newPassword.length() < 8) {
-            return new SignupResponse(
-                    null,
-                    user.getEmail(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    "RESET_PASSWORD",
-                    "Password must be at least 8 characters"
-            );
+            return new SignupResponse(null, user.getEmail(), null, null, null, null,
+                    "RESET_PASSWORD", "Password must be at least 8 characters");
         }
 
-        user.setMotDePasse(newPassword);
+        user.setMotDePasse(hachageService.hashPassword(newPassword)); // ← bug fix: hash before saving
         User updated = userService.updateUser(user);
 
         return new SignupResponse(
@@ -453,62 +366,6 @@ public class AuthFacadeImpl implements AuthFacade {
                 updated.getProfileValidationStatus() != null ? updated.getProfileValidationStatus().name() : null,
                 "LOGIN",
                 "Password reset successfully. You can now sign in."
-        );
-    }
-
-    private String normalizePhoneForSms(String telephone) {
-        String cleaned = telephone.trim().replace(" ", "");
-
-        if (cleaned.startsWith("+")) {
-            return cleaned;
-        }
-
-        if (cleaned.length() == 8) {
-            return "+216" + cleaned;
-        }
-
-        return cleaned;
-    }
-
-    @Override
-    public SignupResponse forgotPasswordCheckEmail(String email) {
-        if (email == null || email.isBlank()) {
-            return new SignupResponse(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "FORGOT_PASSWORD_EMAIL",
-                    "Email is required"
-            );
-        }
-
-        User user = userService.findByEmail(email);
-
-        if (user == null) {
-            return new SignupResponse(
-                    null,
-                    email,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "SIGNUP",
-                    "No account with this email. Please create one."
-            );
-        }
-
-        return new SignupResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getRole() != null ? user.getRole().name() : null,
-                user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
-                user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
-                user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
-                "FORGOT_PASSWORD_PHONE",
-                "Email found. Please confirm your phone number."
         );
     }
 
@@ -535,11 +392,10 @@ public class AuthFacadeImpl implements AuthFacade {
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
-
-            String email = payload.getEmail();
+            String email    = payload.getEmail();
             String firstName = (String) payload.get("given_name");
-            String lastName = (String) payload.get("family_name");
-            String picture = (String) payload.get("picture");
+            String lastName  = (String) payload.get("family_name");
+            String picture   = (String) payload.get("picture");
 
             User user = userService.findByEmail(email);
 
@@ -554,7 +410,6 @@ public class AuthFacadeImpl implements AuthFacade {
                 user.setStatutCompte(StatutCompte.APPROUVE);
                 user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
                 user.setProfileValidationStatus(ProfileValidationStatus.NOT_REQUIRED);
-
                 user = userService.adduser(user);
             }
 
@@ -579,6 +434,7 @@ public class AuthFacadeImpl implements AuthFacade {
                     "GOOGLE_LOGIN", false, "Google login failed: " + e.getMessage());
         }
     }
+
     @Override
     public LoginResponse completeGoogleSignup(GoogleCompleteSignupRequest request) {
         try {
@@ -586,7 +442,6 @@ public class AuthFacadeImpl implements AuthFacade {
                     || request.getCredential() == null || request.getCredential().isBlank()
                     || request.getTelephone() == null || request.getTelephone().isBlank()
                     || request.getRole() == null || request.getRole().isBlank()) {
-
                 return new LoginResponse(null, null, null, null, null, null, null, null,
                         "GOOGLE_COMPLETE_SIGNUP", false, "Missing required Google signup fields");
             }
@@ -606,21 +461,18 @@ public class AuthFacadeImpl implements AuthFacade {
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
-
-            String email = payload.getEmail();
+            String email     = payload.getEmail();
             String firstName = (String) payload.get("given_name");
-            String lastName = (String) payload.get("family_name");
-            String picture = (String) payload.get("picture");
+            String lastName  = (String) payload.get("family_name");
+            String picture   = (String) payload.get("picture");
 
             Role normalizedRole = parseRole(request.getRole());
-
             if (normalizedRole == null) {
                 return new LoginResponse(null, null, null, email, null, null, null, null,
                         "GOOGLE_COMPLETE_SIGNUP", false, "Invalid role");
             }
 
             User user = userService.findByEmail(email);
-
             if (user == null) {
                 user = new User();
                 user.setEmail(email);
@@ -634,7 +486,6 @@ public class AuthFacadeImpl implements AuthFacade {
             user.setRole(normalizedRole);
             user.setStatutCompte(StatutCompte.APPROUVE);
             user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
-
             user.setProfileValidationStatus(
                     roleNeedsExtendedProfile(normalizedRole)
                             ? ProfileValidationStatus.INCOMPLETE
@@ -676,14 +527,8 @@ public class AuthFacadeImpl implements AuthFacade {
                     || request.getAccessToken() == null || request.getAccessToken().isBlank()
                     || request.getTelephone() == null || request.getTelephone().isBlank()
                     || request.getRole() == null || request.getRole().isBlank()) {
-
-                return new LoginResponse(
-                        null, null, null, null,
-                        null, null, null, null,
-                        "FACEBOOK_COMPLETE_SIGNUP",
-                        false,
-                        "Missing required Facebook signup fields"
-                );
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP", false, "Missing required Facebook signup fields");
             }
 
             String graphUrl = "https://graph.facebook.com/me"
@@ -691,60 +536,39 @@ public class AuthFacadeImpl implements AuthFacade {
                     + "&access_token=" + request.getAccessToken();
 
             RestTemplate restTemplate = new RestTemplate();
-
             Map<String, Object> facebookProfile = restTemplate.getForObject(graphUrl, Map.class);
 
             if (facebookProfile == null || facebookProfile.get("id") == null) {
-                return new LoginResponse(
-                        null, null, null, null,
-                        null, null, null, null,
-                        "FACEBOOK_COMPLETE_SIGNUP",
-                        false,
-                        "Invalid Facebook token"
-                );
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP", false, "Invalid Facebook token");
             }
 
-            String email = (String) facebookProfile.get("email");
+            String email     = (String) facebookProfile.get("email");
             String firstName = (String) facebookProfile.get("first_name");
-            String lastName = (String) facebookProfile.get("last_name");
+            String lastName  = (String) facebookProfile.get("last_name");
 
             if (email == null || email.isBlank()) {
-                return new LoginResponse(
-                        null, null, null, null,
-                        null, null, null, null,
-                        "FACEBOOK_COMPLETE_SIGNUP",
-                        false,
-                        "Facebook account did not provide an email"
-                );
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP", false, "Facebook account did not provide an email");
             }
 
             String pictureUrl = null;
-
             Object pictureObj = facebookProfile.get("picture");
             if (pictureObj instanceof Map<?, ?> pictureMap) {
                 Object dataObj = pictureMap.get("data");
                 if (dataObj instanceof Map<?, ?> dataMap) {
                     Object urlObj = dataMap.get("url");
-                    if (urlObj != null) {
-                        pictureUrl = urlObj.toString();
-                    }
+                    if (urlObj != null) pictureUrl = urlObj.toString();
                 }
             }
 
             Role normalizedRole = parseRole(request.getRole());
-
             if (normalizedRole == null) {
-                return new LoginResponse(
-                        null, null, null, email,
-                        null, null, null, null,
-                        "FACEBOOK_COMPLETE_SIGNUP",
-                        false,
-                        "Invalid role"
-                );
+                return new LoginResponse(null, null, null, email, null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP", false, "Invalid role");
             }
 
             User user = userService.findByEmail(email);
-
             if (user == null) {
                 user = new User();
                 user.setEmail(email);
@@ -758,7 +582,6 @@ public class AuthFacadeImpl implements AuthFacade {
             user.setRole(normalizedRole);
             user.setStatutCompte(StatutCompte.APPROUVE);
             user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
-
             user.setProfileValidationStatus(
                     roleNeedsExtendedProfile(normalizedRole)
                             ? ProfileValidationStatus.INCOMPLETE
@@ -788,28 +611,17 @@ public class AuthFacadeImpl implements AuthFacade {
             );
 
         } catch (Exception e) {
-            return new LoginResponse(
-                    null, null, null, null,
-                    null, null, null, null,
-                    "FACEBOOK_COMPLETE_SIGNUP",
-                    false,
-                    "Facebook signup failed: " + e.getMessage()
-            );
+            return new LoginResponse(null, null, null, null, null, null, null, null,
+                    "FACEBOOK_COMPLETE_SIGNUP", false, "Facebook signup failed: " + e.getMessage());
         }
     }
-
 
     @Override
     public LoginResponse loginWithFacebook(String accessToken) {
         try {
             if (accessToken == null || accessToken.isBlank()) {
-                return new LoginResponse(
-                        null, null, null, null,
-                        null, null, null, null,
-                        "FACEBOOK_LOGIN",
-                        false,
-                        "Missing Facebook access token"
-                );
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "FACEBOOK_LOGIN", false, "Missing Facebook access token");
             }
 
             String graphUrl = "https://graph.facebook.com/me"
@@ -820,39 +632,24 @@ public class AuthFacadeImpl implements AuthFacade {
             Map<String, Object> facebookProfile = restTemplate.getForObject(graphUrl, Map.class);
 
             if (facebookProfile == null || facebookProfile.get("id") == null) {
-                return new LoginResponse(
-                        null, null, null, null,
-                        null, null, null, null,
-                        "FACEBOOK_LOGIN",
-                        false,
-                        "Invalid Facebook token"
-                );
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "FACEBOOK_LOGIN", false, "Invalid Facebook token");
             }
 
-            String email = (String) facebookProfile.get("email");
+            String email     = (String) facebookProfile.get("email");
             String firstName = (String) facebookProfile.get("first_name");
-            String lastName = (String) facebookProfile.get("last_name");
+            String lastName  = (String) facebookProfile.get("last_name");
 
             if (email == null || email.isBlank()) {
-                return new LoginResponse(
-                        null, null, null, null,
-                        null, null, null, null,
-                        "FACEBOOK_LOGIN",
-                        false,
-                        "Facebook account did not provide an email"
-                );
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "FACEBOOK_LOGIN", false, "Facebook account did not provide an email");
             }
 
             User user = userService.findByEmail(email);
 
             if (user == null) {
-                return new LoginResponse(
-                        null, null, null, email,
-                        null, null, null, null,
-                        "SIGNUP",
-                        false,
-                        "No account found with this Facebook email. Please sign up first."
-                );
+                return new LoginResponse(null, null, null, email, null, null, null, null,
+                        "SIGNUP", false, "No account found with this Facebook email. Please sign up first.");
             }
 
             String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail());
@@ -872,14 +669,129 @@ public class AuthFacadeImpl implements AuthFacade {
             );
 
         } catch (Exception e) {
-            return new LoginResponse(
-                    null, null, null, null,
-                    null, null, null, null,
-                    "FACEBOOK_LOGIN",
-                    false,
-                    "Facebook login failed: " + e.getMessage()
-            );
+            return new LoginResponse(null, null, null, null, null, null, null, null,
+                    "FACEBOOK_LOGIN", false, "Facebook login failed: " + e.getMessage());
         }
     }
-}
 
+    private void normalizeStatusesAfterEmailVerification(User user) {
+        if (roleNeedsDocumentValidation(user.getRole())) {
+            if (user.getProfileValidationStatus() == null || user.getProfileValidationStatus() == ProfileValidationStatus.INCOMPLETE) {
+                user.setProfileValidationStatus(ProfileValidationStatus.PENDING_VALIDATION);
+            }
+            if (user.getProfileValidationStatus() == ProfileValidationStatus.VALIDATED) {
+                user.setStatutCompte(StatutCompte.APPROUVE);
+            } else if (user.getProfileValidationStatus() == ProfileValidationStatus.REJECTED) {
+                user.setStatutCompte(StatutCompte.REFUSE);
+            } else {
+                user.setStatutCompte(StatutCompte.EN_ATTENTE);
+            }
+            return;
+        }
+
+        if (roleNeedsExtendedProfile(user.getRole())
+                && (user.getProfileValidationStatus() == null || user.getProfileValidationStatus() == ProfileValidationStatus.INCOMPLETE)) {
+            user.setProfileValidationStatus(ProfileValidationStatus.INCOMPLETE);
+            user.setStatutCompte(StatutCompte.EN_ATTENTE);
+            return;
+        }
+
+        if (user.getProfileValidationStatus() == null) {
+            user.setProfileValidationStatus(roleNeedsExtendedProfile(user.getRole())
+                    ? ProfileValidationStatus.VALIDATED
+                    : ProfileValidationStatus.NOT_REQUIRED);
+        }
+        user.setStatutCompte(StatutCompte.APPROUVE);
+    }
+
+    private Role parseRole(String rawRole) {
+        if (rawRole == null || rawRole.isBlank()) return null;
+
+        String normalized = rawRole
+                .trim()
+                .toUpperCase(Locale.ROOT)
+                .replace("-", "")
+                .replace("_", "")
+                .replace(" ", "");
+
+        return switch (normalized) {
+            case "FARMER", "AGRICULTEUR"                         -> Role.AGRICULTEUR;
+            case "AGRICULTURALEXPERT", "EXPERTAGRICOLE"          -> Role.EXPERT_AGRICOLE;
+            case "EVENTORGANIZER", "ORGANISATEUREVENEMENT"       -> Role.ORGANISATEUR_EVENEMENT;
+            case "TRANSPORTER", "TRANSPORTEUR"                   -> Role.TRANSPORTEUR;
+            case "VETERINARIAN", "VETERINAIRE"                   -> Role.VETERINAIRE;
+            case "ADMIN"                                         -> Role.ADMIN;
+            case "BUYER", "ACHETEUR"                             -> Role.ACHETEUR;
+            case "AGENT"                                         -> Role.AGENT;
+            default                                              -> null;
+        };
+    }
+
+    private boolean roleNeedsExtendedProfile(Role role) {
+        return role != null && role != Role.ADMIN && role != Role.ACHETEUR;
+    }
+
+    private boolean roleNeedsDocumentValidation(Role role) {
+        return role == Role.EXPERT_AGRICOLE
+                || role == Role.AGENT
+                || role == Role.ORGANISATEUR_EVENEMENT;
+    }
+
+    private void triggerEmailVerificationEmail(User user) {
+        // TODO(email-team): integrate mail provider here, generate signed token and send verification link.
+    }
+
+    private String buildUsername(User user) {
+        String prenom = user.getPrenom() == null ? "" : user.getPrenom().trim();
+        String nom    = user.getNom()    == null ? "" : user.getNom().trim();
+        String fullName = (prenom + " " + nom).trim();
+        return !fullName.isEmpty() ? fullName : user.getEmail();
+    }
+
+    private LoginResponse blockedLoginResponse(User user, String nextStep, String message) {
+        return new LoginResponse(
+                null,
+                user.getId(),
+                buildUsername(user),
+                user.getEmail(),
+                user.getRole() != null ? user.getRole().name() : null,
+                user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
+                user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
+                user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
+                nextStep,
+                false,
+                message
+        );
+    }
+
+    private String normalizePhoneForSms(String telephone) {
+        String cleaned = telephone.trim().replace(" ", "");
+        if (cleaned.startsWith("+")) return cleaned;
+        if (cleaned.length() == 8) return "+216" + cleaned;
+        return cleaned;
+    }
+
+    @Override
+    public TokenValidationResponse validateAuthorizationHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return new TokenValidationResponse(false, null, null, "Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+        if (!jwtTokenProvider.validateToken(token)) {
+            return new TokenValidationResponse(false, null, null, "Token is invalid or expired");
+        }
+
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        User user = userId == null ? null : userService.getUser(userId);
+        if (user == null) {
+            return new TokenValidationResponse(false, null, null, "User not found");
+        }
+
+        if (user.getStatutCompte() == StatutCompte.SUSPENDU) {
+            return new TokenValidationResponse(false, user.getId(), user.getEmail(), "Account suspended by administrator");
+        }
+
+        return new TokenValidationResponse(true, user.getId(), user.getEmail(), "Token is valid");
+    }
+}

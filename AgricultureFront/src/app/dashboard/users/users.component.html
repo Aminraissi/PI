@@ -1,130 +1,331 @@
-<div class="users-page">
-  <div class="section-header">
-    <div class="section-label">
-      <i class="fas fa-users"></i> Gestion des comptes
-    </div>
-    <h2 class="section-title">
-      Utilisateurs en <span>attente</span>
-    </h2>
-    <p class="section-desc">
-      Consultez et gérez les demandes de création de compte des nouveaux utilisateurs
-    </p>
+<div class="dash-content user-admin-page">
+  <div class="dash-page-title">
+    <h1>User Management</h1>
+    <p>Review accounts, manage access, and monitor verification states from one admin workspace.</p>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="loading" class="state-container loading-state">
+  <div class="user-admin-tabs">
+    <button [class.active]="activeTab === 'all'" (click)="setTab('all')">
+      <i class="fas fa-users"></i>
+      All users
+      <span>{{ users.length }}</span>
+    </button>
+    <button [class.active]="activeTab === 'review'" (click)="setTab('review')">
+      <i class="fas fa-file-shield"></i>
+      Review queue
+      <span>{{ reviewQueue.length }}</span>
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="dash-card state-card">
     <div class="spinner"></div>
-    <p>Chargement des utilisateurs...</p>
+    <p>Loading user management data...</p>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="error && !loading" class="state-container error-state">
+  <div *ngIf="error && !loading" class="dash-card state-card error-card">
     <i class="fas fa-exclamation-circle"></i>
     <p>{{ error }}</p>
   </div>
 
-  <!-- Success State -->
-  <div *ngIf="success && !loading" class="state-container success-state">
+  <div *ngIf="success && !loading" class="dash-card state-card success-card">
     <i class="fas fa-check-circle"></i>
     <p>{{ success }}</p>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!loading && getRoleKeys().length === 0 && !error" class="state-container empty-state">
-    <i class="fas fa-inbox"></i>
-    <p>Aucun utilisateur en attente pour le moment</p>
-    <span class="empty-subtitle">Tous les utilisateurs en attente ont été traités</span>
-  </div>
+  <section *ngIf="!loading && activeTab === 'all'" class="dash-card admin-users-card">
+    <div class="admin-toolbar">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input id="user-search" type="text" [(ngModel)]="searchTerm" placeholder="Search by name, email, role or region..." />
+      </div>
 
-  <!-- Users by Role -->
-  <div *ngFor="let role of getRoleKeys(); let i = index" class="role-section">
-    <div class="role-header">
-      <h3 class="role-title">
-        <i [class]="getRoleIcon(role)"></i>
-        {{ formatRole(role) }}
-      </h3>
-      <span class="role-count">{{ groupedUsers[role].length || 0 }} en attente</span>
+      <div class="toolbar-actions">
+        <select class="filter-select" id="role-filter" [(ngModel)]="roleFilter">
+          <option value="ALL">All roles</option>
+          <option *ngFor="let role of availableRoles" [value]="role">{{ prettyLabel(role) }}</option>
+        </select>
+
+        <select class="filter-select" id="account-filter" [(ngModel)]="accountStatusFilter">
+          <option value="ALL">All accounts</option>
+          <option value="EN_ATTENTE">Pending</option>
+          <option value="APPROUVE">Approved</option>
+          <option value="REFUSE">Refused</option>
+          <option value="SUSPENDU">Suspended</option>
+        </select>
+
+        <select class="filter-select" id="profile-filter" [(ngModel)]="profileStatusFilter">
+          <option value="ALL">All profiles</option>
+          <option value="NOT_REQUIRED">Not required</option>
+          <option value="INCOMPLETE">Incomplete</option>
+          <option value="PENDING_VALIDATION">Pending review</option>
+          <option value="VALIDATED">Validated</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+
+        <div class="view-toggle">
+          <button type="button" [class.active]="viewMode === 'cards'" (click)="setViewMode('cards')">
+            <i class="fas fa-bars"></i>
+            Cards
+          </button>
+          <button type="button" [class.active]="viewMode === 'table'" (click)="setViewMode('table')">
+            <i class="fas fa-table"></i>
+            Table
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="table-wrapper">
+    <div *ngIf="filteredUsers.length === 0" class="empty-state">
+      No users match the current filters.
+    </div>
+
+    <div class="users-list-view" *ngIf="filteredUsers.length > 0 && viewMode === 'cards'">
+      <article class="user-list-card" *ngFor="let user of filteredUsers; trackBy: trackByUserId">
+        <div class="user-list-main">
+          <div class="user-list-identity">
+            <div class="user-photo">
+              <img *ngIf="getPhotoUrl(user.photo); else fallbackAvatar" [src]="getPhotoUrl(user.photo)!" [alt]="getFullName(user)" />
+              <ng-template #fallbackAvatar>
+                <div class="avatar-fallback">
+                  <i class="fas fa-user"></i>
+                </div>
+              </ng-template>
+            </div>
+
+            <div class="identity-copy">
+              <strong>{{ getFullName(user) }}</strong>
+              <span>{{ user.email || 'No email' }}</span>
+              <div class="inline-meta">
+                <span class="role-badge">{{ prettyLabel(user.role) }}</span>
+                <span class="inline-meta-text">Region: {{ user.region || '-' }}</span>
+                <span class="inline-meta-text">Phone: {{ user.telephone || '-' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="user-list-statuses">
+            <div class="status-line">
+              <label>Account</label>
+              <span class="status-badge" [ngClass]="'status-' + (user.statutCompte?.toLowerCase() || 'unknown')">
+                {{ prettyLabel(user.statutCompte) }}
+              </span>
+            </div>
+            <div class="status-line">
+              <label>Profile</label>
+              <span class="status-badge profile-badge" [ngClass]="'profile-' + (user.profileValidationStatus?.toLowerCase() || 'unknown')">
+                {{ prettyLabel(user.profileValidationStatus) }}
+              </span>
+            </div>
+            <div class="status-line">
+              <label>Email</label>
+              <span class="email-text" [class.verified]="user.emailVerificationStatus === 'VERIFIED'">
+                {{ prettyLabel(user.emailVerificationStatus) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="user-list-actions" *ngIf="editingUserId !== user.id">
+            <button type="button" class="action-btn neutral" (click)="startEdit(user)" [disabled]="loading">
+              <i class="fas fa-pen"></i>
+              Edit
+            </button>
+            <button type="button" class="action-btn success" *ngIf="canApprove(user)" (click)="updateAccountStatus(user, 'APPROUVE')" [disabled]="loading">
+              <i class="fas fa-user-check"></i>
+              Approve
+            </button>
+            <button type="button" class="action-btn warning" *ngIf="canSuspend(user)" (click)="updateAccountStatus(user, 'SUSPENDU')" [disabled]="loading">
+              <i class="fas fa-user-lock"></i>
+              Suspend
+            </button>
+            <button type="button" class="action-btn danger" *ngIf="canRefuse(user)" (click)="updateAccountStatus(user, 'REFUSE')" [disabled]="loading">
+              <i class="fas fa-user-times"></i>
+              Refuse
+            </button>
+            <button type="button" class="action-btn danger ghost" (click)="deleteUser(user)" [disabled]="loading">
+              <i class="fas fa-trash"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="edit-panel" *ngIf="editingUserId === user.id && editDraft">
+          <div class="edit-grid">
+            <label>
+              First name
+              <input type="text" [(ngModel)]="editDraft.nom" />
+            </label>
+            <label>
+              Last name
+              <input type="text" [(ngModel)]="editDraft.prenom" />
+            </label>
+            <label>
+              Email
+              <input type="email" [(ngModel)]="editDraft.email" />
+            </label>
+            <label>
+              Phone
+              <input type="text" [(ngModel)]="editDraft.telephone" />
+            </label>
+            <label>
+              Region
+              <input type="text" [(ngModel)]="editDraft.region" />
+            </label>
+          </div>
+          <div class="edit-actions">
+            <button type="button" class="action-btn success" (click)="saveEdit()" [disabled]="loading">
+              <i class="fas fa-save"></i>
+              Save
+            </button>
+            <button type="button" class="action-btn neutral" (click)="cancelEdit()" [disabled]="loading">
+              <i class="fas fa-ban"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <div class="user-list-footer">
+          <div class="footer-item">
+            <label>User ID</label>
+            <strong>#{{ user.id || '-' }}</strong>
+          </div>
+          <div class="footer-item">
+            <label>Documents</label>
+            <strong>{{ getDocumentCount(user) }} attached</strong>
+          </div>
+          <div class="footer-item rejection" *ngIf="user.motifRefus">
+            <label>Rejection note</label>
+            <strong>{{ user.motifRefus }}</strong>
+          </div>
+          <div class="footer-docs" *ngIf="getUserDocuments(user).length > 0">
+            <a *ngFor="let doc of getUserDocuments(user)" [href]="doc" target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-file-lines"></i>
+              {{ getDocumentLabel(doc) }}
+            </a>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="users-table-wrap" *ngIf="filteredUsers.length > 0 && viewMode === 'table'">
       <table class="users-table">
         <thead>
           <tr>
-            <th>Photo</th>
-            <th>Prénom</th>
-            <th>Nom</th>
+            <th>User</th>
+            <th>Role</th>
+            <th>Account</th>
+            <th>Profile</th>
             <th>Email</th>
-            <th>Téléphone</th>
-            <th>Région</th>
-            <th>Statut</th>
+            <th>Region</th>
+            <th>Documents</th>
             <th>Actions</th>
           </tr>
         </thead>
-
         <tbody>
-          <tr *ngFor="let user of groupedUsers[role]" class="user-row">
+          <tr *ngFor="let user of filteredUsers; trackBy: trackByUserId">
             <td>
-              <div class="user-photo">
-                <img
-                  *ngIf="user.photo; else noPhoto"
-                  [src]="user.photo"
-                  alt="Photo utilisateur"
-                  title="{{user.prenom}} {{user.nom}}"
-                />
-                <ng-template #noPhoto>
-                  <div class="no-photo">
-                    <i class="fas fa-user"></i>
-                  </div>
-                </ng-template>
+              <div class="table-user">
+                <div class="table-avatar">
+                  <img *ngIf="getPhotoUrl(user.photo); else tableAvatarFallback" [src]="getPhotoUrl(user.photo)!" [alt]="getFullName(user)" />
+                  <ng-template #tableAvatarFallback>
+                    <div class="avatar-fallback small">
+                      <i class="fas fa-user"></i>
+                    </div>
+                  </ng-template>
+                </div>
+                <div>
+                  <strong>{{ getFullName(user) }}</strong>
+                  <span>{{ user.email || '-' }}</span>
+                </div>
               </div>
             </td>
-
-            <td class="text-primary">{{ user.prenom || '-' }}</td>
-            <td class="text-primary">{{ user.nom || '-' }}</td>
+            <td><span class="role-badge">{{ prettyLabel(user.role) }}</span></td>
             <td>
-              <a [href]="'mailto:' + user.email" class="email-link">
-                {{ user.email || '-' }}
-              </a>
+              <span class="status-badge" [ngClass]="'status-' + (user.statutCompte?.toLowerCase() || 'unknown')">
+                {{ prettyLabel(user.statutCompte) }}
+              </span>
             </td>
             <td>
-              <a *ngIf="user.telephone" [href]="'tel:' + user.telephone" class="phone-link">
-                {{ user.telephone }}
-              </a>
-              <span *ngIf="!user.telephone">-</span>
+              <span class="status-badge profile-badge" [ngClass]="'profile-' + (user.profileValidationStatus?.toLowerCase() || 'unknown')">
+                {{ prettyLabel(user.profileValidationStatus) }}
+              </span>
+            </td>
+            <td>
+              <span class="email-text" [class.verified]="user.emailVerificationStatus === 'VERIFIED'">
+                {{ prettyLabel(user.emailVerificationStatus) }}
+              </span>
             </td>
             <td>{{ user.region || '-' }}</td>
             <td>
-              <span class="status-badge" [ngClass]="'status-' + (user.statutCompte?.toLowerCase() || 'unknown')">
-                {{ user.statutCompte || '-' }}
-              </span>
+              <div class="table-docs" *ngIf="getUserDocuments(user).length > 0; else noDocs">
+                <a *ngFor="let doc of getUserDocuments(user)" [href]="doc" target="_blank" rel="noopener noreferrer">{{ getDocumentLabel(doc) }}</a>
+              </div>
+              <ng-template #noDocs>-</ng-template>
             </td>
-
             <td>
-              <div class="actions-cell">
-                <button
-                  type="button"
-                  (click)="approuver(user)"
-                  [disabled]="loading"
-                  class="btn-action btn-approve"
-                  title="Accepter cet utilisateur"
-                >
-                  <i class="fas fa-check"></i> Accepter
-                </button>
-
-                <button
-                  type="button"
-                  (click)="refuser(user)"
-                  [disabled]="loading"
-                  class="btn-action btn-refuse"
-                  title="Refuser cet utilisateur"
-                >
-                  <i class="fas fa-times"></i> Refuser
-                </button>
+              <div class="table-actions">
+                <button type="button" class="mini-btn neutral" (click)="startEdit(user)" [disabled]="loading">Edit</button>
+                <button type="button" class="mini-btn success" *ngIf="canApprove(user)" (click)="updateAccountStatus(user, 'APPROUVE')" [disabled]="loading">Approve</button>
+                <button type="button" class="mini-btn warning" *ngIf="canSuspend(user)" (click)="updateAccountStatus(user, 'SUSPENDU')" [disabled]="loading">Suspend</button>
+                <button type="button" class="mini-btn danger" *ngIf="canRefuse(user)" (click)="updateAccountStatus(user, 'REFUSE')" [disabled]="loading">Refuse</button>
+                <button type="button" class="mini-btn danger ghost" (click)="deleteUser(user)" [disabled]="loading">Delete</button>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
+
+  <section *ngIf="!loading && activeTab === 'review'" class="dash-card admin-users-card">
+    <div class="section-header-row">
+      <div>
+        <h3>Pending Reviews</h3>
+        <p>Users who submitted documents and are waiting for manual approval.</p>
+      </div>
+    </div>
+
+    <div *ngIf="reviewQueue.length === 0" class="empty-state">
+      No document reviews are pending right now.
+    </div>
+
+    <div class="review-list" *ngIf="reviewQueue.length > 0">
+      <article class="review-item" *ngFor="let user of reviewQueue; trackBy: trackByUserId">
+        <div class="review-main">
+          <div class="review-title">
+            <strong>{{ getFullName(user) }}</strong>
+            <span>{{ prettyLabel(user.role) }} • {{ user.email }}</span>
+          </div>
+          <div class="review-badges">
+            <span class="status-badge status-en_attente">{{ prettyLabel(user.statutCompte) }}</span>
+            <span class="status-badge profile-badge profile-pending_validation">{{ prettyLabel(user.profileValidationStatus) }}</span>
+          </div>
+        </div>
+
+        <div class="review-meta">
+          <span><strong>Email:</strong> {{ prettyLabel(user.emailVerificationStatus) }}</span>
+          <span><strong>Phone:</strong> {{ user.telephone || '-' }}</span>
+          <span><strong>Region:</strong> {{ user.region || '-' }}</span>
+        </div>
+
+        <div class="review-footer">
+          <div class="footer-docs">
+            <a *ngFor="let doc of getUserDocuments(user)" [href]="doc" target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-file-lines"></i>
+              {{ getDocumentLabel(doc) }}
+            </a>
+          </div>
+          <div class="review-actions">
+            <button type="button" class="action-btn success" (click)="approveReview(user)" [disabled]="loading">
+              <i class="fas fa-check"></i>
+              Accept
+            </button>
+            <button type="button" class="action-btn danger" (click)="rejectReview(user)" [disabled]="loading">
+              <i class="fas fa-times"></i>
+              Reject
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
 </div>

@@ -83,6 +83,8 @@ public class DemandePretController {
     public ResponseEntity<?> ajouterDocuments(
             @PathVariable long id,
             @RequestParam("files") List<MultipartFile> files) {
+        System.out.println("🔵 [CONTROLLER] ajouterDocuments appelé pour id=" + id + " avec " + files.size() + " fichiers");
+
 
         try {
             return ResponseEntity.ok(demandePretService.addDocuments(id, files));

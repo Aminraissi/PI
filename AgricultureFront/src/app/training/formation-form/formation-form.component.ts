@@ -66,35 +66,14 @@ export class FormationFormComponent implements OnInit {
     this.isExpertAgricole = this.authService.hasRole('EXPERT_AGRICOLE');
     this.isAccountApproved = this.authService.isAccountApproved();
 
-    // Log permissions
-    console.log('🔐 Formation Form - Permission Check:');
-    console.log('  👤 User ID:', this.currentUserId);
-    console.log('  🎓 Is Expert Agricole:', this.isExpertAgricole);
-    console.log('  ✅ Is Account Approved:', this.isAccountApproved);
-    console.log('  📊 Account Status:', this.authService.getAccountStatus());
-
-    // If not logged in, redirect immediately
     if (!this.currentUserId) {
-      console.log('❌ Redirecting: Not logged in');
       this.router.navigate(['/auth']);
       return;
     }
 
-    // If not EXPERT_AGRICOLE, redirect immediately
-    if (!this.isExpertAgricole) {
-      console.log('❌ Redirecting: Not EXPERT_AGRICOLE');
+    if (!this.isExpertAgricole || !this.isAccountApproved) {
       this.router.navigate(['/training']);
-      return;
     }
-
-    // If account not approved, redirect
-    if (!this.isAccountApproved) {
-      console.log('❌ Redirecting: Account not approved');
-      this.router.navigate(['/training']);
-      return;
-    }
-
-    console.log('✅ Access granted: EXPERT_AGRICOLE with approved account');
   }
 
   loadFormation(): void {
@@ -105,16 +84,16 @@ export class FormationFormComponent implements OnInit {
       this.formationService.getFormationById(Number(id)).subscribe({
         next: (data) => {
           this.formation = data;
-          
+
           if (this.formation.imageUrl) {
             this.imagePreview = this.formation.imageUrl;
           }
-          
+
           this.isLoading = false;
         },
         error: (err) => {
           console.error('Error loading formation:', err);
-          this.error = 'Impossible de charger la formation';
+          this.error = 'Unable to load the training.';
           this.isLoading = false;
         }
       });
@@ -130,7 +109,6 @@ export class FormationFormComponent implements OnInit {
     this.error = null;
     this.success = null;
 
-    // If there's an image to upload, do it first
     if (this.selectedImageFile) {
       this.uploadImageAndSubmit();
     } else {
@@ -147,11 +125,13 @@ export class FormationFormComponent implements OnInit {
     this.formationService.uploadImage(this.selectedImageFile).subscribe({
       next: (response) => {
         this.formation.imageUrl = response.imageUrl;
+        this.imagePreview = response.imageUrl;
+        this.selectedImageFile = null;
         this.submitFormation();
       },
       error: (err) => {
         console.error('Error uploading image:', err);
-        this.error = 'Erreur lors du téléchargement de l\'image';
+        this.error = 'An error occurred while uploading the image.';
         this.isSubmitting = false;
       }
     });
@@ -161,34 +141,28 @@ export class FormationFormComponent implements OnInit {
     if (this.isEditMode && this.formation.idFormation) {
       this.formationService.updateFormation(this.formation.idFormation, this.formation).subscribe({
         next: () => {
-          this.success = 'Formation mise à jour avec succès';
+          this.success = 'Training updated successfully.';
           setTimeout(() => this.router.navigate(['/training', this.formation.idFormation]), 1500);
         },
         error: (err) => {
           console.error('Error updating formation:', err);
-          this.error = 'Erreur lors de la mise à jour de la formation';
+          this.error = 'An error occurred while updating the training.';
           this.isSubmitting = false;
         }
       });
     } else {
-      // Set userId for new formations
       const formationData = { ...this.formation };
       formationData.userId = this.currentUserId ?? undefined;
-      delete formationData.idFormation; // Don't send id for new formations
-      
-      console.log('📤 Sending formation data:', formationData);
-      
+      delete formationData.idFormation;
+
       this.formationService.createFormation(formationData).subscribe({
         next: (data) => {
-          console.log('✅ Formation created successfully:', data);
-          
-          this.success = 'Formation créée avec succès';
+          this.success = 'Training created successfully.';
           setTimeout(() => this.router.navigate(['/training', data.idFormation]), 1500);
         },
         error: (err) => {
-          console.error('❌ Error creating formation:', err);
-          console.error('❌ Error details:', err.error);
-          this.error = 'Erreur lors de la création de la formation';
+          console.error('Error creating formation:', err);
+          this.error = 'An error occurred while creating the training.';
           this.isSubmitting = false;
         }
       });
@@ -197,19 +171,19 @@ export class FormationFormComponent implements OnInit {
 
   validateForm(): boolean {
     if (!this.formation.titre?.trim()) {
-      this.error = 'Le titre est obligatoire';
+      this.error = 'Title is required.';
       return false;
     }
     if (!this.formation.description?.trim()) {
-      this.error = 'La description est obligatoire';
+      this.error = 'Description is required.';
       return false;
     }
     if (!this.formation.thematique?.trim()) {
-      this.error = 'La thématique est obligatoire';
+      this.error = 'Topic is required.';
       return false;
     }
     if (this.formation.estPayante && !this.formation.prix) {
-      this.error = 'Le prix est obligatoire pour une formation payante';
+      this.error = 'Price is required for a paid training.';
       return false;
     }
     return true;
@@ -218,22 +192,20 @@ export class FormationFormComponent implements OnInit {
   async onFileSelected(event: any): Promise<void> {
     const file = event.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
-        this.error = 'Veuillez sélectionner un fichier image valide';
+        this.error = 'Please select a valid image file.';
         event.target.value = '';
         return;
       }
 
-      // Validate file size before compression.
       if (file.size > this.maxOriginalImageBytes) {
-        this.error = 'La taille de l\'image ne doit pas dépasser 5MB';
+        this.error = 'The image size must not exceed 5MB.';
         return;
       }
 
       const optimizedFile = await this.optimizeImageForUpload(file).catch((err) => {
         console.error('Error optimizing image:', err);
-        this.error = 'Impossible de preparer cette image';
+        this.error = 'Unable to prepare this image.';
         event.target.value = '';
         return null;
       });
@@ -241,7 +213,7 @@ export class FormationFormComponent implements OnInit {
         return;
       }
       if (optimizedFile.size > this.maxUploadImageBytes) {
-        this.error = 'Image trop lourde apres optimisation. Choisissez une image plus petite.';
+        this.error = 'The image is still too large after optimization. Choose a smaller image.';
         event.target.value = '';
         return;
       }
@@ -249,17 +221,12 @@ export class FormationFormComponent implements OnInit {
       this.selectedImageFile = optimizedFile;
       this.error = null;
 
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         this.imagePreview = e.target?.result as string;
-        // For now, we'll use the data URL as imageUrl
-        // In production, this would be uploaded to server and get a proper URL
         this.formation.imageUrl = this.imagePreview;
       };
       reader.readAsDataURL(optimizedFile);
-
-      console.log('📸 Image selected:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
     }
   }
 

@@ -1,10 +1,10 @@
 import { EventTypeAgricole } from '../models/calendar.model';
 
 export const EVENT_TYPE_OPTIONS: { value: EventTypeAgricole; label: string }[] = [
-  { value: 'SEMIS', label: 'Semis' },
+  { value: 'SEMIS', label: 'Sowing' },
   { value: 'IRRIGATION', label: 'Irrigation' },
-  { value: 'FERTILISATION', label: 'Fertilisation' },
-  { value: 'AUTRE', label: 'Autre' }
+  { value: 'FERTILISATION', label: 'Fertilization' },
+  { value: 'AUTRE', label: 'Other' }
 ];
 
 export function getEventTypeLabel(code: string): string {
