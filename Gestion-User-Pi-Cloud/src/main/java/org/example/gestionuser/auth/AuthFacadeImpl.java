@@ -1,6 +1,8 @@
 package org.example.gestionuser.auth;
 
 import lombok.AllArgsConstructor;
+import org.example.gestionuser.Services.IHachageService;
+import org.example.gestionuser.Services.IRecaptchaService;
 import org.example.gestionuser.Services.IUser;
 import org.example.gestionuser.dtos.LoginResponse;
 import org.example.gestionuser.dtos.SignupResponse;
@@ -23,12 +25,23 @@ public class AuthFacadeImpl implements AuthFacade {
 
     private final IUser userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final IHachageService hachageService;
+    private final IRecaptchaService recaptchaService;
 
     @Override
-    public LoginResponse login(String email, String motDePasse) {
+    public LoginResponse login(String email, String motDePasse, String captchaToken)  {
+
+        boolean isCaptchaValid = recaptchaService.verifyCaptcha(captchaToken);
+        if (!isCaptchaValid) {
+            System.err.println(" Échec validation CAPTCHA");
+            return new LoginResponse(null, null, null, email, null, null, null, null,
+                    "LOGIN", false, "Échec de vérification CAPTCHA. Veuillez réessayer.");
+        }
+
         User user = userService.findByEmail(email);
 
-        if (user == null || user.getMotDePasse() == null || !user.getMotDePasse().equals(motDePasse)) {
+
+        if (!hachageService.verifyPassword(motDePasse, user.getMotDePasse())) {
             return new LoginResponse(null, null, null, email, null, null, null, null,
                     "LOGIN", false, "Invalid credentials");
         }
@@ -97,7 +110,7 @@ public class AuthFacadeImpl implements AuthFacade {
         user.setNom(request.getNom());
         user.setPrenom(request.getPrenom());
         user.setEmail(request.getEmail());
-        user.setMotDePasse(request.getMotDePasse());
+        user.setMotDePasse(hachageService.hashPassword(request.getMotDePasse()));
         if (request.getPhoto() != null) {
             user.setPhoto(request.getPhoto());
         }

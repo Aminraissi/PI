@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';  
+import { environment } from 'src/environments/environment';
 
 export type BackendRole =
     | 'AGRICULTEUR'
@@ -74,6 +75,7 @@ export interface AuthUser {
     role:         BackendRole;
     statutCompte?: string;
 }
+declare var grecaptcha: any;
 
 @Injectable({
     providedIn: 'root'
@@ -83,37 +85,97 @@ export class AuthService {
     private currentUserSubject = new BehaviorSubject<AuthUser | null>(this.getUserFromStorage());
     public currentUser$ = this.currentUserSubject.asObservable();
 
+    siteKey=environment.siteKey;
+
     constructor(private http: HttpClient) {}
 
-    login(email: string, password: string): Observable<LoginResponse> {
-        return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
-            email,
-            motDePasse: password
-        }).pipe(
+ private getCaptchaToken(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        if (typeof grecaptcha === 'undefined') {
+            console.error(' reCAPTCHA not loaded');
+            if (!environment.production) {
+                console.warn(' Mode dev: simulation CAPTCHA');
+                resolve('dev-simulated-token');
+            } else {
+                reject('reCAPTCHA not loaded');
+            }
+            return;
+        }
+        const token = grecaptcha.getResponse();
+        
+        if (token) {
+            console.log('✅ CAPTCHA token obtenu (v2)');
+            resolve(token);
+        } else {
+            reject('CAPTCHA not completed by user');
+        }
+    });
+}
+ login(email: string, password: string): Observable<LoginResponse> {
+        
+        return from(this.getCaptchaToken()).pipe(
+            switchMap(captchaToken => {
+                console.log('📤 Envoi requête login avec CAPTCHA');
+                return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
+                    email: email,
+                    motDePasse: password,
+                    captchaToken: captchaToken
+                });
+            }),
             map(response => {
                 if (response.token && response.userId !== null && response.role) {
                     const user: AuthUser = {
-                        userId:       response.userId,
-                        username:     response.username || response.email,
-                        email:        response.email,
-                        role:         response.role as BackendRole,
+                        userId: response.userId,
+                        username: response.username || response.email,
+                        email: response.email,
+                        role: response.role as BackendRole,
                         statutCompte: response.statutCompte || undefined
                     };
                     this.storeToken(response.token);
                     this.storeUser(user);
                     this.currentUserSubject.next(user);
-
                     console.log('🔐 User logged in successfully!');
                     console.log('👤 User Role:', response.role);
                     console.log('🆔 User ID:', response.userId);
                     console.log('📧 User Email:', response.email);
                     console.log('📊 Account Status (Statut Compte):', response.statutCompte || 'Not provided');
-                    console.log('✅ Is Approved:', response.statutCompte === 'APPROUVE');
-                }
+                 console.log('✅ Is Approved:', response.statutCompte === 'APPROUVE');                }
                 return response;
             })
         );
     }
+
+
+
+    // login(email: string, password: string): Observable<LoginResponse> {
+    //     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
+    //         email,
+    //         motDePasse: password
+    //     }).pipe(
+    //         map(response => {
+    //             if (response.token && response.userId !== null && response.role) {
+    //                 const user: AuthUser = {
+    //                     userId:       response.userId,
+    //                     username:     response.username || response.email,
+    //                     email:        response.email,
+    //                     role:         response.role as BackendRole,
+    //                     statutCompte: response.statutCompte || undefined
+    //                 };
+    //                 this.storeToken(response.token);
+    //                 this.storeUser(user);
+    //                 this.currentUserSubject.next(user);
+
+    //                 console.log('🔐 User logged in successfully!');
+    //                 console.log('👤 User Role:', response.role);
+    //                 console.log('🆔 User ID:', response.userId);
+    //                 console.log('📧 User Email:', response.email);
+    //                 console.log('📊 Account Status (Statut Compte):', response.statutCompte || 'Not provided');
+    //                 console.log('✅ Is Approved:', response.statutCompte === 'APPROUVE');
+    //             }
+    //             return response;
+    //         })
+    //     );
+    // }
 
     signupStep1(payload: SignupStep1Request): Observable<SignupResponse> {
         return this.http.post<SignupResponse>(`${this.apiUrl}/signup/step1`, payload);
@@ -211,4 +273,8 @@ export class AuthService {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
     }
+
+
+
+    
 }

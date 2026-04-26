@@ -2,6 +2,7 @@ package org.example.gestionuser.Services;
 
 import lombok.AllArgsConstructor;
 import org.example.gestionuser.Repositories.UserRepo;
+import org.example.gestionuser.entities.Role;
 import org.example.gestionuser.entities.StatutCompte;
 import org.example.gestionuser.entities.User;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,10 @@ public class UserServiceImp implements IUser{
 
         user.setStatutCompte(statut);
         return ur.save(user);
+    }
+    @Override
+    public List<User> getInstitutions() {
+        return ur.findByRole(Role.AGENT);
     }
 }
 
