@@ -54,6 +54,9 @@ public class Location {
     @Enumerated(EnumType.STRING)
     private EtatMateriel etat;
 
+    @Column(nullable = false)
+    private Boolean archived = false;
+
 
     public Long getId() {
         return id;
@@ -186,5 +189,13 @@ public class Location {
 
     public void setEtat(EtatMateriel etat) {
         this.etat = etat;
+    }
+
+    public Boolean getArchived() {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived) {
+        this.archived = archived;
     }
 }

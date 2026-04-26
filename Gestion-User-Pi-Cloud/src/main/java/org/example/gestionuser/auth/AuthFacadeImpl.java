@@ -1,12 +1,10 @@
 package org.example.gestionuser.auth;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.example.gestionuser.Services.IUser;
-import org.example.gestionuser.dtos.LoginResponse;
-import org.example.gestionuser.dtos.SignupResponse;
-import org.example.gestionuser.dtos.SignupStep1Request;
-import org.example.gestionuser.dtos.SignupStep2Request;
-import org.example.gestionuser.dtos.TokenValidationResponse;
+import org.example.gestionuser.Services.SmsService;
+import org.example.gestionuser.dtos.*;
 import org.example.gestionuser.entities.EmailVerificationStatus;
 import org.example.gestionuser.entities.ProfileValidationStatus;
 import org.example.gestionuser.entities.Role;
@@ -14,15 +12,28 @@ import org.example.gestionuser.entities.StatutCompte;
 import org.example.gestionuser.entities.User;
 import org.example.gestionuser.util.JwtTokenProvider;
 import org.springframework.stereotype.Service;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Collections;
 
 import java.util.Locale;
+import java.util.Map;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthFacadeImpl implements AuthFacade {
 
     private final IUser userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final SmsService smsService;
+
+    @Value("${google.client-id}")
+    private String googleClientId;
 
     @Override
     public LoginResponse login(String email, String motDePasse) {
@@ -282,6 +293,593 @@ public class AuthFacadeImpl implements AuthFacade {
                 jwtTokenProvider.getEmailFromToken(token),
                 "Token is valid"
         );
+    }
+
+
+    @Override
+    public SignupResponse forgotPasswordByPhone(String email, String telephone) {
+        if (email == null || email.isBlank()
+                || telephone == null || telephone.isBlank()) {
+            return new SignupResponse(
+                    null,
+                    email,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "FORGOT_PASSWORD_PHONE",
+                    "Email and phone number are required"
+            );
+        }
+
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            return new SignupResponse(
+                    null,
+                    email,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "SIGNUP",
+                    "No account with this email. Please create one."
+            );
+        }
+
+        String savedPhone = user.getTelephone() == null ? "" : user.getTelephone().trim().replace(" ", "");
+        String providedPhone = telephone.trim().replace(" ", "");
+
+        if (!savedPhone.equals(providedPhone)) {
+            return new SignupResponse(
+                    null,
+                    user.getEmail(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    "FORGOT_PASSWORD_PHONE",
+                    "Wrong phone number for this email account."
+            );
+        }
+
+        String smsPhone = normalizePhoneForSms(telephone);
+
+        smsService.sendSms(
+                smsPhone,
+                "Your verification code for GreenRoots website."
+        );
+
+        return new SignupResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getRole() != null ? user.getRole().name() : null,
+                user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
+                user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
+                user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
+                "RESET_PASSWORD",
+                "Reset code sent to your phone."
+        );
+    }
+
+    @Override
+    public SignupResponse resetPasswordByPhone(String email, String telephone, String code, String newPassword) {
+        if (email == null || email.isBlank()
+                || telephone == null || telephone.isBlank()
+                || code == null || code.isBlank()
+                || newPassword == null || newPassword.isBlank()) {
+            return new SignupResponse(
+                    null,
+                    email,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "RESET_PASSWORD",
+                    "Email, phone, code and new password are required"
+            );
+        }
+
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            return new SignupResponse(
+                    null,
+                    email,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "SIGNUP",
+                    "No account with this email. Please create one."
+            );
+        }
+
+        String savedPhone = user.getTelephone() == null ? "" : user.getTelephone().trim().replace(" ", "");
+        String providedPhone = telephone.trim().replace(" ", "");
+
+        if (!savedPhone.equals(providedPhone)) {
+            return new SignupResponse(
+                    null,
+                    user.getEmail(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    "RESET_PASSWORD",
+                    "Wrong phone number for this email account."
+            );
+        }
+
+        String smsPhone = normalizePhoneForSms(telephone);
+
+        boolean validCode = smsService.checkCode(smsPhone, code);
+
+        if (!validCode) {
+            return new SignupResponse(
+                    null,
+                    user.getEmail(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    "RESET_PASSWORD",
+                    "Invalid or expired reset code"
+            );
+        }
+
+        if (newPassword.length() < 8) {
+            return new SignupResponse(
+                    null,
+                    user.getEmail(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    "RESET_PASSWORD",
+                    "Password must be at least 8 characters"
+            );
+        }
+
+        user.setMotDePasse(newPassword);
+        User updated = userService.updateUser(user);
+
+        return new SignupResponse(
+                updated.getId(),
+                updated.getEmail(),
+                updated.getRole() != null ? updated.getRole().name() : null,
+                updated.getStatutCompte() != null ? updated.getStatutCompte().name() : null,
+                updated.getEmailVerificationStatus() != null ? updated.getEmailVerificationStatus().name() : null,
+                updated.getProfileValidationStatus() != null ? updated.getProfileValidationStatus().name() : null,
+                "LOGIN",
+                "Password reset successfully. You can now sign in."
+        );
+    }
+
+    private String normalizePhoneForSms(String telephone) {
+        String cleaned = telephone.trim().replace(" ", "");
+
+        if (cleaned.startsWith("+")) {
+            return cleaned;
+        }
+
+        if (cleaned.length() == 8) {
+            return "+216" + cleaned;
+        }
+
+        return cleaned;
+    }
+
+    @Override
+    public SignupResponse forgotPasswordCheckEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return new SignupResponse(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "FORGOT_PASSWORD_EMAIL",
+                    "Email is required"
+            );
+        }
+
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            return new SignupResponse(
+                    null,
+                    email,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "SIGNUP",
+                    "No account with this email. Please create one."
+            );
+        }
+
+        return new SignupResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getRole() != null ? user.getRole().name() : null,
+                user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
+                user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
+                user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
+                "FORGOT_PASSWORD_PHONE",
+                "Email found. Please confirm your phone number."
+        );
+    }
+
+    @Override
+    public LoginResponse loginWithGoogle(String credential) {
+        try {
+            if (credential == null || credential.isBlank()) {
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "GOOGLE_LOGIN", false, "Missing Google credential");
+            }
+
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance()
+            )
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(credential);
+
+            if (idToken == null) {
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "GOOGLE_LOGIN", false, "Invalid Google token");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+
+            String email = payload.getEmail();
+            String firstName = (String) payload.get("given_name");
+            String lastName = (String) payload.get("family_name");
+            String picture = (String) payload.get("picture");
+
+            User user = userService.findByEmail(email);
+
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setPrenom(firstName);
+                user.setNom(lastName);
+                user.setPhoto(picture);
+                user.setMotDePasse(null);
+                user.setRole(Role.ACHETEUR);
+                user.setStatutCompte(StatutCompte.APPROUVE);
+                user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
+                user.setProfileValidationStatus(ProfileValidationStatus.NOT_REQUIRED);
+
+                user = userService.adduser(user);
+            }
+
+            String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail());
+
+            return new LoginResponse(
+                    token,
+                    user.getId(),
+                    buildUsername(user),
+                    user.getEmail(),
+                    user.getRole() != null ? user.getRole().name() : null,
+                    user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
+                    user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
+                    user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
+                    "ACCESS_GRANTED",
+                    false,
+                    "Google login successful"
+            );
+
+        } catch (Exception e) {
+            return new LoginResponse(null, null, null, null, null, null, null, null,
+                    "GOOGLE_LOGIN", false, "Google login failed: " + e.getMessage());
+        }
+    }
+    @Override
+    public LoginResponse completeGoogleSignup(GoogleCompleteSignupRequest request) {
+        try {
+            if (request == null
+                    || request.getCredential() == null || request.getCredential().isBlank()
+                    || request.getTelephone() == null || request.getTelephone().isBlank()
+                    || request.getRole() == null || request.getRole().isBlank()) {
+
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "GOOGLE_COMPLETE_SIGNUP", false, "Missing required Google signup fields");
+            }
+
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance()
+            )
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(request.getCredential());
+
+            if (idToken == null) {
+                return new LoginResponse(null, null, null, null, null, null, null, null,
+                        "GOOGLE_COMPLETE_SIGNUP", false, "Missing, invalid, or expired token");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+
+            String email = payload.getEmail();
+            String firstName = (String) payload.get("given_name");
+            String lastName = (String) payload.get("family_name");
+            String picture = (String) payload.get("picture");
+
+            Role normalizedRole = parseRole(request.getRole());
+
+            if (normalizedRole == null) {
+                return new LoginResponse(null, null, null, email, null, null, null, null,
+                        "GOOGLE_COMPLETE_SIGNUP", false, "Invalid role");
+            }
+
+            User user = userService.findByEmail(email);
+
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setPrenom(firstName);
+                user.setNom(lastName);
+                user.setPhoto(picture);
+                user.setMotDePasse(null);
+            }
+
+            user.setTelephone(request.getTelephone());
+            user.setRole(normalizedRole);
+            user.setStatutCompte(StatutCompte.APPROUVE);
+            user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
+
+            user.setProfileValidationStatus(
+                    roleNeedsExtendedProfile(normalizedRole)
+                            ? ProfileValidationStatus.INCOMPLETE
+                            : ProfileValidationStatus.NOT_REQUIRED
+            );
+
+            User saved = user.getId() == null
+                    ? userService.adduser(user)
+                    : userService.updateUser(user);
+
+            String token = jwtTokenProvider.generateToken(saved.getId(), saved.getEmail());
+
+            return new LoginResponse(
+                    token,
+                    saved.getId(),
+                    buildUsername(saved),
+                    saved.getEmail(),
+                    saved.getRole() != null ? saved.getRole().name() : null,
+                    saved.getStatutCompte() != null ? saved.getStatutCompte().name() : null,
+                    saved.getEmailVerificationStatus() != null ? saved.getEmailVerificationStatus().name() : null,
+                    saved.getProfileValidationStatus() != null ? saved.getProfileValidationStatus().name() : null,
+                    roleNeedsExtendedProfile(saved.getRole()) ? "SIGNUP_STEP2" : "ACCESS_GRANTED",
+                    false,
+                    roleNeedsExtendedProfile(saved.getRole())
+                            ? "Google signup completed. Please complete your profile."
+                            : "Google signup completed successfully."
+            );
+
+        } catch (Exception e) {
+            return new LoginResponse(null, null, null, null, null, null, null, null,
+                    "GOOGLE_COMPLETE_SIGNUP", false, "Google signup failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public LoginResponse completeFacebookSignup(FacebookCompleteSignupRequest request) {
+        try {
+            if (request == null
+                    || request.getAccessToken() == null || request.getAccessToken().isBlank()
+                    || request.getTelephone() == null || request.getTelephone().isBlank()
+                    || request.getRole() == null || request.getRole().isBlank()) {
+
+                return new LoginResponse(
+                        null, null, null, null,
+                        null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP",
+                        false,
+                        "Missing required Facebook signup fields"
+                );
+            }
+
+            String graphUrl = "https://graph.facebook.com/me"
+                    + "?fields=id,first_name,last_name,name,email,picture"
+                    + "&access_token=" + request.getAccessToken();
+
+            RestTemplate restTemplate = new RestTemplate();
+
+            Map<String, Object> facebookProfile = restTemplate.getForObject(graphUrl, Map.class);
+
+            if (facebookProfile == null || facebookProfile.get("id") == null) {
+                return new LoginResponse(
+                        null, null, null, null,
+                        null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP",
+                        false,
+                        "Invalid Facebook token"
+                );
+            }
+
+            String email = (String) facebookProfile.get("email");
+            String firstName = (String) facebookProfile.get("first_name");
+            String lastName = (String) facebookProfile.get("last_name");
+
+            if (email == null || email.isBlank()) {
+                return new LoginResponse(
+                        null, null, null, null,
+                        null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP",
+                        false,
+                        "Facebook account did not provide an email"
+                );
+            }
+
+            String pictureUrl = null;
+
+            Object pictureObj = facebookProfile.get("picture");
+            if (pictureObj instanceof Map<?, ?> pictureMap) {
+                Object dataObj = pictureMap.get("data");
+                if (dataObj instanceof Map<?, ?> dataMap) {
+                    Object urlObj = dataMap.get("url");
+                    if (urlObj != null) {
+                        pictureUrl = urlObj.toString();
+                    }
+                }
+            }
+
+            Role normalizedRole = parseRole(request.getRole());
+
+            if (normalizedRole == null) {
+                return new LoginResponse(
+                        null, null, null, email,
+                        null, null, null, null,
+                        "FACEBOOK_COMPLETE_SIGNUP",
+                        false,
+                        "Invalid role"
+                );
+            }
+
+            User user = userService.findByEmail(email);
+
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setPrenom(firstName);
+                user.setNom(lastName);
+                user.setPhoto(pictureUrl);
+                user.setMotDePasse(null);
+            }
+
+            user.setTelephone(request.getTelephone());
+            user.setRole(normalizedRole);
+            user.setStatutCompte(StatutCompte.APPROUVE);
+            user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
+
+            user.setProfileValidationStatus(
+                    roleNeedsExtendedProfile(normalizedRole)
+                            ? ProfileValidationStatus.INCOMPLETE
+                            : ProfileValidationStatus.NOT_REQUIRED
+            );
+
+            User saved = user.getId() == null
+                    ? userService.adduser(user)
+                    : userService.updateUser(user);
+
+            String token = jwtTokenProvider.generateToken(saved.getId(), saved.getEmail());
+
+            return new LoginResponse(
+                    token,
+                    saved.getId(),
+                    buildUsername(saved),
+                    saved.getEmail(),
+                    saved.getRole() != null ? saved.getRole().name() : null,
+                    saved.getStatutCompte() != null ? saved.getStatutCompte().name() : null,
+                    saved.getEmailVerificationStatus() != null ? saved.getEmailVerificationStatus().name() : null,
+                    saved.getProfileValidationStatus() != null ? saved.getProfileValidationStatus().name() : null,
+                    roleNeedsExtendedProfile(saved.getRole()) ? "SIGNUP_STEP2" : "ACCESS_GRANTED",
+                    false,
+                    roleNeedsExtendedProfile(saved.getRole())
+                            ? "Facebook signup completed. Please complete your profile."
+                            : "Facebook signup completed successfully."
+            );
+
+        } catch (Exception e) {
+            return new LoginResponse(
+                    null, null, null, null,
+                    null, null, null, null,
+                    "FACEBOOK_COMPLETE_SIGNUP",
+                    false,
+                    "Facebook signup failed: " + e.getMessage()
+            );
+        }
+    }
+
+
+    @Override
+    public LoginResponse loginWithFacebook(String accessToken) {
+        try {
+            if (accessToken == null || accessToken.isBlank()) {
+                return new LoginResponse(
+                        null, null, null, null,
+                        null, null, null, null,
+                        "FACEBOOK_LOGIN",
+                        false,
+                        "Missing Facebook access token"
+                );
+            }
+
+            String graphUrl = "https://graph.facebook.com/me"
+                    + "?fields=id,first_name,last_name,name,email,picture"
+                    + "&access_token=" + accessToken;
+
+            RestTemplate restTemplate = new RestTemplate();
+            Map<String, Object> facebookProfile = restTemplate.getForObject(graphUrl, Map.class);
+
+            if (facebookProfile == null || facebookProfile.get("id") == null) {
+                return new LoginResponse(
+                        null, null, null, null,
+                        null, null, null, null,
+                        "FACEBOOK_LOGIN",
+                        false,
+                        "Invalid Facebook token"
+                );
+            }
+
+            String email = (String) facebookProfile.get("email");
+            String firstName = (String) facebookProfile.get("first_name");
+            String lastName = (String) facebookProfile.get("last_name");
+
+            if (email == null || email.isBlank()) {
+                return new LoginResponse(
+                        null, null, null, null,
+                        null, null, null, null,
+                        "FACEBOOK_LOGIN",
+                        false,
+                        "Facebook account did not provide an email"
+                );
+            }
+
+            User user = userService.findByEmail(email);
+
+            if (user == null) {
+                return new LoginResponse(
+                        null, null, null, email,
+                        null, null, null, null,
+                        "SIGNUP",
+                        false,
+                        "No account found with this Facebook email. Please sign up first."
+                );
+            }
+
+            String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail());
+
+            return new LoginResponse(
+                    token,
+                    user.getId(),
+                    buildUsername(user),
+                    user.getEmail(),
+                    user.getRole() != null ? user.getRole().name() : null,
+                    user.getStatutCompte() != null ? user.getStatutCompte().name() : null,
+                    user.getEmailVerificationStatus() != null ? user.getEmailVerificationStatus().name() : null,
+                    user.getProfileValidationStatus() != null ? user.getProfileValidationStatus().name() : null,
+                    "ACCESS_GRANTED",
+                    false,
+                    "Facebook login successful"
+            );
+
+        } catch (Exception e) {
+            return new LoginResponse(
+                    null, null, null, null,
+                    null, null, null, null,
+                    "FACEBOOK_LOGIN",
+                    false,
+                    "Facebook login failed: " + e.getMessage()
+            );
+        }
     }
 }
 

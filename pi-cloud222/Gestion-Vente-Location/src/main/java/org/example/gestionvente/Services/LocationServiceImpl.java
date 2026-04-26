@@ -5,6 +5,7 @@ import org.example.gestionvente.Entities.Location;
 import org.example.gestionvente.Entities.TypeLocation;
 import org.example.gestionvente.Repositories.DisponibiliteRepo;
 import org.example.gestionvente.Repositories.LocationRepo;
+import org.example.gestionvente.Repositories.PropositionLocationRepo;
 import org.example.gestionvente.Repositories.ReservationVisiteRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class LocationServiceImpl implements ILocationService {
 
     @Autowired
     private DisponibiliteRepo disponibiliteRepository;
+
+    @Autowired
+    private PropositionLocationRepo propositionLocationRepository;
 
     @Override
     public Location create(Location location) {
@@ -92,7 +96,10 @@ public class LocationServiceImpl implements ILocationService {
     }
     @Override
     public List<Location> getAll() {
-        return repo.findAll();
+        return repo.findAll()
+                .stream()
+                .filter(location -> location.getArchived() == null || !location.getArchived())
+                .toList();
     }
 
     @Override
@@ -103,17 +110,25 @@ public class LocationServiceImpl implements ILocationService {
 
     @Override
     public List<Location> getByUser(Long userId) {
-        return repo.findByIdUser(userId);
+        return repo.findByIdUser(userId)
+                .stream()
+                .filter(location -> location.getArchived() == null || !location.getArchived())
+                .toList();
     }
 
     @Override
     public List<Location> getByType(TypeLocation type) {
-        return repo.findByType(type);
+        return repo.findByType(type)
+                .stream()
+                .filter(location -> location.getArchived() == null || !location.getArchived())
+                .toList();
     }
-
     @Override
     public List<Location> getDisponibles() {
-        return repo.findByDisponibiliteTrue();
+        return repo.findByDisponibiliteTrue()
+                .stream()
+                .filter(location -> location.getArchived() == null || !location.getArchived())
+                .toList();
     }
 
     @Override
@@ -203,22 +218,23 @@ public class LocationServiceImpl implements ILocationService {
     @Override
     public void delete(Long id) {
 
-        boolean hasBlockingReservations =
-                reservationRepository.existsBlockingReservation(id);
+        Location location = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rental not found"));
 
-        if (hasBlockingReservations) {
-            throw new RuntimeException(
-                    "Cannot delete this rental because it has pending or confirmed reservations."
-            );
+        boolean hasAnyReservation =
+                reservationRepository.existsAnyReservation(id);
+
+        boolean hasAnyProposal =
+                propositionLocationRepository.existsByLocationId(id);
+
+        if (hasAnyReservation || hasAnyProposal) {
+            location.setArchived(true);
+            location.setDisponibilite(false);
+            repo.save(location);
+            return;
         }
 
-        // 🔥 DELETE ALL RESERVATIONS (TERMINEE / ANNULEE)
-        reservationRepository.deleteByLocationId(id);
-
-        // 🔥 DELETE AVAILABILITIES
         disponibiliteRepository.deleteByLocationId(id);
-
-        // 🔥 DELETE LOCATION
         repo.deleteById(id);
     }
 

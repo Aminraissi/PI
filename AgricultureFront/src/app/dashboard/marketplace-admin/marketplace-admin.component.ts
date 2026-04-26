@@ -6,6 +6,8 @@ import { LocationService } from '../../services/location/location.service';
 import { AdminUserService } from '../services/admin-user.service';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+
 type AdminMarketplaceTab =
   | 'products'
   | 'rentals'
@@ -13,6 +15,7 @@ type AdminMarketplaceTab =
   | 'reservations'
   | 'paiement'
   | 'contracts';
+  type IncomeTab = 'orders' | 'rentals';
 
 @Component({
   selector: 'app-marketplace-admin',
@@ -61,8 +64,31 @@ export class MarketplaceAdminComponent implements OnInit {
 
   selectedPaymentStatus = 'VALIDEE';
 
+  incomeTab: IncomeTab = 'orders';
+
+  rentalPayments: any[] = [];
+  filteredRentalPayments: any[] = [];
+  paginatedRentalPayments: any[] = [];
+
+  rentalIncomeStats = {
+    rentalSales: 0,
+    rentalRevenue: 0,
+    rentalFarmersPayout: 0,
+    paidRentalPaymentsCount: 0,
+    unpaidRentalPaymentsCount: 0
+  };
+
+  showAdminPopup = false;
+  adminPopupTitle = '';
+  adminPopupMessage = '';
+  adminPopupType: 'success' | 'error' = 'success';
+
   paymentStats = {
-    totalIncome: 0,
+    totalSales: 0,
+    platformRevenue: 0,
+    totalCommission: 0,
+    totalTips: 0,
+    farmersPayout: 0,
     paidOrdersCount: 0,
     mostBoughtProduct: '—',
     totalProductsSold: 0
@@ -80,7 +106,8 @@ export class MarketplaceAdminComponent implements OnInit {
     private locationService: LocationService,
     private adminUserService: AdminUserService,
     private adminOrderService: AdminOrderService,
-    private reservationVisiteService: ReservationVisiteService
+    private reservationVisiteService: ReservationVisiteService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -112,9 +139,9 @@ export class MarketplaceAdminComponent implements OnInit {
     return;
     }
 
-    if (tab === 'paiement' && this.paidOrders.length === 0) {
-    this.loadPaidOrders();
-    return;
+    if (tab === 'paiement') {
+      this.loadIncomeData();
+      return;
     }
 
 
@@ -291,14 +318,29 @@ export class MarketplaceAdminComponent implements OnInit {
     }
 
     if (this.activeTab === 'paiement') {
+  if (this.incomeTab === 'orders') {
     this.filteredPaidOrders = !term
-        ? [...this.paidOrders]
-        : this.paidOrders.filter(o =>
-            String(o.id).includes(term) ||
-            (o.userName || '').toLowerCase().includes(term) ||
-            (o.statut || '').toLowerCase().includes(term)
-        );
-    }
+      ? [...this.paidOrders]
+      : this.paidOrders.filter(o =>
+          String(o.id).includes(term) ||
+          (o.userName || '').toLowerCase().includes(term) ||
+          (o.statut || '').toLowerCase().includes(term)
+      );
+  }
+
+  if (this.incomeTab === 'rentals') {
+    this.filteredRentalPayments = !term
+      ? [...this.rentalPayments]
+      : this.rentalPayments.filter(p =>
+          String(p.id).includes(term) ||
+          String(p.locationId).includes(term) ||
+          String(p.propositionId).includes(term) ||
+          (p.farmerName || '').toLowerCase().includes(term) ||
+          (p.tenantName || '').toLowerCase().includes(term) ||
+          (p.statut || '').toLowerCase().includes(term)
+      );
+  }
+}
 
     if (this.activeTab === 'contracts') {
     this.filteredContracts = !term
@@ -326,7 +368,7 @@ export class MarketplaceAdminComponent implements OnInit {
         : this.activeTab === 'reservations'
         ? this.filteredReservations
         : this.activeTab === 'paiement'
-        ? this.filteredPaidOrders
+        ? (this.incomeTab === 'orders' ? this.filteredPaidOrders : this.filteredRentalPayments)
         : this.activeTab === 'contracts'
         ? this.filteredContracts
         : [];
@@ -357,7 +399,13 @@ export class MarketplaceAdminComponent implements OnInit {
     }
 
     if (this.activeTab === 'paiement') {
-    this.paginatedPaidOrders = this.filteredPaidOrders.slice(start, end);
+      if (this.incomeTab === 'orders') {
+        this.paginatedPaidOrders = this.filteredPaidOrders.slice(start, end);
+      }
+
+      if (this.incomeTab === 'rentals') {
+        this.paginatedRentalPayments = this.filteredRentalPayments.slice(start, end);
+      }
     }
 
     if (this.activeTab === 'contracts') {
@@ -396,20 +444,31 @@ export class MarketplaceAdminComponent implements OnInit {
   }
 
   deleteRental(rental: any): void {
-    const confirmed = confirm(`Delete rental "${rental.nom}" ?`);
-    if (!confirmed) return;
+  const confirmed = confirm(`Delete rental "${rental.nom}" ?`);
+  if (!confirmed) return;
 
-    this.locationService.delete(rental.id).subscribe({
-      next: () => {
-        this.rentals = this.rentals.filter(r => r.id !== rental.id);
-        this.applyFilter();
-      },
-      error: (err) => {
-        console.error('Delete rental failed', err);
-        alert(err?.error?.message || 'Failed to delete rental.');
-      }
-    });
-  }
+  this.locationService.delete(rental.id).subscribe({
+    next: () => {
+      this.rentals = this.rentals.filter(r => r.id !== rental.id);
+      this.applyFilter();
+
+      this.openAdminPopup(
+        'Rental Deleted',
+        'The rental was deleted successfully.',
+        'success'
+      );
+    },
+    error: (err) => {
+      console.error('Delete rental failed', err);
+
+      this.openAdminPopup(
+        'Delete Blocked',
+        this.getErrorMessage(err),
+        'error'
+      );
+    }
+  });
+}
 
   getOrderStatusLabel(status: string): string {
   switch (status) {
@@ -435,8 +494,11 @@ export class MarketplaceAdminComponent implements OnInit {
         id: c.id,
         dateCommande: c.dateCommande,
         montantTotal: c.montantTotal,
+        sousTotal: c.sousTotal,
+        commission: c.commission,
+        tip: c.tip,
         statut: c.statut,
-        idUser: c.userId,
+        idUser: c.userId ?? c.idUser,
         panierId: c.panier_id || c.panierId,
         userName: 'Loading...'
       }));
@@ -454,32 +516,33 @@ export class MarketplaceAdminComponent implements OnInit {
 
 
     openOrderDetails(order: any): void {
-  this.showOrderDetails = true;
-  this.selectedOrder = {
-    ...order,
-    items: [],
-    loadingDetails: true
-  };
+      this.showOrderDetails = true;
 
-  this.adminOrderService.getOrderDetails(order.id).subscribe({
-    next: (details: any) => {
-      this.selectedOrder = {
-        ...order,
-        ...details,
-        items: details?.items || [],
-        loadingDetails: false
-      };
-    },
-    error: (err) => {
-      console.error('Failed to load order details', err);
       this.selectedOrder = {
         ...order,
         items: [],
-        loadingDetails: false
+        loadingDetails: true
       };
+
+      this.adminOrderService.getOrderDetails(order.id).subscribe({
+        next: (details: any) => {
+          this.selectedOrder = {
+            ...order,
+            items: details?.items || [],
+            loadingDetails: false
+          };
+        },
+        error: (err) => {
+          console.error('Failed to load order details', err);
+
+          this.selectedOrder = {
+            ...order,
+            items: [],
+            loadingDetails: false
+          };
+        }
+      });
     }
-  });
-}
 
 closeOrderDetails(): void {
   this.showOrderDetails = false;
@@ -606,9 +669,23 @@ deleteReservation(reservation: any): void {
   });
 }
 
+async loadIncomeData(): Promise<void> {
+  this.loading = true;
+
+  try {
+    await this.loadPaidOrders();
+    await this.loadRentalPayments();
+
+    this.applyFilter();
+  } catch (err) {
+    console.error('Error loading income data', err);
+  } finally {
+    this.loading = false;
+  }
+}
+
 
 async loadPaidOrders(): Promise<void> {
-  this.loading = true;
 
   this.adminOrderService.getAllOrders().subscribe({
     next: async (data: any) => {
@@ -632,6 +709,9 @@ async loadPaidOrders(): Promise<void> {
             id: c.id,
             dateCommande: c.dateCommande,
             montantTotal: c.montantTotal,
+            sousTotal: c.sousTotal,
+            commission: c.commission,
+            tip: c.tip,
             statut: c.statut,
             idUser: c.userId ?? c.idUser,
             panierId: c.panierId ?? c.panier_id,
@@ -646,21 +726,156 @@ async loadPaidOrders(): Promise<void> {
       await this.attachUserNames(this.paidOrders);
       this.computePaymentStats();
       this.applyFilter();
-
-      this.loading = false;
     },
     error: (err) => {
       console.error('Error loading paid orders', err);
-      this.loading = false;
     }
   });
 }
 
+async loadRentalPayments(): Promise<void> {
+  try {
+    const data: any = await firstValueFrom(
+      this.http.get('http://localhost:8089/paiement/api/v1/rental-payments')
+    );
+
+    const payments = Array.isArray(data)
+      ? data
+      : (data?.content || data?._embedded?.rentalPayments || []);
+
+    this.rentalPayments = payments.map((p: any) => ({
+      id: p.id,
+
+      agriculteurId: p.agriculteurId ?? p.agriculteur_id,
+      locataireId: p.locataireId ?? p.locataire_id,
+      locationId: p.locationId ?? p.location_id,
+      propositionId: p.propositionId ?? p.proposition_id,
+
+      moisNumero: p.moisNumero ?? p.mois_numero,
+      dateEcheance: p.dateEcheance ?? p.date_echeance,
+      datePaiement: p.datePaiement ?? p.date_paiement,
+
+      montant: Number(p.montant) || 0,
+      statut: p.statut,
+
+      commissionAmount: Number(p.commissionAmount ?? p.commission_amount) || 0,
+      commissionRate: Number(p.commissionRate ?? p.commission_rate) || 0,
+      farmerAmount: Number(p.farmerAmount ?? p.farmer_amount) || 0,
+
+      farmerName: 'Loading...',
+      tenantName: 'Loading...'
+    }));
+
+    await this.attachRentalPaymentUserNames();
+
+    this.computeRentalIncomeStats();
+
+    this.filteredRentalPayments = [...this.rentalPayments];
+    this.currentPage = 1;
+    this.updatePagination();
+
+  } catch (err) {
+    console.error('Error loading rental payments', err);
+
+    this.rentalPayments = [];
+    this.filteredRentalPayments = [];
+    this.paginatedRentalPayments = [];
+
+    this.computeRentalIncomeStats();
+    this.updatePagination();
+  }
+}
+
+async attachRentalPaymentUserNames(): Promise<void> {
+  const userIds = [
+    ...new Set(
+      this.rentalPayments
+        .flatMap(p => [p.agriculteurId, p.locataireId])
+        .filter(id => id !== null && id !== undefined)
+    )
+  ];
+
+  const userMap = new Map<number, string>();
+
+  await Promise.all(
+    userIds.map(async (userId) => {
+      try {
+        const user = await firstValueFrom(this.adminUserService.getUserById(userId));
+        const fullName =
+          `${user?.prenom || ''} ${user?.nom || ''}`.trim() ||
+          user?.username ||
+          user?.email ||
+          `User #${userId}`;
+
+        userMap.set(Number(userId), fullName);
+      } catch (e) {
+        userMap.set(Number(userId), `User #${userId}`);
+      }
+    })
+  );
+
+  this.rentalPayments = this.rentalPayments.map(p => ({
+    ...p,
+    farmerName: userMap.get(Number(p.agriculteurId)) || `User #${p.agriculteurId}`,
+    tenantName: userMap.get(Number(p.locataireId)) || `User #${p.locataireId}`
+  }));
+}
+
+computeRentalIncomeStats(): void {
+  const paid = this.rentalPayments.filter(p =>
+    String(p.statut || '').toUpperCase() === 'PAID'
+  );
+
+  const unpaid = this.rentalPayments.filter(p =>
+    String(p.statut || '').toUpperCase() === 'UNPAID'
+  );
+
+  const rentalSales = paid.reduce(
+    (sum, p) => sum + (Number(p.montant) || 0),
+    0
+  );
+
+  const rentalRevenue = paid.reduce(
+    (sum, p) => sum + (Number(p.commissionAmount) || 0),
+    0
+  );
+
+  const rentalFarmersPayout = paid.reduce(
+    (sum, p) => sum + (Number(p.farmerAmount) || 0),
+    0
+  );
+
+  this.rentalIncomeStats = {
+    rentalSales,
+    rentalRevenue,
+    rentalFarmersPayout,
+    paidRentalPaymentsCount: paid.length,
+    unpaidRentalPaymentsCount: unpaid.length
+  };
+}
+
 computePaymentStats(): void {
-  const totalIncome = this.paidOrders.reduce(
+  const totalSales = this.paidOrders.reduce(
     (sum, order) => sum + (Number(order.montantTotal) || 0),
     0
   );
+
+  const totalCommission = this.paidOrders.reduce(
+    (sum, order) => sum + (Number(order.commission) || 0),
+    0
+  );
+
+  const totalTips = this.paidOrders.reduce(
+    (sum, order) => sum + (Number(order.tip) || 0),
+    0
+  );
+
+  const farmersPayout = this.paidOrders.reduce(
+    (sum, order) => sum + (Number(order.sousTotal) || 0),
+    0
+  );
+
+  const platformRevenue = totalCommission + totalTips;
 
   const productCounter = new Map<string, number>();
   let totalProductsSold = 0;
@@ -686,7 +901,11 @@ computePaymentStats(): void {
   });
 
   this.paymentStats = {
-    totalIncome,
+    totalSales,
+    platformRevenue,
+    totalCommission,
+    totalTips,
+    farmersPayout,
     paidOrdersCount: this.paidOrders.length,
     mostBoughtProduct,
     totalProductsSold
@@ -701,11 +920,15 @@ isFinalizedContract(proposal: any): boolean {
 async loadContracts(): Promise<void> {
   this.loading = true;
 
-  const currentUserId = Number(localStorage.getItem('adminUserId') || 1);
-
-  this.reservationVisiteService.getProposalsByAgriculteur(currentUserId).subscribe({
+  this.reservationVisiteService.getAllProposals().subscribe({
     next: async (proposals: any[]) => {
-      const finalized = (proposals || []).filter(p => this.isFinalizedContract(p));
+      const list = Array.isArray(proposals)
+        ? proposals
+        : ((proposals as any)?.content || (proposals as any)?._embedded?.propositionLocations || []);
+
+      const finalized = list.filter((p: any) =>
+        p.statut === 'FINALISEE' || this.isFinalizedContract(p)
+      );
 
       this.contracts = finalized.map((p: any) => ({
         id: p.id,
@@ -806,4 +1029,55 @@ viewContract(contract: any): void {
     { queryParams: { from: 'admin' } }
   );
 }
+
+openAdminPopup(
+  title: string,
+  message: string,
+  type: 'success' | 'error' = 'success'
+): void {
+  this.adminPopupTitle = title;
+  this.adminPopupMessage = message;
+  this.adminPopupType = type;
+  this.showAdminPopup = true;
+}
+
+closeAdminPopup(): void {
+  this.showAdminPopup = false;
+}
+
+getErrorMessage(err: any): string {
+  if (err?.error?.message) {
+    return err.error.message;
+  }
+
+  if (typeof err?.error === 'string') {
+    return err.error;
+  }
+
+  if (err?.message) {
+    return err.message;
+  }
+
+  return 'Something went wrong.';
+}
+
+
+setIncomeTab(tab: IncomeTab): void {
+  this.incomeTab = tab;
+  this.searchTerm = '';
+  this.currentPage = 1;
+
+  if (tab === 'rentals' && this.rentalPayments.length === 0) {
+    this.loadRentalPayments();
+    return;
+  }
+
+  if (tab === 'orders' && this.paidOrders.length === 0) {
+    this.loadPaidOrders();
+    return;
+  }
+
+  this.applyFilter();
+}
+
 }

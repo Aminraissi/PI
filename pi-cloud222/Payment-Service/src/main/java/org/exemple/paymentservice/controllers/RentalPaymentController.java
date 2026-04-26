@@ -51,4 +51,10 @@ public class RentalPaymentController {
         rentalPaymentService.chargeDuePayments();
         return ResponseEntity.ok("Due rental payments charged");
     }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping
+    public ResponseEntity<List<PaiementLocation>> getAllPayments() {
+        return ResponseEntity.ok(rentalPaymentService.getAllPayments());
+    }
 }

@@ -13,6 +13,13 @@ public class StripeConfig {
 
     @PostConstruct
     public void init() {
+        System.out.println("STRIPE key loaded? " + (secretKey != null && !secretKey.isBlank()));
+        System.out.println("STRIPE key starts with sk_test? " + (secretKey != null && secretKey.startsWith("sk_test_")));
+
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new RuntimeException("STRIPE_SECRET_KEY is missing or empty");
+        }
+
         Stripe.apiKey = secretKey;
     }
 }

@@ -51,5 +51,19 @@ public class UserServiceImp implements IUser{
         user.setStatutCompte(statut);
         return ur.save(user);
     }
+
+    @Override
+    public User findByTelephone(String telephone) {
+        return ur.findByTelephone(telephone).orElse(null);
+    }
+
+    @Override
+    public User updatePasswordByPhone(String telephone, String newPassword) {
+        User user = ur.findByTelephone(telephone)
+                .orElseThrow(() -> new RuntimeException("No account found with this phone number"));
+
+        user.setMotDePasse(newPassword);
+        return ur.save(user);
+    }
 }
 

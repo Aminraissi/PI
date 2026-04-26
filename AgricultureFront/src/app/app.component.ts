@@ -38,13 +38,14 @@ import { filter } from 'rxjs/operators';
 
         <!-- Floating Cart -->
         <button
-                class="floating-cart"
-                routerLink="/marketplace/cart"
-                *ngIf="showFloatingCart">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="cart-badge" *ngIf="cartCount > 0">
-        {{ cartCount }}
-      </span>
+        class="floating-cart"
+        routerLink="/marketplace/cart"
+        *ngIf="showFloatingCart">
+        <i class="fas fa-shopping-cart"></i>
+
+        <span class="cart-badge" *ngIf="cartCount > 0">
+            {{ cartCount }}
+        </span>
         </button>
 
         <!-- Toast notifications (both implementations supported) -->
@@ -256,6 +257,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             this.preloaderHidden = true;
         }, 1200); // reduced from 3s to be snappier
 
+        
         this.cartService.cartCount$.subscribe(count => {
             this.cartCount = count;
         });
@@ -406,7 +408,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     // Smart cart visibility
     updateFloatingCartVisibility(): void {
-        const url = this.router.url;
+        const url = this.router.url.split('?')[0].split('#')[0];
 
         const token =
             localStorage.getItem('authToken') ||
@@ -421,13 +423,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 
         const isLoggedIn = !!token || !!user;
 
-        const hiddenRoutes =
-            url === '/' ||
-            url.startsWith('/auth') ||
-            url.startsWith('/dashboard') ||
+        const isMarketplacePage = url.startsWith('/marketplace');
+
+        const hiddenMarketplaceRoutes =
+            url === '/marketplace/cart' ||
             url.includes('/marketplace/rental-contract/');
 
-        this.showFloatingCart = isLoggedIn && !hiddenRoutes;
+        this.showFloatingCart =
+            isLoggedIn &&
+            isMarketplacePage &&
+            !hiddenMarketplaceRoutes;
 
         if (this.showFloatingCart) {
             this.cartService.refreshCartCount();

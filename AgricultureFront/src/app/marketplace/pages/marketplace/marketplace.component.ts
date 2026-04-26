@@ -47,9 +47,6 @@ export class MarketplaceComponent implements OnInit {
   items: any[] = [];
   showForm = false;
   blockedSlots: any[] = [];
-  loadError: string | null = null;
-  isLoadingProducts = false;
-  isLoadingRentals = false;
 
   weekAvailability = [
     {
@@ -191,73 +188,86 @@ aiResult: any = null;
   }
 
   loadProducts() {
-  this.isLoadingProducts = true;
-  this.loadError = null;
-  this.productService.getAll().subscribe({
-    next: (data: any) => {
-      this.isLoadingProducts = false;
-      const produits = data?._embedded?.produitAgricoles || data || [];
+  this.productService.getAll().subscribe((data: any) => {
+    const produits =
+      data?._embedded?.produitAgricoles ||
+      data?.content ||
+      data ||
+      [];
 
-      if (!Array.isArray(produits)) {
-        console.error('No produits found in response');
-        return;
-      }
-
-      this.items = produits.map((p: any) => ({
-        id: p.id ?? this.extractId(p._links?.self?.href || ''),
-        name: p.nom,
-        category: p.category || '',
-        type: 'Product',
-        price: p.prix,
-        image: p.photoProduit
-          ? 'http://localhost:8090/uploads/' + p.photoProduit
-          : 'assets/images/product1.jpg',
-        description: p.description,
-        quantity: p.quantiteDisponible,
-        idUser: p.idUser,
-        averageRating: 0,
-        reviewCount: 0
-      }));
-
-      this.items.forEach((item: any) => {
-        this.reviewService.getReviews('PRODUCT', item.id).subscribe({
-          next: (reviews: any[]) => {
-            const list = Array.isArray(reviews) ? reviews : [];
-            item.reviewCount = list.length;
-
-            if (list.length > 0) {
-              const total = list.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
-              item.averageRating = total / list.length;
-            } else {
-              item.averageRating = 0;
-            }
-
-            this.filteredItems = [...this.items];
-          },
-          error: () => {
-            item.reviewCount = 0;
-            item.averageRating = 0;
-            this.filteredItems = [...this.items];
-          }
-        });
-      });
-
-      this.filteredItems = [...this.items];
-    },
-    error: (err: any) => {
-      this.isLoadingProducts = false;
-      console.error('Failed to load products:', err);
-      this.loadError = 'Le service marketplace est temporairement indisponible. Veuillez réessayer plus tard.';
-      this.items = [];
-      this.filteredItems = [];
+    if (!Array.isArray(produits)) {
+      console.error('No produits found in response', data);
+      return;
     }
+
+    console.log('RAW PRODUCTS RESPONSE:', produits);
+    console.log('FIRST PRODUCT:', produits[0]);
+
+    this.items = produits
+      .map((p: any) => {
+        const realId =
+          p.id ??
+          p.idProduit ??
+          p.idProduitAgricole ??
+          p.produitId ??
+          this.extractId(p._links?.self?.href);
+
+        return {
+          id: realId,
+          name: p.nom,
+          category: p.category || '',
+          type: 'Product',
+          price: p.prix,
+          image: p.photoProduit
+            ? 'http://localhost:8090/uploads/' + p.photoProduit
+            : 'assets/images/logo.png',
+          description: p.description,
+          quantity: p.quantiteDisponible,
+          idUser: p.idUser,
+          averageRating: 0,
+          reviewCount: 0
+        };
+      })
+      .filter((p: any) => p.id !== null && p.id !== undefined && p.id !== 0);
+
+    console.log('Loaded products with IDs:', this.items.map((p: any) => ({
+      id: p.id,
+      name: p.name
+    })));
+
+    this.filteredItems = [...this.items];
+
+    this.items.forEach((item: any) => {
+      this.reviewService.getReviews('PRODUCT', item.id).subscribe({
+        next: (reviews: any[]) => {
+          const list = Array.isArray(reviews) ? reviews : [];
+          item.reviewCount = list.length;
+
+          if (list.length > 0) {
+            const total = list.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
+            item.averageRating = total / list.length;
+          } else {
+            item.averageRating = 0;
+          }
+
+          this.filteredItems = [...this.items];
+        },
+        error: () => {
+          item.reviewCount = 0;
+          item.averageRating = 0;
+          this.filteredItems = [...this.items];
+        }
+      });
+    });
   });
 }
 
-  extractId(url: string): number {
-    return Number(url.split('/').pop());
-  }
+extractId(url: string | undefined | null): number | null {
+  if (!url) return null;
 
+  const id = Number(url.split('/').pop());
+  return Number.isNaN(id) ? null : id;
+}
   openForm() {
     if (!this.currentUserId) {
       this.openReservationPopup('Login Required', 'Please sign in first.', 'error');
@@ -389,7 +399,7 @@ aiResult: any = null;
         !this.showOnlyMine || p.idUser === this.currentUserId;
 
       return matchesSearch && matchesPrice && matchesRentCategory && matchesBuyCategory && matchesMine;
-
+      
     });
     this.currentPage = 1;
   }
@@ -681,8 +691,29 @@ aiResult: any = null;
   }
 
   viewProduct(item: any) {
+    const id = Number(item?.id);
+
+    if (!id || Number.isNaN(id)) {
+      console.error('Cannot open item with invalid ID:', item);
+
+      this.openReservationPopup(
+        'Item Error',
+        'This item cannot be opened because its ID is missing.',
+        'error'
+      );
+
+      return;
+    }
+
     const targetMode: 'buy' | 'rent' = this.mode === 'rent' ? 'rent' : 'buy';
-    this.router.navigate(['/marketplace', targetMode, item.id]);
+
+    console.log('OPEN DETAIL:', {
+      targetMode,
+      id,
+      item
+    });
+
+    this.router.navigate(['/marketplace', targetMode, id]);
   }
 
   action(item: any) {
@@ -844,7 +875,14 @@ aiResult: any = null;
 
     if (this.mode === 'rent') {
       this.locationService.delete(p.id).subscribe({
-        next: () => this.loadRentItems(),
+        next: () => {
+          this.loadRentItems();
+          this.openReservationPopup(
+            'Rental Removed',
+            'This rental was removed from the marketplace. If it has contracts or payments, its history is safely kept.',
+            'success'
+          );
+        },
         error: (err) => {
           this.openReservationPopup(
             'Delete Blocked',
@@ -863,16 +901,14 @@ aiResult: any = null;
   }
 
   loadRentItems() {
-    this.isLoadingRentals = true;
-    this.locationService.getAll().subscribe({
-     next: (data: any) => {
-      this.isLoadingRentals = false;
+    this.locationService.getAll().subscribe((data: any) => {
       let locations: any[] = [];
 
       if (data._embedded?.locations) locations = data._embedded.locations;
       else if (data.content) locations = data.content;
       else if (Array.isArray(data)) locations = data;
 
+      locations = locations.filter((r: any) => !r.archived);
       this.rentItems = locations.map((r: any) => ({
         id: r.id ?? this.extractId(r._links?.self?.href),
         name: r.nom || (r.type === 'terrain' ? 'Land Rental' : 'Machine Rental'),
@@ -925,22 +961,12 @@ aiResult: any = null;
         this.locationService.hasActiveReservations(item.id)
           .subscribe(res => item.hasReservation = res);
       });
-    },
-    error: (err: any) => {
-      this.isLoadingRentals = false;
-      console.error('Failed to load rentals:', err);
-      this.rentItems = [];
-      // Only surface the error and update filteredItems when the user is in rent mode
-      if (this.mode === 'rent') {
-        this.loadError = 'Le service marketplace est temporairement indisponible. Veuillez réessayer plus tard.';
-        this.applyFilters();
-      }
-    }
     });
   }
 
   setMode(mode: 'buy' | 'rent') {
     this.mode = mode;
+    this.currentPage = 1;
     this.applyFilters();
   }
 

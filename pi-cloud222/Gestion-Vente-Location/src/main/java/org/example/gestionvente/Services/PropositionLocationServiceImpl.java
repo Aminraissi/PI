@@ -276,4 +276,9 @@ public class PropositionLocationServiceImpl implements IPropositionLocationServi
             System.out.println("Could not create rental payment plan: " + e.getMessage());
         }
     }
+
+    @Override
+    public List<PropositionLocation> getAll() {
+        return propositionRepo.findAll();
+    }
 }

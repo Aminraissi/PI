@@ -90,4 +90,9 @@ public class PropositionLocationController {
         return service.getByLocation(locationId);
     }
 
+    @GetMapping
+    public List<PropositionLocation> getAll() {
+        return service.getAll();
+    }
+
 }
