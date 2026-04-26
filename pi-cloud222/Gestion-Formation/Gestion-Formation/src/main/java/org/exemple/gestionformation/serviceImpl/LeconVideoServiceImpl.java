@@ -66,6 +66,8 @@ public class LeconVideoServiceImpl implements LeconVideoService {
         lecon.setDureeSecondes(newData.getDureeSecondes());
         lecon.setOrdre(newData.getOrdre());
         lecon.setEstGratuitePreview(newData.getEstGratuitePreview());
+        lecon.setLiveAt(newData.getLiveAt());
+        lecon.setStreamingRoom(newData.getStreamingRoom());
         return leconVideoRepository.save(lecon);
     }
 

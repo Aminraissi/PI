@@ -16,6 +16,7 @@ import { SharedModule } from '../../shared/shared.module';
 export class FormationListComponent implements OnInit {
   formations: Formation[] = [];
   filteredFormations: Formation[] = [];
+  enrolledFormations: Formation[] = [];
   isLoading = true;
   error: string | null = null;
   isExpertAgricole = false;
@@ -25,14 +26,14 @@ export class FormationListComponent implements OnInit {
   filterType = '';
   currentUserId: number | null = null;
   userInscriptions: Set<number> = new Set();
-  
+
   niveaux = ['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT'];
   types = ['THEORIQUE', 'PRATIQUE', 'HYBRIDE'];
 
   constructor(
-    private formationService: FormationService,
-    private authService: AuthService,
-    private router: Router
+      private formationService: FormationService,
+      private authService: AuthService,
+      private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -48,32 +49,30 @@ export class FormationListComponent implements OnInit {
     this.currentUserId = user?.userId ?? null;
     this.isExpertAgricole = this.authService.hasRole('EXPERT_AGRICOLE');
     this.isAccountApproved = this.authService.isAccountApproved();
-    
-    // Log permissions
-    console.log('🔐 Formation List - Permission Check:');
-    console.log('  👤 User ID:', this.currentUserId);
-    console.log('  🎓 Is Expert Agricole:', this.isExpertAgricole);
-    console.log('  ✅ Is Account Approved:', this.isAccountApproved);
-    console.log('  📊 Account Status:', this.authService.getAccountStatus());
-    console.log('  ⚙️ Can Manage Formations:', this.canManageFormations());
+
+    console.log('Formation List - Permission Check:');
+    console.log('  User ID:', this.currentUserId);
+    console.log('  Is Expert Agricole:', this.isExpertAgricole);
+    console.log('  Is Account Approved:', this.isAccountApproved);
+    console.log('  Account Status:', this.authService.getAccountStatus());
+    console.log('  Can Manage Formations:', this.canManageFormations());
   }
 
   loadFormations(): void {
     this.formationService.getAllFormations().subscribe({
       next: (data) => {
-        // Filter formations based on user role
         if (this.canManageFormations()) {
-          // Experts can only see their own formations
-          data = data.filter(f => f.userId === this.currentUserId);
+          data = data.filter((f) => f.userId === this.currentUserId);
         }
 
         this.formations = data;
         this.applyFilters();
+        this.updateEnrolledFormations();
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading formations:', err);
-        this.error = 'Impossible de charger les formations';
+        this.error = 'Unable to load trainings.';
         this.isLoading = false;
       }
     });
@@ -83,7 +82,12 @@ export class FormationListComponent implements OnInit {
     if (this.currentUserId) {
       this.formationService.getUserInscriptions(this.currentUserId).subscribe({
         next: (inscriptions) => {
-          this.userInscriptions = new Set(inscriptions.map(i => i.idInscription || 0));
+          this.userInscriptions = new Set(
+              inscriptions
+                  .map((i) => i.formationId)
+                  .filter((id): id is number => typeof id === 'number')
+          );
+          this.updateEnrolledFormations();
         },
         error: (err) => console.error('Error loading inscriptions:', err)
       });
@@ -91,14 +95,15 @@ export class FormationListComponent implements OnInit {
   }
 
   applyFilters(): void {
-    this.filteredFormations = this.formations.filter(formation => {
+    this.filteredFormations = this.formations.filter((formation) => {
       const matchesSearch = formation.titre.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                           formation.description.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                           formation.thematique.toLowerCase().includes(this.searchQuery.toLowerCase());
+          formation.description.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+          formation.thematique.toLowerCase().includes(this.searchQuery.toLowerCase());
       const matchesNiveau = !this.filterNiveau || formation.niveau === this.filterNiveau;
       const matchesType = !this.filterType || formation.type === this.filterType;
       return matchesSearch && matchesNiveau && matchesType;
     });
+    this.updateEnrolledFormations();
   }
 
   onSearch(): void {
@@ -126,10 +131,10 @@ export class FormationListComponent implements OnInit {
   }
 
   deleteFormation(id: number): void {
-    if (this.canManageFormations() && confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
+    if (this.canManageFormations() && confirm('Are you sure you want to delete this training?')) {
       this.formationService.deleteFormation(id).subscribe({
         next: () => {
-          this.formations = this.formations.filter(f => f.idFormation !== id);
+          this.formations = this.formations.filter((f) => f.idFormation !== id);
           this.applyFilters();
         },
         error: (err) => console.error('Error deleting formation:', err)
@@ -146,26 +151,45 @@ export class FormationListComponent implements OnInit {
       this.router.navigate(['/auth']);
       return;
     }
-    
+
     if (formation.idFormation) {
       this.formationService.inscribeToFormation(formation.idFormation, this.currentUserId).subscribe({
         next: () => {
           this.userInscriptions.add(formation.idFormation!);
-          alert('Vous êtes inscrit à cette formation');
+          this.updateEnrolledFormations();
+          alert('You are now enrolled in this training.');
         },
         error: (err) => {
           console.error('Error subscribing:', err);
-          alert('Erreur lors de l\'inscription');
+          alert('An error occurred during enrollment.');
         }
       });
     }
   }
 
   isAlreadyInscribed(id: number | undefined): boolean {
-    return id ? this.userInscriptions.has(id) : false;
+    if (!id) {
+      return false;
+    }
+
+    if (this.userInscriptions.has(id)) {
+      return true;
+    }
+
+    const formation = this.formations.find((item) => item.idFormation === id);
+    return formation?.inscriptions?.some((inscription) => inscription.userId === this.currentUserId) ?? false;
   }
 
   getFormationImage(imageUrl?: string): string {
     return imageUrl || 'assets/images/formation-default.jpg';
+  }
+
+  private updateEnrolledFormations(): void {
+    if (this.canManageFormations() || !this.currentUserId) {
+      this.enrolledFormations = [];
+      return;
+    }
+
+    this.enrolledFormations = this.formations.filter((formation) => this.isAlreadyInscribed(formation.idFormation));
   }
 }
