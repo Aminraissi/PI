@@ -29,4 +29,34 @@ export class ContratService {
   getContrat(id: number): Observable<any> {
   return this.http.get(`${this.apiUrl}/getContrat/${id}`);
 }
+ signContratWithPDF(contratId: number, signatureBase64: string, pdfFile: Blob): Observable<any> {
+    const formData = new FormData();
+    formData.append('contratId', contratId.toString());
+    formData.append('signatureBase64', signatureBase64);
+    formData.append('pdfFile', pdfFile, `contrat_${contratId}.pdf`);
+    
+    return this.http.post(`${this.apiUrl}/sign-with-pdf`, formData);
+  }
+
+  getPendingContracts(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/pending-validation`);
+}
+
+getValidatedContracts(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/validated-contracts`);
+}
+
+getRejectedContracts(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/rejected-contracts`);
+}
+
+validateContract(contratId: number, valide: boolean, raison: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/validate/${contratId}`, { valide, raison });
+}
+
+downloadPDF(contratId: number): Observable<Blob> {
+  return this.http.get(`${this.apiUrl}/download-pdf/${contratId}`, {
+    responseType: 'blob'
+  });
+}
 }

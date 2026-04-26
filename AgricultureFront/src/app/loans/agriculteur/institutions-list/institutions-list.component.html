@@ -15,6 +15,11 @@
       Explore loan options and apply in just a few clicks
     </p>
   </div>
+  <div class="dashboard-link-container" *ngIf="!services.length">
+  <button class="btn-dashboard-secondary" (click)="goToDashboard()">
+    📊 Go to My Dashboard
+  </button>
+</div>
 
   <div class="hero-scroll-hint">
     <span>↓</span>

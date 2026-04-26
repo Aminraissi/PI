@@ -62,4 +62,7 @@ export class InstitutionsListComponent implements OnInit {
     console.log('Demande pour:', service);
      this.router.navigate(['/loans/application', service.id]);
   }
+  goToDashboard() {
+    this.router.navigate(['/loans/agriculteurDashboard']);
+  }
 }
