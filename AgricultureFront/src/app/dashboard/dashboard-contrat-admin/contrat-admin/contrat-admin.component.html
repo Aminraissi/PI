@@ -1,0 +1,237 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h1>Contract Management</h1>
+    <p class="subtitle">Review and validate contracts signed by farmers</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab === 'pending'"
+      (click)="onTabChange('pending')">
+      Pending 
+      <span class="count" *ngIf="pendingContracts.length">{{ pendingContracts.length }}</span>
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab === 'validated'"
+      (click)="onTabChange('validated')">
+      Validated
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab === 'rejected'"
+      (click)="onTabChange('rejected')">
+      Rejected
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-spinner" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading contracts...</p>
+  </div>
+
+  <!-- PENDING CONTRACTS -->
+  <div class="contracts-list" *ngIf="selectedTab === 'pending' && !isLoading">
+    <div class="contract-card" *ngFor="let contract of pendingContracts">
+      <div class="card-header">
+        <div>
+          <h3>Contract #{{ contract.contrat?.id }}</h3>
+          <p class="contract-date">Created: {{ contract.contrat?.dateCreation | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="badge-container">
+          <span class="status-badge" [ngClass]="getStatusBadgeClass(contract.contrat?.statutContrat)">
+            {{ getStatusLabel(contract.contrat?.statutContrat) }}
+          </span>
+          <span class="validation-badge pending">Pending Validation</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-group">
+            <label>Farmer:</label>
+            <span>{{ contract.agriculteur?.nom }} {{ contract.agriculteur?.prenom }}</span>
+          </div>
+          <div class="info-group">
+            <label>Amount:</label>
+            <span>{{ contract.contrat?.montant || contract.demande?.montantDemande || 0 }} DT</span>
+          </div>
+          <div class="info-group">
+            <label>Duration:</label>
+            <span>{{ contract.demande?.dureeMois }} months</span>
+          </div>
+          <div class="info-group">
+            <label>Interest Rate:</label>
+            <span>{{ contract.demande?.service?.tauxInteret || 0 }}%</span>
+          </div>
+          <div class="info-group">
+            <label>Monthly Payment:</label>
+            <span>{{ calculateMensualite(contract.demande?.montantDemande, contract.demande?.service?.tauxInteret, contract.demande?.dureeMois) | number:'1.2-2' }} DT</span>
+          </div>
+        </div>
+
+        <!-- Signature preview -->
+        <div class="signature-preview" *ngIf="contract.contrat?.signatureBase64">
+          <label>Farmer Signature:</label>
+          <div class="signature-wrapper">
+            <img [src]="contract.contrat?.signatureBase64" alt="Signature" class="signature-img">
+          </div>
+        </div>
+
+        <!-- Contract preview button -->
+        <div class="contract-preview">
+          <button class="btn-view" (click)="viewContractDetails(contract)">
+            View Full Contract
+          </button>
+        </div>
+      </div>
+
+      <!-- BOUTONS À L'EXTÉRIEUR DU MODAL -->
+      <div class="card-actions">
+        <button class="btn-validate" (click)="validateContract(contract.contrat?.id)">
+          Validate Contract
+        </button>
+        <button class="btn-reject" (click)="rejectContract(contract.contrat?.id)">
+          Reject Contract
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="pendingContracts.length === 0">
+      <span class="empty-icon"></span>
+      <p>No contracts pending validation</p>
+    </div>
+  </div>
+
+  <!-- VALIDATED CONTRACTS -->
+  <div class="contracts-list" *ngIf="selectedTab === 'validated' && !isLoading">
+    <div class="contract-card validated" *ngFor="let contract of validatedContracts">
+      <div class="card-header">
+        <div>
+          <h3>Contract #{{ contract.contrat?.id }}</h3>
+          <p class="contract-date">Validated: {{ contract.contrat?.dateCreation | date:'dd/MM/yyyy' }}</p>
+        </div>
+        <span class="status-badge validated">Validated</span>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-group"><label>Farmer:</label> <span>{{ contract.agriculteur?.nom }} {{ contract.agriculteur?.prenom }}</span></div>
+          <div class="info-group"><label>Amount:</label> <span>{{ contract.contrat?.montant }} DT</span></div>
+          <div class="info-group"><label>Duration:</label> <span>{{ contract.demande?.dureeMois }} months</span></div>
+          <div class="info-group"><label>Interest Rate:</label> <span>{{ contract.demande?.service?.tauxInteret || 0 }}%</span></div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-view" (click)="viewContractDetails(contract)">View Details</button>
+      </div>
+    </div>
+    <div class="empty-state" *ngIf="validatedContracts.length === 0">
+      <p>No validated contracts</p>
+    </div>
+  </div>
+
+  <!-- REJECTED CONTRACTS -->
+  <div class="contracts-list" *ngIf="selectedTab === 'rejected' && !isLoading">
+    <div class="contract-card rejected" *ngFor="let contract of rejectedContracts">
+      <div class="card-header">
+        <div>
+          <h3>Contract #{{ contract.contrat?.id }}</h3>
+          <p class="contract-date">Rejected: {{ contract.contrat?.dateCreation | date:'dd/MM/yyyy' }}</p>
+        </div>
+        <span class="status-badge rejected">Rejected</span>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-group"><label>Farmer:</label> <span>{{ contract.agriculteur?.nom }} {{ contract.agriculteur?.prenom }}</span></div>
+          <div class="info-group"><label>Amount:</label> <span>{{ contract.contrat?.montant }} DT</span></div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-view" (click)="viewContractDetails(contract)">View Details</button>
+      </div>
+    </div>
+    <div class="empty-state" *ngIf="rejectedContracts.length === 0">
+      <p>No rejected contracts</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETAILS (SANS BOUTONS VALIDATE/REJECT) -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Contract Details #{{ selectedContract?.contrat?.id }}</h2>
+      <button class="modal-close" (click)="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- General Information -->
+      <div class="detail-section">
+        <h3>General Information</h3>
+        <div class="detail-grid">
+          <div><strong>Farmer:</strong> {{ selectedContract?.agriculteur?.nom }} {{ selectedContract?.agriculteur?.prenom }}</div>
+          <div><strong>Amount:</strong> {{ selectedContract?.contrat?.montant }} DT</div>
+          <div><strong>Duration:</strong> {{ selectedContract?.demande?.dureeMois }} months</div>
+          <div><strong>Interest Rate:</strong> {{ selectedContract?.demande?.service?.tauxInteret || 0 }}%</div>
+          <div><strong>Creation Date:</strong> {{ selectedContract?.contrat?.dateCreation | date:'dd/MM/yyyy' }}</div>
+          <div><strong>Signature Status:</strong> {{ selectedContract?.contrat?.statutContrat }}</div>
+          <div><strong>Admin Validation:</strong> 
+            <span [ngClass]="{
+              'text-pending': getValidationStatus(selectedContract?.contrat?.validationAdmin) === 'Pending',
+              'text-approved': getValidationStatus(selectedContract?.contrat?.validationAdmin) === 'Approved',
+              'text-rejected': getValidationStatus(selectedContract?.contrat?.validationAdmin) === 'Rejected'
+            }">
+              {{ getValidationStatus(selectedContract?.contrat?.validationAdmin) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Signature -->
+      <div class="detail-section" *ngIf="selectedContract?.contrat?.signatureBase64">
+        <h3>Farmer Signature</h3>
+        <div class="signature-container">
+          <img [src]="selectedContract?.contrat?.signatureBase64" alt="Signature" class="full-signature">
+        </div>
+      </div>
+
+      <!-- Contract Text Content (if not PDF) -->
+      <div class="detail-section" *ngIf="selectedContract?.contrat?.contenuContrat && !selectedContract?.contrat?.contenuContrat?.endsWith('.pdf')">
+        <h3>Contract Content</h3>
+        <div class="contract-full-content">
+          <pre>{{ selectedContract?.contrat?.contenuContrat }}</pre>
+        </div>
+      </div>
+
+      <!-- PDF Viewer -->
+      <div class="detail-section" *ngIf="pdfUrl">
+        <h3>Signed PDF Document</h3>
+        <iframe [src]="pdfUrl" class="pdf-viewer" frameborder="0"></iframe>
+        <a [href]="pdfUrl" download="contract_{{selectedContract?.contrat?.id}}.pdf" class="btn-download">
+          Download PDF
+        </a>
+      </div>
+
+      <!-- Message d'information (sans boutons) -->
+      <div class="detail-section" *ngIf="selectedContract?.contrat?.validationAdmin === 'PENDING' && selectedContract?.contrat?.statutContrat === 'SIGNE'">
+        <h3>Status</h3>
+        <p class="pending-text">This contract is waiting for your validation. Please use the buttons on the contract card to validate or reject.</p>
+      </div>
+      
+      <div class="detail-section" *ngIf="selectedContract?.contrat?.validationAdmin === 'REJECTED'">
+        <h3>Contract Rejected</h3>
+        <p class="rejected-text">This contract has been rejected by the administrator.</p>
+      </div>
+      
+      <div class="detail-section" *ngIf="selectedContract?.contrat?.validationAdmin === 'APPROVED'">
+        <h3>Contract Validated</h3>
+        <p class="validated-text">This contract has been successfully validated by the administrator.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-close" (click)="closeModal()">Close</button>
+    </div>
+  </div>
+</div>

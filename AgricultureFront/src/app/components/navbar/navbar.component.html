@@ -11,15 +11,15 @@
       <!-- Nav links (centre) -->
       <ul class="nav-links" [class.open]="isMobileMenuOpen">
 
-        <li *ngFor="let link of navLinks">
+        <li *ngFor="let link of visibleNavLinks">
           <a [class.active]="activeLink === link.route"
-             (click)="navigate(link.route)">
+             (click)="navigateTo(link)">
             {{ link.label }}
           </a>
         </li>
 
         <!-- Dropdown More -->
-        <li class="dropdown-wrap">
+        <li class="dropdown-wrap" *ngIf="visibleDropdownLinks.length > 0">
           <a class="dropdown-trigger"
              [class.active]="isDropdownActive()"
              (click)="toggleDropdown($event)">
@@ -28,7 +28,7 @@
                [class.rotated]="moreDropdownOpen"></i>
           </a>
           <ul class="dropdown-menu" *ngIf="moreDropdownOpen">
-            <li *ngFor="let d of dropdownLinks"
+            <li *ngFor="let d of visibleDropdownLinks"
                 (mouseleave)="hideSubmenu()">
               <a class="dropdown-item"
                  [class.active]="isDropdownLinkActive(d)"

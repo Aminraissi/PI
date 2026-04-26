@@ -58,6 +58,7 @@ export interface LeconCommentaire {
 
 export interface InscriptionFormation {
   idInscription?: number;
+  formationId?: number;
   dateInscription?: string;
   statutAcces?: string;
   progression?: number;
@@ -69,7 +70,7 @@ export interface InscriptionFormation {
   providedIn: 'root'
 })
 export class FormationService {
-  private apiUrl = 'http://localhost:8089/formation/api/formations';
+  private apiUrl = '/formation/api/formations';
 
   constructor(private http: HttpClient) {}
 

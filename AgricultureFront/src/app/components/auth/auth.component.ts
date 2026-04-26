@@ -1,35 +1,35 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService, BackendRole, SignupStep1Request, SignupResponse } from '../../services/auth/auth.service';
 import { Router } from '@angular/router';
 
-
+declare var grecaptcha: any;
 declare const google: any;
 declare const FB: any;
+
 @Component({
   selector: 'app-auth',
   standalone: false,
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css']
 })
-export class AuthComponent implements OnInit, AfterViewInit {
+export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
 
   mode: 'signin' | 'signup' | 'verify' | 'forgot' | 'forgotPhone' | 'reset' = 'signin';
-  showSignInPass    = false;
-  showSignUpPass    = false;
-  previewUrl:           string | null = null;
-  photoUploadUrl:       string | null = null;
-  loginError:           string | null = null;
-  isLoading                           = false;
-  verificationUserId:   number | null = null;
-  verificationEmail:    string | null = null;
-  verificationMessage:  string | null = null;
-  verificationLoading                 = false;
-  verificationError:    string | null = null;
+  showSignInPass = false;
+  showSignUpPass = false;
+  previewUrl: string | null = null;
+  photoUploadUrl: string | null = null;
+  loginError: string | null = null;
+  isLoading = false;
+  verificationUserId: number | null = null;
+  verificationEmail: string | null = null;
+  verificationMessage: string | null = null;
+  verificationLoading = false;
+  verificationError: string | null = null;
 
   signInForm!: FormGroup;
   signUpForm!: FormGroup;
-
   forgotEmailForm!: FormGroup;
   forgotPhoneForm!: FormGroup;
   resetPasswordForm!: FormGroup;
@@ -40,8 +40,10 @@ export class AuthComponent implements OnInit, AfterViewInit {
   resetError: string | null = null;
   resetLoading = false;
 
-  private readonly googleClientId = '270359567342-1evqop862k1bolr40f5qsn47b4d9q4rl.apps.googleusercontent.com';
+  siteKey = '6LdVg8ssAAAAAGykd7vnzD3RveWYa55rWK7b2oy2';
+  private captchaWidgetId: number | null = null;
 
+  private readonly googleClientId = '270359567342-1evqop862k1bolr40f5qsn47b4d9q4rl.apps.googleusercontent.com';
   googleSignupMode = false;
   googleCredential: string | null = null;
   googleProfile: any = null;
@@ -49,7 +51,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
 
   private readonly facebookAppId = '1855481011803635';
   private facebookInitialized = false;
-
   facebookSignupMode = false;
   facebookAccessToken: string | null = null;
   facebookProfile: any = null;
@@ -58,7 +59,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
     return this.googleSignupMode || this.facebookSignupMode;
   }
 
-  // Roles that require extra info
   rolesWithExtra = [
     'Farmer', 'Transporter', 'AgriculturalExpert',
     'Agent', 'Veterinarian', 'EventOrganizer'
@@ -81,9 +81,9 @@ export class AuthComponent implements OnInit, AfterViewInit {
   }
 
   constructor(
-      private authService: AuthService,
-      private router:      Router
-  ) {}
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     const savedMode = localStorage.getItem('authMode');
@@ -95,34 +95,34 @@ export class AuthComponent implements OnInit, AfterViewInit {
       savedMode === 'forgotPhone' ||
       savedMode === 'reset'
     ) {
-      this.mode = savedMode;
+      this.mode = savedMode as typeof this.mode;
     }
 
-    const pendingVerificationId      = localStorage.getItem('pendingVerificationUserId');
-    const pendingVerificationEmail   = localStorage.getItem('pendingVerificationEmail');
+    const pendingVerificationId = localStorage.getItem('pendingVerificationUserId');
+    const pendingVerificationEmail = localStorage.getItem('pendingVerificationEmail');
     const pendingVerificationMessage = localStorage.getItem('pendingVerificationMessage');
     if (this.mode === 'verify') {
-      this.verificationUserId  = pendingVerificationId ? Number(pendingVerificationId) : null;
-      this.verificationEmail   = pendingVerificationEmail;
+      this.verificationUserId = pendingVerificationId ? Number(pendingVerificationId) : null;
+      this.verificationEmail = pendingVerificationEmail;
       this.verificationMessage = pendingVerificationMessage || 'Please verify your email to continue.';
     }
 
     const rememberedEmail = localStorage.getItem('rememberedEmail');
 
     this.signInForm = new FormGroup({
-      email:    new FormControl(rememberedEmail || '', [Validators.required, Validators.email]),
+      email: new FormControl(rememberedEmail || '', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(8)]),
       remember: new FormControl(rememberedEmail !== null)
     });
 
     this.signUpForm = new FormGroup({
       firstName: new FormControl('', [Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]),
-      lastName:  new FormControl('', [Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]),
-      email:     new FormControl('', [Validators.required, Validators.email]),
-      phone:     new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{8}$/)]),
-      password:  new FormControl('', [Validators.required, Validators.minLength(8)]),
-      photo:     new FormControl(null, [Validators.required, this.imageValidator]),
-      role:      new FormControl('', Validators.required)
+      lastName: new FormControl('', [Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]),
+      email: new FormControl('', [Validators.required, Validators.email]),
+      phone: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{8}$/)]),
+      password: new FormControl('', [Validators.required, Validators.minLength(8)]),
+      photo: new FormControl(null, [Validators.required, this.imageValidator]),
+      role: new FormControl('', Validators.required)
     });
 
     this.forgotEmailForm = new FormGroup({
@@ -133,35 +133,75 @@ export class AuthComponent implements OnInit, AfterViewInit {
       phone: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{8}$/)])
     });
 
-
     this.resetPasswordForm = new FormGroup({
       code: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{6}$/)]),
       newPassword: new FormControl('', [Validators.required, Validators.minLength(8)]),
       confirmPassword: new FormControl('', [Validators.required])
     }, { validators: this.passwordsMatchValidator });
 
-    this.forgotEmailForm.get('email')?.valueChanges.subscribe(() => {
-      this.resetError = null;
-    });
-
-    this.forgotPhoneForm.get('phone')?.valueChanges.subscribe(() => {
-      this.resetError = null;
-    });
-
-    this.resetPasswordForm.valueChanges.subscribe(() => {
-      this.resetError = null;
-    });
-
+    this.forgotEmailForm.get('email')?.valueChanges.subscribe(() => { this.resetError = null; });
+    this.forgotPhoneForm.get('phone')?.valueChanges.subscribe(() => { this.resetError = null; });
+    this.resetPasswordForm.valueChanges.subscribe(() => { this.resetError = null; });
 
     if (this.authService.hasActiveSession()) {
       const redirectRoute = this.authService.getDefaultRouteForRole(this.authService.getCurrentRole());
       this.router.navigate([redirectRoute]);
     }
+
+    this.waitForRecaptcha();
   }
 
   ngAfterViewInit(): void {
     this.initGoogleButton();
     this.initFacebookSdk();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyCaptcha();
+  }
+
+  private waitForRecaptcha(): void {
+    const checkInterval = setInterval(() => {
+      if (typeof grecaptcha !== 'undefined' && this.mode === 'signin') {
+        clearInterval(checkInterval);
+        this.renderCaptcha();
+      }
+    }, 500);
+    setTimeout(() => clearInterval(checkInterval), 10000);
+  }
+
+  private renderCaptcha(): void {
+    const container = document.querySelector('.g-recaptcha');
+    if (container && !this.captchaWidgetId && typeof grecaptcha !== 'undefined') {
+      this.captchaWidgetId = grecaptcha.render(container, {
+        sitekey: this.siteKey,
+        callback: () => {
+          console.log('✅ CAPTCHA résolu');
+          this.loginError = null;
+        },
+        'expired-callback': () => {
+          console.log('⚠️ CAPTCHA expiré');
+          this.loginError = 'La vérification a expiré, veuillez recommencer';
+        }
+      });
+    }
+  }
+
+  private destroyCaptcha(): void {
+    if (this.captchaWidgetId !== null && typeof grecaptcha !== 'undefined') {
+      try {
+        grecaptcha.reset(this.captchaWidgetId);
+        this.captchaWidgetId = null;
+      } catch (e) {
+        console.warn('Erreur destruction CAPTCHA:', e);
+      }
+    }
+  }
+
+  resetCaptcha(): void {
+    if (this.captchaWidgetId !== null && typeof grecaptcha !== 'undefined') {
+      grecaptcha.reset(this.captchaWidgetId);
+    }
   }
 
   switchTo(m: 'signin' | 'signup'): void {
@@ -175,16 +215,24 @@ export class AuthComponent implements OnInit, AfterViewInit {
       this.googleCredential = null;
       this.googleProfile = null;
       this.restoreNormalSignupValidators();
+
+      setTimeout(() => {
+        if (typeof grecaptcha !== 'undefined' && !this.captchaWidgetId) {
+          this.renderCaptcha();
+        } else if (this.captchaWidgetId) {
+          this.resetCaptcha();
+        }
+      }, 100);
+    } else {
+      this.destroyCaptcha();
     }
 
-    setTimeout(() => {
-      this.initGoogleButton();
-    }, 0);
+    setTimeout(() => { this.initGoogleButton(); }, 0);
   }
 
   togglePass(field: 'signin' | 'signup'): void {
     if (field === 'signin') this.showSignInPass = !this.showSignInPass;
-    else                    this.showSignUpPass = !this.showSignUpPass;
+    else this.showSignUpPass = !this.showSignUpPass;
   }
 
   siInvalid(field: string): boolean {
@@ -199,15 +247,48 @@ export class AuthComponent implements OnInit, AfterViewInit {
     return !!(c && c.invalid && c.touched);
   }
 
-  submitSignIn(): void {
-    if (this.signInForm.invalid) { this.signInForm.markAllAsTouched(); return; }
+  feInvalid(field: string): boolean {
+    const c = this.forgotEmailForm?.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
 
-    this.isLoading  = true;
+  fpInvalid(field: string): boolean {
+    const c = this.forgotPhoneForm?.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
+
+  rpInvalid(field: string): boolean {
+    const c = this.resetPasswordForm?.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
+
+  submitSignIn(): void {
+    if (this.signInForm.invalid) {
+      this.signInForm.markAllAsTouched();
+      return;
+    }
+
+    let captchaToken = '';
+    if (typeof grecaptcha !== 'undefined') {
+      if (this.captchaWidgetId !== null) {
+        captchaToken = grecaptcha.getResponse(this.captchaWidgetId);
+      } else {
+        captchaToken = grecaptcha.getResponse();
+      }
+      if (!captchaToken || captchaToken.length === 0) {
+        this.loginError = 'Veuillez cocher "Je ne suis pas un robot"';
+        return;
+      }
+    } else {
+      captchaToken = 'dev-simulated-token';
+    }
+
+    this.isLoading = true;
     this.loginError = null;
 
     const { email, remember, password } = this.signInForm.value;
 
-    this.authService.login(email, password).subscribe({
+    this.authService.login(email, password, remember).subscribe({
       next: (response) => {
         if (response.token) {
           if (remember) {
@@ -216,19 +297,21 @@ export class AuthComponent implements OnInit, AfterViewInit {
             localStorage.removeItem('rememberedEmail');
           }
           const redirectRoute = this.authService.getDefaultRouteForRole(
-              response.role ? response.role as BackendRole : null
+            response.role ? response.role as BackendRole : null
           );
           this.router.navigate([redirectRoute]);
         } else if (response.verificationRequired || response.nextStep === 'VERIFY_EMAIL') {
           this.enterVerificationMode(response.userId, response.email, response.message || 'Please verify your email.');
         } else {
           this.loginError = response.message || 'Login failed';
+          this.resetCaptcha();
         }
         this.isLoading = false;
       },
       error: (err) => {
         this.loginError = err.error?.message || 'An error occurred during login';
-        this.isLoading  = false;
+        this.isLoading = false;
+        this.resetCaptcha();
       }
     });
   }
@@ -244,36 +327,35 @@ export class AuthComponent implements OnInit, AfterViewInit {
       return;
     }
 
-      if (this.facebookSignupMode) {
+    if (this.facebookSignupMode) {
       this.submitFacebookSignupCompletion();
       return;
     }
 
-    this.isLoading  = true;
+    this.isLoading = true;
     this.loginError = null;
 
     const payload: SignupStep1Request = {
-      nom:        this.signUpForm.value.firstName ?? '',
-      prenom:     this.signUpForm.value.lastName  ?? '',
-      email:      this.signUpForm.value.email     ?? '',
-      motDePasse: this.signUpForm.value.password  ?? '',
-      role:       this.selectedRole,
-      photo:      this.photoUploadUrl,
-      telephone:  this.signUpForm.value.phone     ?? ''
+      nom: this.signUpForm.value.firstName ?? '',
+      prenom: this.signUpForm.value.lastName ?? '',
+      email: this.signUpForm.value.email ?? '',
+      motDePasse: this.signUpForm.value.password ?? '',
+      role: this.selectedRole,
+      photo: this.photoUploadUrl,
+      telephone: this.signUpForm.value.phone ?? ''
     };
 
     this.authService.signupStep1(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
-
         if (response.nextStep === 'SIGNUP_STEP2' && response.userId != null) {
           localStorage.setItem('signupBase', JSON.stringify({
             ...this.signUpForm.value,
             photo: this.photoUploadUrl
           }));
-          localStorage.setItem('signupRole',    this.selectedRole);
-          localStorage.setItem('signupUserId',  String(response.userId));
-          localStorage.setItem('signupEmail',   response.email || payload.email);
+          localStorage.setItem('signupRole', this.selectedRole);
+          localStorage.setItem('signupUserId', String(response.userId));
+          localStorage.setItem('signupEmail', response.email || payload.email);
           localStorage.setItem('signupMessage', response.message || 'Complete your profile.');
           this.router.navigate(['/register-extra']);
           return;
@@ -287,7 +369,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
         this.enterVerificationMode(response.userId, response.email, response.message || 'Please verify your email to continue.');
       },
       error: (err) => {
-        this.isLoading  = false;
+        this.isLoading = false;
         this.loginError = err.error?.message || 'Could not create your account';
       }
     });
@@ -300,7 +382,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
     }
 
     this.verificationLoading = true;
-    this.verificationError   = null;
+    this.verificationError = null;
 
     this.authService.verifyEmail(this.verificationUserId).subscribe({
       next: (response) => {
@@ -318,60 +400,12 @@ export class AuthComponent implements OnInit, AfterViewInit {
       },
       error: (err) => {
         this.verificationLoading = false;
-        this.verificationError   = err.error?.message || 'Verification failed';
+        this.verificationError = err.error?.message || 'Verification failed';
       }
     });
   }
 
-  imageValidator = (control: AbstractControl): ValidationErrors | null => {
-    const file = control.value;
-    if (!file) return null;
-    const allowed = ['image/jpeg', 'image/png', 'image/jpg'];
-    if (!allowed.includes(file.type)) return { invalidType: true };
-    if (file.size > 2 * 1024 * 1024) return { maxSize: true };
-    return null;
-  };
-
-  onFileChange(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    this.signUpForm.get('photo')?.setValue(file);
-    this.signUpForm.get('photo')?.markAsTouched();
-    this.photoUploadUrl = this.buildMockFileUrl(file);
-    const reader    = new FileReader();
-    reader.onload   = () => this.previewUrl = reader.result as string;
-    reader.readAsDataURL(file);
-  }
-
-  private buildMockFileUrl(file: File): string {
-    const safeName = encodeURIComponent(file.name.replace(/\s+/g, '-'));
-    return `https://files.greenroots.local/uploads/${Date.now()}-${safeName}`;
-  }
-
-  private enterVerificationMode(userId: number | null, email: string | null, message: string): void {
-    this.verificationUserId  = userId;
-    this.verificationEmail   = email;
-    this.verificationMessage = message;
-    this.mode = 'verify';
-    localStorage.setItem('authMode', 'verify');
-    if (userId != null) localStorage.setItem('pendingVerificationUserId', String(userId));
-    if (email)          localStorage.setItem('pendingVerificationEmail', email);
-    localStorage.setItem('pendingVerificationMessage', message);
-  }
-
-  
-  passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
-    const newPassword = control.get('newPassword')?.value;
-    const confirmPassword = control.get('confirmPassword')?.value;
-
-    if (!newPassword || !confirmPassword) return null;
-
-    return newPassword === confirmPassword ? null : { passwordsMismatch: true };
-    }
-
-    
-
-    switchToForgot(): void {
+  switchToForgot(): void {
     this.mode = 'forgot';
     this.resetEmail = null;
     this.resetPhone = null;
@@ -383,21 +417,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.mode = 'signin';
     this.resetError = null;
     this.resetMessage = null;
-  }
-
-  feInvalid(field: string): boolean {
-    const c = this.forgotEmailForm?.get(field);
-    return !!(c && c.invalid && c.touched);
-  }
-
-  fpInvalid(field: string): boolean {
-    const c = this.forgotPhoneForm?.get(field);
-    return !!(c && c.invalid && c.touched);
-  }
-
-  rpInvalid(field: string): boolean {
-    const c = this.resetPasswordForm?.get(field);
-    return !!(c && c.invalid && c.touched);
   }
 
   submitForgotEmail(): void {
@@ -417,12 +436,11 @@ export class AuthComponent implements OnInit, AfterViewInit {
         this.resetLoading = false;
         this.resetEmail = email;
         this.resetMessage = response.message || 'Email found. Please confirm your phone number.';
-
         this.mode = 'forgotPhone';
       },
       error: (err) => {
         this.resetLoading = false;
-        this.resetError = err.error?.message || 'We couldn’t find an account with this email. Please check the address or create a new account.';
+        this.resetError = err.error?.message || 'We couldn\'t find an account with this email.';
       }
     });
   }
@@ -458,6 +476,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
       }
     });
   }
+
   submitResetPassword(): void {
     if (this.resetPasswordForm.invalid) {
       this.resetPasswordForm.markAllAsTouched();
@@ -483,11 +502,9 @@ export class AuthComponent implements OnInit, AfterViewInit {
       next: (response) => {
         this.resetLoading = false;
         this.resetMessage = response.message || 'Password reset successfully.';
-
         this.resetPasswordForm.reset();
         this.forgotEmailForm.reset();
         this.forgotPhoneForm.reset();
-
         this.mode = 'signin';
         this.loginError = 'Password reset successfully. You can now sign in.';
       },
@@ -498,37 +515,76 @@ export class AuthComponent implements OnInit, AfterViewInit {
     });
   }
 
+  passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const newPassword = control.get('newPassword')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+    if (!newPassword || !confirmPassword) return null;
+    return newPassword === confirmPassword ? null : { passwordsMismatch: true };
+  }
+
+  imageValidator = (control: AbstractControl): ValidationErrors | null => {
+    const file = control.value;
+    if (!file) return null;
+    const allowed = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowed.includes(file.type)) return { invalidType: true };
+    if (file.size > 2 * 1024 * 1024) return { maxSize: true };
+    return null;
+  };
+
+  onFileChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.signUpForm.get('photo')?.setValue(file);
+    this.signUpForm.get('photo')?.markAsTouched();
+    this.photoUploadUrl = this.buildMockFileUrl(file);
+    const reader = new FileReader();
+    reader.onload = () => this.previewUrl = reader.result as string;
+    reader.readAsDataURL(file);
+  }
+
+  private buildMockFileUrl(file: File): string {
+    const safeName = encodeURIComponent(file.name.replace(/\s+/g, '-'));
+    return `https://files.greenroots.local/uploads/${Date.now()}-${safeName}`;
+  }
+
+  private enterVerificationMode(userId: number | null, email: string | null, message: string): void {
+    this.verificationUserId = userId;
+    this.verificationEmail = email;
+    this.verificationMessage = message;
+    this.mode = 'verify';
+    localStorage.setItem('authMode', 'verify');
+    if (userId != null) localStorage.setItem('pendingVerificationUserId', String(userId));
+    if (email) localStorage.setItem('pendingVerificationEmail', email);
+    localStorage.setItem('pendingVerificationMessage', message);
+  }
+
   initGoogleButton(): void {
-  setTimeout(() => {
-    if (typeof google === 'undefined') {
-      console.error('Google Identity Services not loaded');
-      return;
-    }
+    setTimeout(() => {
+      if (typeof google === 'undefined') return;
 
-    const googleBtn = document.getElementById('googleSignInButton');
-    if (!googleBtn) return;
+      const googleBtn = document.getElementById('googleSignInButton');
+      if (!googleBtn) return;
 
-    googleBtn.innerHTML = '';
+      googleBtn.innerHTML = '';
 
-    if (!this.googleInitialized) {
-      google.accounts.id.initialize({
-        client_id: this.googleClientId,
-        callback: (response: any) => this.handleGoogleCredential(response)
+      if (!this.googleInitialized) {
+        google.accounts.id.initialize({
+          client_id: this.googleClientId,
+          callback: (response: any) => this.handleGoogleCredential(response)
+        });
+        this.googleInitialized = true;
+      }
+
+      google.accounts.id.renderButton(googleBtn, {
+        theme: 'outline',
+        size: 'large',
+        shape: 'rectangular',
+        width: 190,
+        text: this.mode === 'signup' ? 'signup_with' : 'signin_with',
+        logo_alignment: 'left'
       });
-
-      this.googleInitialized = true;
-    }
-
-    google.accounts.id.renderButton(googleBtn, {
-      theme: 'outline',
-      size: 'large',
-      shape: 'rectangular',
-      width: 190,
-      text: this.mode === 'signup' ? 'signup_with' : 'signin_with',
-      logo_alignment: 'left'
-    });
-  }, 200);
-}
+    }, 200);
+  }
 
   handleGoogleCredential(response: any): void {
     if (!response?.credential) {
@@ -551,16 +607,13 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.authService.loginWithGoogle(credential).subscribe({
       next: (res) => {
         this.isLoading = false;
-
         if (!res?.token) {
           this.loginError = res?.message || 'Google login failed.';
           return;
         }
-
         const redirectRoute = this.authService.getDefaultRouteForRole(
           res.role ? res.role as BackendRole : null
         );
-
         this.router.navigate([redirectRoute]);
       },
       error: (err) => {
@@ -584,7 +637,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.googleSignupMode = true;
     this.googleCredential = credential;
     this.googleProfile = profile;
-
     this.mode = 'signup';
     localStorage.setItem('authMode', 'signup');
 
@@ -600,7 +652,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
 
     this.previewUrl = profile.picture || null;
     this.photoUploadUrl = profile.picture || null;
-
     this.applyGoogleSignupValidators();
   }
 
@@ -611,11 +662,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.signUpForm.get('password')?.clearValidators();
     this.signUpForm.get('photo')?.clearValidators();
 
-    this.signUpForm.get('phone')?.setValidators([
-      Validators.required,
-      Validators.pattern(/^[0-9]{8}$/)
-    ]);
-
+    this.signUpForm.get('phone')?.setValidators([Validators.required, Validators.pattern(/^[0-9]{8}$/)]);
     this.signUpForm.get('role')?.setValidators([Validators.required]);
 
     Object.keys(this.signUpForm.controls).forEach(key => {
@@ -625,39 +672,14 @@ export class AuthComponent implements OnInit, AfterViewInit {
 
   restoreNormalSignupValidators(): void {
     if (!this.signUpForm) return;
-
     this.googleSignupMode = false;
 
-    this.signUpForm.get('firstName')?.setValidators([
-      Validators.required,
-      Validators.pattern(/^[a-zA-Z]+$/)
-    ]);
-
-    this.signUpForm.get('lastName')?.setValidators([
-      Validators.required,
-      Validators.pattern(/^[a-zA-Z]+$/)
-    ]);
-
-    this.signUpForm.get('email')?.setValidators([
-      Validators.required,
-      Validators.email
-    ]);
-
-    this.signUpForm.get('password')?.setValidators([
-      Validators.required,
-      Validators.minLength(8)
-    ]);
-
-    this.signUpForm.get('photo')?.setValidators([
-      Validators.required,
-      this.imageValidator
-    ]);
-
-    this.signUpForm.get('phone')?.setValidators([
-      Validators.required,
-      Validators.pattern(/^[0-9]{8}$/)
-    ]);
-
+    this.signUpForm.get('firstName')?.setValidators([Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]);
+    this.signUpForm.get('lastName')?.setValidators([Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]);
+    this.signUpForm.get('email')?.setValidators([Validators.required, Validators.email]);
+    this.signUpForm.get('password')?.setValidators([Validators.required, Validators.minLength(8)]);
+    this.signUpForm.get('photo')?.setValidators([Validators.required, this.imageValidator]);
+    this.signUpForm.get('phone')?.setValidators([Validators.required, Validators.pattern(/^[0-9]{8}$/)]);
     this.signUpForm.get('role')?.setValidators([Validators.required]);
 
     Object.keys(this.signUpForm.controls).forEach(key => {
@@ -685,23 +707,10 @@ export class AuthComponent implements OnInit, AfterViewInit {
       role: this.selectedRole
     };
 
-    console.log('Google complete signup payload:', {
-      credentialExists: !!payload.credential,
-      credentialLength: payload.credential?.length,
-      telephone: payload.telephone,
-      role: payload.role
-    });
-
     this.authService.completeGoogleSignup(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
 
-        /**
-         * IMPORTANT:
-         * Check SIGNUP_STEP2 first.
-         * Backend may return a token AND nextStep SIGNUP_STEP2.
-         * In that case, we must go to register-extra, not dashboard.
-         */
         if (response.nextStep === 'SIGNUP_STEP2' && response.userId != null) {
           localStorage.setItem('signupBase', JSON.stringify({
             firstName: this.signUpForm.value.firstName,
@@ -711,39 +720,26 @@ export class AuthComponent implements OnInit, AfterViewInit {
             role: this.selectedRole,
             photo: this.photoUploadUrl
           }));
-
           localStorage.setItem('signupRole', this.selectedRole);
           localStorage.setItem('signupUserId', String(response.userId));
           localStorage.setItem('signupEmail', response.email || this.signUpForm.value.email);
-          localStorage.setItem(
-            'signupMessage',
-            response.message || 'Google signup completed. Please complete your profile.'
-          );
-
+          localStorage.setItem('signupMessage', response.message || 'Google signup completed. Please complete your profile.');
           this.router.navigate(['/register-extra']);
           return;
         }
 
-        /**
-         * If no extra profile is needed, backend returns token.
-         */
         if ('token' in response && response.token) {
           const redirectRoute = this.authService.getDefaultRouteForRole(
             response.role ? response.role as BackendRole : null
           );
-
           this.router.navigate([redirectRoute]);
           return;
         }
 
-        /**
-         * Fallback.
-         */
         this.mode = 'signin';
         this.googleSignupMode = false;
         this.googleCredential = null;
         this.googleProfile = null;
-
         this.loginError = response.message || 'Google signup completed. You can now sign in.';
       },
       error: (err) => {
@@ -764,7 +760,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
             .join('')
         )
       );
-
       return {
         email: decodedPayload.email,
         firstName: decodedPayload.given_name,
@@ -777,17 +772,10 @@ export class AuthComponent implements OnInit, AfterViewInit {
     }
   }
 
-
   initFacebookSdk(): void {
     setTimeout(() => {
-      if (typeof FB === 'undefined') {
-        console.error('Facebook SDK not loaded');
-        return;
-      }
-
-      if (this.facebookInitialized) {
-        return;
-      }
+      if (typeof FB === 'undefined') return;
+      if (this.facebookInitialized) return;
 
       FB.init({
         appId: this.facebookAppId,
@@ -818,16 +806,11 @@ export class AuthComponent implements OnInit, AfterViewInit {
 
       const accessToken = response.authResponse.accessToken;
 
-      FB.api('/me', {
-        fields: 'id,first_name,last_name,name,email,picture'
-      }, (profile: any) => {
+      FB.api('/me', { fields: 'id,first_name,last_name,name,email,picture' }, (profile: any) => {
         if (!profile || profile.error) {
           this.loginError = 'Could not read your Facebook profile.';
           return;
         }
-
-        console.log('Facebook profile:', profile);
-        console.log('Facebook access token exists:', !!accessToken);
 
         if (this.mode === 'signup') {
           this.startFacebookSignup(accessToken, profile);
@@ -836,10 +819,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
 
         this.signInWithFacebook(accessToken);
       });
-    }, {
-      scope: 'email,public_profile',
-      return_scopes: true
-    });
+    }, { scope: 'email,public_profile', return_scopes: true });
   }
 
   startFacebookSignup(accessToken: string, profile: any): void {
@@ -853,11 +833,9 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.facebookSignupMode = true;
     this.facebookAccessToken = accessToken;
     this.facebookProfile = profile;
-
     this.googleSignupMode = false;
     this.googleCredential = null;
     this.googleProfile = null;
-
     this.mode = 'signup';
     localStorage.setItem('authMode', 'signup');
 
@@ -873,14 +851,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
 
     this.previewUrl = profile.picture?.data?.url || null;
     this.photoUploadUrl = profile.picture?.data?.url || null;
-
     this.applyGoogleSignupValidators();
-
-    console.log('Facebook signup missing fields mode activated:', {
-      email: profile.email,
-      firstName: profile.first_name,
-      lastName: profile.last_name
-    });
   }
 
   signInWithFacebook(accessToken: string): void {
@@ -890,16 +861,13 @@ export class AuthComponent implements OnInit, AfterViewInit {
     this.authService.loginWithFacebook(accessToken).subscribe({
       next: (res) => {
         this.isLoading = false;
-
         if (!res?.token) {
           this.loginError = res?.message || 'Facebook login failed.';
           return;
         }
-
         const redirectRoute = this.authService.getDefaultRouteForRole(
           res.role ? res.role as BackendRole : null
         );
-
         this.router.navigate([redirectRoute]);
       },
       error: (err) => {
@@ -929,13 +897,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
       role: this.selectedRole
     };
 
-    console.log('Facebook complete signup payload:', {
-      accessTokenExists: !!payload.accessToken,
-      tokenLength: payload.accessToken?.length,
-      telephone: payload.telephone,
-      role: payload.role
-    });
-
     this.authService.completeFacebookSignup(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
@@ -949,15 +910,10 @@ export class AuthComponent implements OnInit, AfterViewInit {
             role: this.selectedRole,
             photo: this.photoUploadUrl
           }));
-
           localStorage.setItem('signupRole', this.selectedRole);
           localStorage.setItem('signupUserId', String(response.userId));
           localStorage.setItem('signupEmail', response.email || this.signUpForm.value.email);
-          localStorage.setItem(
-            'signupMessage',
-            response.message || 'Facebook signup completed. Please complete your profile.'
-          );
-
+          localStorage.setItem('signupMessage', response.message || 'Facebook signup completed. Please complete your profile.');
           this.router.navigate(['/register-extra']);
           return;
         }
@@ -966,7 +922,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
           const redirectRoute = this.authService.getDefaultRouteForRole(
             response.role ? response.role as BackendRole : null
           );
-
           this.router.navigate([redirectRoute]);
           return;
         }
@@ -975,7 +930,6 @@ export class AuthComponent implements OnInit, AfterViewInit {
         this.facebookSignupMode = false;
         this.facebookAccessToken = null;
         this.facebookProfile = null;
-
         this.loginError = response.message || 'Facebook signup completed. You can now sign in.';
       },
       error: (err) => {
@@ -984,5 +938,4 @@ export class AuthComponent implements OnInit, AfterViewInit {
       }
     });
   }
-
 }
