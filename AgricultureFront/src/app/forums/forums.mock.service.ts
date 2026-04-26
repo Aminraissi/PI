@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpParams } from '@angular/common/http';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, timer } from 'rxjs';
-import { catchError, retry, shareReplay, tap } from 'rxjs/operators';
+import { catchError, map, retry, shareReplay, tap } from 'rxjs/operators';
 
 export interface ForumUser {
   id: number;
@@ -31,6 +31,9 @@ export interface ForumReply {
   id: number;
   authorId: number;
   content: string;
+  mediaUrls?: string[];
+  mediaApproved?: boolean;
+  mediaPendingReview?: boolean;
   upvotes: number;
   downvotes: number;
   isAccepted: boolean;
@@ -48,8 +51,12 @@ export interface ForumPost {
   id: number;
   title: string;
   content: string;
+  mediaUrls?: string[];
+  mediaApproved?: boolean;
+  mediaPendingReview?: boolean;
   tags: string[];
   authorId: number;
+  groupId?: number | null;
   createdAt: string;
   views: number;
   isDeleted?: boolean;
@@ -59,6 +66,20 @@ export interface ForumPost {
   activeReportCount?: number;
   currentUserHasPendingReport?: boolean;
   replies: ForumReply[];
+}
+
+export interface ForumGroup {
+  id: number;
+  name: string;
+  description: string;
+  focusTags: string[];
+  rules?: string[];
+  memberIds?: number[];
+  moderatorIds?: number[];
+  createdAt?: string;
+  memberCount: number;
+  joined: boolean;
+  createdBy?: number | null;
 }
 
 export interface ForumReportResult {
@@ -87,6 +108,38 @@ export interface ForumReportDetail {
   adminNotes?: string | null;
 }
 
+export interface ForumReportCaseActionTarget {
+  targetType: 'POST' | 'REPLY' | 'COMMENT';
+  targetId: number;
+  postId?: number | null;
+  replyId?: number | null;
+  commentId?: number | null;
+}
+
+interface AiTagSuggestionResponse {
+  tags: string[];
+}
+
+interface AiReplyImproveResponse {
+  draft: string;
+}
+
+interface AiDuplicateCandidateResponse {
+  id: number;
+  title: string;
+  score: number;
+  replies: number;
+  views: number;
+  reason?: string;
+}
+
+interface AiModerationAnalysisResponse {
+  recommendation: 'APPROVE' | 'REVIEW_CAREFULLY' | 'REJECT';
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  rationale: string;
+  signals: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ForumsMockService {
   private readonly apiUrl = 'http://localhost:8089/forums/api/forums';
@@ -94,65 +147,53 @@ export class ForumsMockService {
 
   constructor(private http: HttpClient) {}
 
-  getPosts(userId?: number, sortBy: string = 'newest', sortDirection: string = 'desc'): Observable<ForumPost[]> {
-    console.log('[ForumsService] getPosts called with userId:', userId, 'sortBy:', sortBy);
+  getPosts(userId?: number, sortBy: string = 'newest', sortDirection: string = 'desc', searchTerm?: string, tags?: string[], groupId?: number): Observable<ForumPost[]> {
     let params = new HttpParams();
     if (userId != null) {
       params = params.set('userId', userId.toString());
     }
     params = params.set('sortBy', sortBy);
     params = params.set('sortDirection', sortDirection);
+    if (searchTerm && searchTerm.trim()) {
+      params = params.set('search', searchTerm.trim());
+    }
+    if (tags && tags.length > 0) {
+      params = params.set('tags', tags.join(','));
+    }
+    if (groupId != null) {
+      params = params.set('groupId', groupId.toString());
+    }
 
-    return this.http.get<ForumPost[]>(`${this.apiUrl}/posts`, { params })
-      .pipe(
-        retry({
-          count: 3,
-          delay: (error: HttpErrorResponse, retryCount: number) => {
-            const status = error?.status ?? 0;
-            console.log(`[ForumsService] getPosts retry ${retryCount}: status=${status}`);
-            if (status >= 500 || status === 0) {
-              const waitTime = Math.min(1000 * Math.pow(2, retryCount - 1), 5000);
-              console.log(`[ForumsService] Retrying after ${waitTime}ms`);
-              return timer(waitTime);
-            }
-            throw error;
+    return this.http.get<ForumPost[]>(`${this.apiUrl}/posts`, { params }).pipe(
+      retry({
+        count: 3,
+        delay: (error: HttpErrorResponse, retryCount: number) => {
+          const status = error?.status ?? 0;
+          if (status >= 500 || status === 0) {
+            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
           }
-        }),
-        tap((posts) => {
-          if (posts && posts.length > 0) {
-            console.log('[ForumsService] getPosts received:', posts.length, 'posts');
-          } else {
-            console.log('[ForumsService] getPosts received empty or null data');
-          }
-        })
-      );
+          throw error;
+        }
+      })
+    );
   }
 
   getPostById(postId: number, userId?: number): Observable<ForumPost | undefined> {
     const params = userId == null ? undefined : new HttpParams().set('userId', userId.toString());
-    return this.http
-      .get<ForumPost>(`${this.apiUrl}/posts/${postId}`, { params })
-      .pipe(catchError(() => of(undefined)));
+    return this.http.get<ForumPost>(`${this.apiUrl}/posts/${postId}`, { params }).pipe(catchError(() => of(undefined)));
   }
 
   getUserById(userId: number): Observable<ForumUser | undefined> {
     const cached = this.userRequestCache.get(userId);
     if (cached) {
-      console.log('[ForumsService] getUserById:', userId, '(cached)');
       return cached;
     }
 
-    console.log('[ForumsService] getUserById:', userId, '(making request)');
-    const request$ = this.http
-      .get<ForumUser>(`${this.apiUrl}/users/${userId}`)
-      .pipe(
-        tap((user) => console.log('[ForumsService] getUserById received:', userId, user?.name)),
-        catchError(() => {
-          console.log('[ForumsService] getUserById failed:', userId);
-          return of(undefined);
-        }),
-        shareReplay(1)
-      );
+    const request$ = this.http.get<ForumUser>(`${this.apiUrl}/users/${userId}`).pipe(
+      tap(() => {}),
+      catchError(() => of(undefined)),
+      shareReplay(1)
+    );
 
     this.userRequestCache.set(userId, request$);
     return request$;
@@ -201,19 +242,65 @@ export class ForumsMockService {
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg).replace(/background/g, background)}`;
   }
 
-  createPost(payload: { title: string; content: string; tags: string[]; authorId?: number; generateAiReply?: boolean }): Observable<ForumPost> {
+  createPost(payload: { title: string; content: string; tags: string[]; mediaUrls?: string[]; groupId?: number | null; authorId?: number; generateAiReply?: boolean }): Observable<ForumPost> {
     return this.http.post<ForumPost>(`${this.apiUrl}/posts`, {
       title: payload.title,
       content: payload.content,
       tags: payload.tags,
+      mediaUrls: payload.mediaUrls ?? [],
+      groupId: payload.groupId ?? null,
       authorId: payload.authorId ?? 2,
       generateAiReply: payload.generateAiReply !== false
     });
   }
 
-  addReply(postId: number, content: string, authorId = 2): Observable<void> {
+  getAiTagSuggestions(payload: { title: string; content: string; tags?: string[]; groupId?: number | null }): Observable<string[]> {
+    return this.http.post<AiTagSuggestionResponse>(`${this.apiUrl}/ai/tags`, {
+      title: payload.title,
+      content: payload.content,
+      tags: payload.tags ?? [],
+      groupId: payload.groupId ?? null
+    }).pipe(
+      map((response) => (response?.tags ?? []).filter((tag) => !!tag && tag.trim().length > 0))
+    );
+  }
+
+  improveReplyDraft(payload: { draft: string; postTitle: string; postContent: string; groupId?: number | null }): Observable<string> {
+    return this.http.post<AiReplyImproveResponse>(`${this.apiUrl}/ai/replies/improve`, {
+      draft: payload.draft,
+      postTitle: payload.postTitle,
+      postContent: payload.postContent,
+      groupId: payload.groupId ?? null
+    }).pipe(
+      map((response) => response?.draft ?? payload.draft)
+    );
+  }
+
+  getAiDuplicateSuggestions(payload: { title: string; content: string; tags?: string[]; groupId?: number | null }): Observable<AiDuplicateCandidateResponse[]> {
+    return this.http.post<AiDuplicateCandidateResponse[]>(`${this.apiUrl}/ai/duplicates`, {
+      title: payload.title,
+      content: payload.content,
+      tags: payload.tags ?? [],
+      groupId: payload.groupId ?? null
+    }).pipe(
+      map((response) => (response ?? []).filter((item) => !!item && typeof item.id === 'number'))
+    );
+  }
+
+  getModerationAnalysis(payload: { targetType: 'POST'; title: string; content: string; tags?: string[]; groupId?: number | null }): Observable<AiModerationAnalysisResponse> {
+    return this.http.post<AiModerationAnalysisResponse>(`${this.apiUrl}/ai/moderation/analyze`, {
+      targetType: payload.targetType,
+      title: payload.title,
+      content: payload.content,
+      tags: payload.tags ?? [],
+      groupId: payload.groupId ?? null
+    });
+  }
+
+  addReply(postId: number, content: string, mediaUrls: string[] = [], authorId = 2): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies`, {
       content,
+      mediaUrls,
       authorId
     });
   }
@@ -258,12 +345,37 @@ export class ForumsMockService {
     return this.http.get<ForumReportDetail[]>(`${this.apiUrl}/reports/${targetType.toLowerCase()}/${targetId}`);
   }
 
+  getAllReports(status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'): Observable<ForumReportDetail[]> {
+    let params = new HttpParams();
+    if (status && status !== 'ALL') {
+      params = params.set('status', status);
+    }
+
+    return this.http.get<ForumReportDetail[]>(`${this.apiUrl}/reports`, { params });
+  }
+
   approveReportedPost(postId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/moderation/approve`, {});
   }
 
   rejectReportedPost(postId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/moderation/reject`, {});
+  }
+
+  approvePostMedia(postId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/posts/${postId}/media/approve`, {});
+  }
+
+  rejectPostMedia(postId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/posts/${postId}/media/reject`, {});
+  }
+
+  approveReplyMedia(postId: number, replyId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/media/approve`, {});
+  }
+
+  rejectReplyMedia(postId: number, replyId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/media/reject`, {});
   }
 
   approveReportedReply(postId: number, replyId: number): Observable<void> {
@@ -282,14 +394,68 @@ export class ForumsMockService {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/comments/${commentId}/moderation/reject`, {});
   }
 
+  approveReportTarget(target: ForumReportCaseActionTarget): Observable<void> {
+    if (target.targetType === 'POST') {
+      return this.approveReportedPost(target.postId ?? target.targetId);
+    }
+
+    if (target.targetType === 'REPLY') {
+      return this.approveReportedReply(target.postId ?? 0, target.replyId ?? target.targetId);
+    }
+
+    return this.approveReportedComment(target.postId ?? 0, target.replyId ?? 0, target.commentId ?? target.targetId);
+  }
+
+  rejectReportTarget(target: ForumReportCaseActionTarget): Observable<void> {
+    if (target.targetType === 'POST') {
+      return this.rejectReportedPost(target.postId ?? target.targetId);
+    }
+
+    if (target.targetType === 'REPLY') {
+      return this.rejectReportedReply(target.postId ?? 0, target.replyId ?? target.targetId);
+    }
+
+    return this.rejectReportedComment(target.postId ?? 0, target.replyId ?? 0, target.commentId ?? target.targetId);
+  }
+
   acceptReply(postId: number, replyId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/posts/${postId}/replies/${replyId}/accept`, {});
   }
 
   getUserProfile(userId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/users/${userId}/profile`).pipe(
-      catchError(() => of(undefined))
-    );
+    return this.http.get<any>(`${this.apiUrl}/users/${userId}/profile`).pipe(catchError(() => of(undefined)));
   }
 
+  getGroups(userId?: number): Observable<ForumGroup[]> {
+    let params = new HttpParams();
+    if (userId != null) {
+      params = params.set('userId', userId.toString());
+    }
+    return this.http.get<ForumGroup[]>(`${this.apiUrl}/groups`, { params });
+  }
+
+  getGroupById(groupId: number, userId?: number): Observable<ForumGroup> {
+    let params = new HttpParams();
+    if (userId != null) {
+      params = params.set('userId', userId.toString());
+    }
+    return this.http.get<ForumGroup>(`${this.apiUrl}/groups/${groupId}`, { params });
+  }
+
+  createGroup(payload: { name: string; description: string; focusTags: string[]; rules?: string[] }): Observable<ForumGroup> {
+    return this.http.post<ForumGroup>(`${this.apiUrl}/groups`, {
+      name: payload.name,
+      description: payload.description,
+      focusTags: payload.focusTags,
+      rules: payload.rules ?? []
+    });
+  }
+
+  joinGroup(groupId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/groups/${groupId}/join`, {});
+  }
+
+  leaveGroup(groupId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/groups/${groupId}/leave`, {});
+  }
 }
