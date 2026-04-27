@@ -7,6 +7,9 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Configuration
 @AllArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -27,6 +30,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(localUserFileStorageService.getUploadRootLocation());
     }
+
+
 
 //    @Override
 //    public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
