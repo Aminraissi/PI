@@ -107,43 +107,24 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<?> loginWithGoogle(@RequestBody GoogleLoginRequest request) {
         LoginResponse response = authFacade.loginWithGoogle(request.getCredential());
-
-        if (response.getToken() == null) {
-            return ResponseEntity.badRequest().body(response);
-        }
-
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/google/complete-signup")
     public ResponseEntity<?> completeGoogleSignup(@RequestBody GoogleCompleteSignupRequest request) {
         LoginResponse response = authFacade.completeGoogleSignup(request);
-
-        if (response.getToken() == null) {
-            return ResponseEntity.badRequest().body(response);
-        }
-
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/facebook/complete-signup")
     public ResponseEntity<?> completeFacebookSignup(@RequestBody FacebookCompleteSignupRequest request) {
         LoginResponse response = authFacade.completeFacebookSignup(request);
-
-        if (response.getToken() == null) {
-            return ResponseEntity.badRequest().body(response);
-        }
-
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/facebook")
     public ResponseEntity<?> loginWithFacebook(@RequestBody FacebookLoginRequest request) {
         LoginResponse response = authFacade.loginWithFacebook(request.getAccessToken());
-
-        if (response.getToken() == null) {
-            return ResponseEntity.badRequest().body(response);
-        }
-
         return ResponseEntity.ok(response);
     }
 }

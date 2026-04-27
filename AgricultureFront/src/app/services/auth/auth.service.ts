@@ -23,7 +23,7 @@ export interface LoginResponse {
     statutCompte?:            string | null;
     emailVerificationStatus?: string | null;
     profileValidationStatus?: string | null;
-    nextStep?:                'LOGIN' | 'VERIFY_EMAIL' | 'SIGNUP_STEP2' | 'ACCESS_GRANTED' | string | null;
+    nextStep?:                'LOGIN' | 'VERIFY_EMAIL' | 'SIGNUP' | 'SIGNUP_STEP2' | 'ACCESS_GRANTED' | string | null;
     verificationRequired?:    boolean;
     message:                  string;
 }
@@ -96,7 +96,7 @@ declare var grecaptcha: any;
 export class AuthService {
     private apiUrl = 'http://localhost:8089/user/api/auth';
     private readonly tokenKey = 'authToken';
-    private readonly userKey  = 'authUser';
+    private readonly userKey = 'authUser';
     private currentUserSubject = new BehaviorSubject<AuthUser | null>(this.getUserFromStorage());
     public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -115,6 +115,7 @@ export class AuthService {
                 }
                 return;
             }
+
             const token = grecaptcha.getResponse();
             if (token) {
                 resolve(token);
@@ -126,31 +127,13 @@ export class AuthService {
 
     login(email: string, password: string, rememberSession = true): Observable<LoginResponse> {
         return from(this.getCaptchaToken()).pipe(
-            switchMap(captchaToken => {
-                return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
-                    email,
-                    motDePasse: password,
-                    captchaToken: captchaToken
-                });
-            }),
+            switchMap(captchaToken => this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
+                email,
+                motDePasse: password,
+                captchaToken
+            })),
             map(response => {
-                if (response.token && response.userId !== null && response.role) {
-                    const user: AuthUser = {
-                        userId:       response.userId,
-                        username:     response.username || response.email,
-                        email:        response.email,
-                        role:         response.role as BackendRole,
-                        statutCompte: response.statutCompte || undefined
-                    };
-                    this.storeSession(response.token, user, rememberSession);
-                    this.currentUserSubject.next(user);
-                    console.log('🔐 User logged in successfully!');
-                    console.log('👤 User Role:', response.role);
-                    console.log('🆔 User ID:', response.userId);
-                    console.log('📧 User Email:', response.email);
-                    console.log('📊 Account Status:', response.statutCompte || 'Not provided');
-                    console.log('✅ Is Approved:', response.statutCompte === 'APPROUVE');
-                }
+                this.persistSessionIfAllowed(response, rememberSession);
                 return response;
             })
         );
@@ -196,7 +179,9 @@ export class AuthService {
 
     consumeAuthNotice(): string | null {
         const message = sessionStorage.getItem('authNotice');
-        if (message) sessionStorage.removeItem('authNotice');
+        if (message) {
+            sessionStorage.removeItem('authNotice');
+        }
         return message;
     }
 
@@ -249,15 +234,15 @@ export class AuthService {
     getDefaultRouteForRole(role: BackendRole | null): string {
         if (!role) return '/';
         switch (role) {
-            case 'ADMIN':                  return '/dashboard';
-            case 'ACHETEUR':               return '/marketplace';
-            case 'AGRICULTEUR':            return '/delivery';
-            case 'EXPERT_AGRICOLE':        return '/expert/home';
-            case 'TRANSPORTEUR':           return '/transporter/home';
-            case 'VETERINAIRE':            return '/appointments';
-            case 'AGENT':                  return '/agent/home';
+            case 'ADMIN': return '/dashboard';
+            case 'ACHETEUR': return '/marketplace';
+            case 'AGRICULTEUR': return '/delivery';
+            case 'EXPERT_AGRICOLE': return '/expert/home';
+            case 'TRANSPORTEUR': return '/transporter/home';
+            case 'VETERINAIRE': return '/appointments';
+            case 'AGENT': return '/agent/home';
             case 'ORGANISATEUR_EVENEMENT': return '/organizer/home';
-            default:                       return '/';
+            default: return '/';
         }
     }
 
@@ -276,17 +261,7 @@ export class AuthService {
     loginWithGoogle(credential: string): Observable<LoginResponse> {
         return this.http.post<LoginResponse>(`${this.apiUrl}/google`, { credential }).pipe(
             map(response => {
-                if (response.token && response.userId !== null && response.role) {
-                    const user: AuthUser = {
-                        userId:       response.userId,
-                        username:     response.username || response.email,
-                        email:        response.email,
-                        role:         response.role as BackendRole,
-                        statutCompte: response.statutCompte || undefined
-                    };
-                    this.storeSession(response.token, user, true);
-                    this.currentUserSubject.next(user);
-                }
+                this.persistSessionIfAllowed(response, true);
                 return response;
             })
         );
@@ -294,24 +269,12 @@ export class AuthService {
 
     completeGoogleSignup(payload: {
         credential: string;
-        telephone:  string;
-        role:       string;
+        telephone: string;
+        role: string;
     }): Observable<LoginResponse | SignupResponse> {
-        return this.http.post<LoginResponse | SignupResponse>(
-            `${this.apiUrl}/google/complete-signup`, payload
-        ).pipe(
+        return this.http.post<LoginResponse | SignupResponse>(`${this.apiUrl}/google/complete-signup`, payload).pipe(
             map((response: any) => {
-                if (response.token && response.userId !== null && response.role) {
-                    const user: AuthUser = {
-                        userId:       response.userId,
-                        username:     response.username || response.email,
-                        email:        response.email,
-                        role:         response.role as BackendRole,
-                        statutCompte: response.statutCompte || undefined
-                    };
-                    this.storeSession(response.token, user, true);
-                    this.currentUserSubject.next(user);
-                }
+                this.persistSessionIfAllowed(response, true);
                 return response;
             })
         );
@@ -319,24 +282,12 @@ export class AuthService {
 
     completeFacebookSignup(payload: {
         accessToken: string;
-        telephone:   string;
-        role:        string;
+        telephone: string;
+        role: string;
     }): Observable<LoginResponse | SignupResponse> {
-        return this.http.post<LoginResponse | SignupResponse>(
-            `${this.apiUrl}/facebook/complete-signup`, payload
-        ).pipe(
+        return this.http.post<LoginResponse | SignupResponse>(`${this.apiUrl}/facebook/complete-signup`, payload).pipe(
             map((response: any) => {
-                if (response.token && response.userId !== null && response.role) {
-                    const user: AuthUser = {
-                        userId:       response.userId,
-                        username:     response.username || response.email,
-                        email:        response.email,
-                        role:         response.role as BackendRole,
-                        statutCompte: response.statutCompte || undefined
-                    };
-                    this.storeSession(response.token, user, true);
-                    this.currentUserSubject.next(user);
-                }
+                this.persistSessionIfAllowed(response, true);
                 return response;
             })
         );
@@ -345,20 +296,35 @@ export class AuthService {
     loginWithFacebook(accessToken: string): Observable<LoginResponse> {
         return this.http.post<LoginResponse>(`${this.apiUrl}/facebook`, { accessToken }).pipe(
             map(response => {
-                if (response.token && response.userId !== null && response.role) {
-                    const user: AuthUser = {
-                        userId:       response.userId,
-                        username:     response.username || response.email,
-                        email:        response.email,
-                        role:         response.role as BackendRole,
-                        statutCompte: response.statutCompte || undefined
-                    };
-                    this.storeSession(response.token, user, true);
-                    this.currentUserSubject.next(user);
-                }
+                this.persistSessionIfAllowed(response, true);
                 return response;
             })
         );
+    }
+
+    private persistSessionIfAllowed(response: LoginResponse | SignupResponse | any, rememberSession: boolean): void {
+        if (!this.shouldStoreSession(response)) {
+            return;
+        }
+
+        const user: AuthUser = {
+            userId: response.userId as number,
+            username: response.username || response.email,
+            email: response.email,
+            role: response.role as BackendRole,
+            statutCompte: response.statutCompte || undefined
+        };
+
+        this.storeSession(response.token as string, user, rememberSession);
+        this.currentUserSubject.next(user);
+    }
+
+    private shouldStoreSession(response: LoginResponse | any): response is LoginResponse {
+        return !!response
+            && !!response.token
+            && response.userId !== null
+            && !!response.role
+            && response.nextStep === 'ACCESS_GRANTED';
     }
 
     private storeSession(token: string, user: AuthUser, rememberSession: boolean): void {

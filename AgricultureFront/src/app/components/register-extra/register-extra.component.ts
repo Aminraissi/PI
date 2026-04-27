@@ -175,19 +175,30 @@ export class RegisterExtraComponent implements OnInit, OnDestroy {
     this.authService.signupStep2(this.userId, payload).subscribe({
       next: (response) => {
         this.isLoading = false;
-        localStorage.setItem('authMode', 'verify');
-        if (response.userId != null) {
-          localStorage.setItem('pendingVerificationUserId', String(response.userId));
-        }
-        if (response.email) {
-          localStorage.setItem('pendingVerificationEmail', response.email);
-        }
-        localStorage.setItem('pendingVerificationMessage', response.message || 'Please verify your email to continue.');
+        this.authService.logout();
         localStorage.removeItem('signupBase');
         localStorage.removeItem('signupRole');
         localStorage.removeItem('signupUserId');
         localStorage.removeItem('signupEmail');
         localStorage.removeItem('signupMessage');
+
+        if (response.nextStep === 'VERIFY_EMAIL') {
+          localStorage.setItem('authMode', 'verify');
+          if (response.userId != null) {
+            localStorage.setItem('pendingVerificationUserId', String(response.userId));
+          }
+          if (response.email) {
+            localStorage.setItem('pendingVerificationEmail', response.email);
+          }
+          localStorage.setItem('pendingVerificationMessage', response.message || 'Please verify your email to continue.');
+        } else {
+          localStorage.setItem('authMode', 'signin');
+          this.authService.setAuthNotice(response.message || 'Profile completed successfully. You can now sign in.');
+          localStorage.removeItem('pendingVerificationUserId');
+          localStorage.removeItem('pendingVerificationEmail');
+          localStorage.removeItem('pendingVerificationMessage');
+        }
+
         this.router.navigate(['/auth']);
       },
       error: (err) => {
