@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CartService } from './services/cart/cart.service';
@@ -14,7 +14,7 @@ import { filter } from 'rxjs/operators';
                 <img src="assets/images/loader1.gif" alt="Loading..." class="preloader-gif">
                 <div class="preloader-logo">
                     <img src="assets/images/logo.png" alt="Logo" class="preloader-img">
-                    <span><span class="green">Green</span>Roots</span>
+                    <span class="notranslate" translate="no"><span class="green">Green</span>Roots</span>
                 </div>
             </div>
         </div>
@@ -209,7 +209,7 @@ import { filter } from 'rxjs/operators';
         }
     `]
 })
-export class AppComponent implements OnInit, AfterViewInit {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     preloaderHidden = false;
     showBackTop = false;
     showFloatingCart = false;
@@ -220,6 +220,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     @ViewChild('explorerFrame') private explorerFrame?: ElementRef<HTMLIFrameElement>;
     private explorerLoaded = false;
+    private notranslateObserver: MutationObserver | null = null;
+    private noTranslateScanScheduled = false;
 
     private readonly explorerOrigins = new Set([
         'http://localhost:5173',
@@ -276,9 +278,11 @@ export class AppComponent implements OnInit, AfterViewInit {
                 this.updateFloatingCartVisibility();
                 // Re-scan for new reveal elements after navigation
                 setTimeout(() => this.scanRevealElements(), 200);
+                this.scheduleNoTranslateScan();
             });
 
         this.updateFabState();
+        this.initNoTranslateObserver();
     }
 
     ngAfterViewInit(): void {
@@ -292,6 +296,11 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
         // Scan elements once view is fully initialized
         this.scanRevealElements();
+        this.scheduleNoTranslateScan();
+    }
+
+    ngOnDestroy(): void {
+        this.notranslateObserver?.disconnect();
     }
 
     closeExplorer(): void {
@@ -441,5 +450,64 @@ export class AppComponent implements OnInit, AfterViewInit {
         } else {
             this.cartCount = 0;
         }
+    }
+
+    private initNoTranslateObserver(): void {
+        this.scheduleNoTranslateScan();
+
+        this.notranslateObserver = new MutationObserver(() => {
+            this.scheduleNoTranslateScan();
+        });
+
+        this.notranslateObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    private scheduleNoTranslateScan(): void {
+        if (this.noTranslateScanScheduled) {
+            return;
+        }
+
+        this.noTranslateScanScheduled = true;
+        window.requestAnimationFrame(() => {
+            this.noTranslateScanScheduled = false;
+            this.applyNoTranslateMarkers();
+        });
+    }
+
+    private applyNoTranslateMarkers(): void {
+        const selector = [
+            '.brand-name',
+            '.sidebar-title',
+            '.logo-text',
+            '.logo-txt',
+            '.user-name',
+            '.user-badge',
+            '.user-name-link',
+            '.contributor-name-link',
+            '.story-author-link',
+            '.author-link',
+            '.comment-author-link',
+            '.collapsed-author-link',
+            '.actor-name',
+            '.actor-link',
+            '.ticket-id',
+            '.card-id',
+            '.animal-ref',
+            '.ref',
+            '.d-ref',
+            '.rec-id',
+            '.delivery-ref',
+            '.ref-badge',
+            '[data-no-translate]'
+        ].join(',');
+
+        document.querySelectorAll(selector).forEach(node => {
+            const element = node as HTMLElement;
+            element.classList.add('notranslate');
+            element.setAttribute('translate', 'no');
+        });
     }
 }
