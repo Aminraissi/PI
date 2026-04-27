@@ -119,6 +119,11 @@
             <p>Sign in to your account to get started.</p>
           </div>
 
+          <div class="auth-feedback auth-feedback-error" *ngIf="loginError">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ loginError }}</span>
+          </div>
+
           <!-- Socials -->
           <div class="social-auth">
             <div id="googleSignInButton" class="social-btn "></div>
@@ -613,7 +618,7 @@
     </span>
   </span>
 </div>
-<div class="field-error" *ngIf="loginError">
+<div class="auth-feedback auth-feedback-error" *ngIf="loginError">
   <i class="fas fa-exclamation-circle"></i>
   <span>{{ loginError }}</span>
 </div>
