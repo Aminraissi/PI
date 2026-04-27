@@ -59,6 +59,12 @@
   margin: 0;
 }
 
+.err {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
 /* ── FORM CARD ── */
 .form-card {
   background: var(--gr-white);

@@ -27,6 +27,26 @@
         <span class="section-eyebrow">Program</span>
         <h2 class="section-title">All Events</h2>
       </div>
+  <div class="filters">
+        <select [(ngModel)]="selectedType" (change)="onFilterChange()">
+          <option value="">All Types</option>
+          <option value="WORKSHOP">Workshop</option>
+          <option value="MARKET">Market</option>
+          <option value="DEMONSTRATION">Demonstration</option>
+          <option value="FAIR">Fair</option>
+        </select>
+
+        <select [(ngModel)]="selectedRegion" (change)="onFilterChange()">
+          <option value="">All Regions</option>
+          <option value="Tunis">Tunis</option>
+          <option value="Sfax">Sfax</option>
+          <option value="Sousse">Sousse</option>
+          <option value="Ariana">Ariana</option>
+          <option value="Bizerte">Bizerte</option>
+          <option value="Tozeur">Tozeur</option>
+          <option value="Nabeul">Nabeul</option>
+        </select>
+      </div>
       <div class="events-count">
         <span class="count-pill">{{ events.length }} events</span>
       </div>
@@ -35,7 +55,9 @@
             <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
           </svg>
           Nearby Events Map
-        </button>
+      </button>
+
+      
 
     </div>
     <div class="loading-container" *ngIf="loading">
@@ -46,12 +68,10 @@
     <div class="events-grid" *ngIf="!loading && events.length > 0">
       <article *ngFor="let event of events" class="event-card">
       <div class="card-image-wrap">
-        <img [src]="'assets/images/' + event.image" *ngIf="event.image" loading="lazy" class="card-img" [alt]="event.titre" />
-        <div class="card-img-placeholder" *ngIf="!event.image"><span>🌿</span></div>
+<img [src]="event.image ? getImageUrl(event.image) : 'assets/images/placeholder.jpg'"loading="lazy"class="card-img" [alt]="event.titre"/>        <div class="card-img-placeholder" *ngIf="!event.image"><span>🌿</span></div>
         <span class="card-type-badge">{{ event.type }}</span>
         <span class="card-price-tag">{{ event.montant > 0 ? (event.montant + ' DT') : 'Gratuit' }}</span>
     </div>
-
   <div class="seats-strip">
     <div class="seats-strip-fill"></div>
   </div>
@@ -139,6 +159,13 @@
       <span class="empty-icon">🌱</span>
       <p>No events available at the moment.</p>
     </div>
+    <div class="pagination">
+  <button (click)="prevPage()" [disabled]="page === 0">Prev</button>
+
+  <span>Page {{ page + 1 }}</span>
+
+  <button (click)="nextPage()">Next</button>
+</div>
 
   </div>
 </section>

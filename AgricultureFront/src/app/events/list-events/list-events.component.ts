@@ -12,29 +12,58 @@ import { EventService } from 'src/app/services/event/event.service';
 export class ListComponent implements OnInit {
 
   events: EventListItem[] = [];
+  page = 0;
+  size = 6;
+
+ selectedType: string = '';
+ selectedRegion: string = '';
+
 
   loading: boolean = true;
 
   constructor(private eventService: EventService, private router: Router ) {}
 
-  ngOnInit(): void {
+ ngOnInit(): void {
+  this.loadEvents();
+}
+
+loadEvents(): void {
   this.loading = true;
 
-  this.eventService.getAllEvents().subscribe({
-    next: (data) => {
-      this.events = data;
-      this.loading = false;
-    },
-    error: () => {
-      this.loading = false;
-    }
-  });
+  this.eventService.getValidatedEventsFiltered(this.page, this.size, this.selectedType, this.selectedRegion)
+    .subscribe({
+      next: (data) => {
+        this.events = data.content;
+        this.loading = false;
+      },
+      error: () => this.loading = false
+    });
+}
+
+onFilterChange(): void {
+  this.page = 0; 
+  this.loadEvents();
+}
+nextPage(): void {
+  this.page++;
+  this.loadEvents();
+}
+
+prevPage(): void {
+  if (this.page > 0) {
+    this.page--;
+    this.loadEvents();
+  }
 }
   
   goToDetails(id: number) {
     this.router.navigate(['/events/detailsEvent', id]); 
     window.scrollTo(0, 0);
   }
+
+  getImageUrl(filename: string): string {
+  return this.eventService.getImageUrl(filename);
+}
 
   openMapView(): void {
     this.router.navigate(['/events/map']);
@@ -55,4 +84,6 @@ export class ListComponent implements OnInit {
     if (pourcentage >= 70 && pourcentage < 99) return '#dbbf0a';      
     return '#3cb054';                             
   }
+
+  
 }

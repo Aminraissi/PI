@@ -9,6 +9,7 @@ import org.example.gestionevenement.Services.EmailService;
 import org.example.gestionevenement.Services.IReservation;
 import org.example.gestionevenement.Services.ITicket;
 import org.example.gestionevenement.entities.EtatPaiement;
+import org.example.gestionevenement.entities.Event;
 import org.example.gestionevenement.entities.Reservation;
 import org.example.gestionevenement.entities.Ticket;
 import org.springframework.web.bind.annotation.*;
@@ -60,25 +61,34 @@ public class PaymentController {
         }
 
         Reservation reservation = getValidReservation(reservationId);
+
+        if (reservation.getEtatPaiement() == EtatPaiement.PAID) {
+            return reservation;
+        }
+
         reservation.setEtatPaiement(EtatPaiement.PAID);
         reservation.setDateInscription(LocalDateTime.now());
         reservation.setPaymentIntentId(paymentIntentId);
 
+        Event event = reservation.getEvenement();
+
+        event.setInscrits(event.getInscrits() + reservation.getNbPlaceReserve());
+
+        reservationService.updateReservation(reservation);
         Reservation updatedReservation = reservationService.updateReservation(reservation);
 
         try {
             Ticket ticketResult = ticketService.generateTicket(updatedReservation);
+
             if (ticketResult != null && ticketResult.getQrCode() != null) {
 
                 String userEmail = getDefaultEmail((int) reservation.getId_user());
-
                 emailService.sendTicketConfirmation(userEmail, updatedReservation, ticketResult);
-
-                System.out.println("Ticket email sent to: " + userEmail);
 
             } else {
                 System.out.println("Failed to generate ticket for reservation: " + reservationId);
             }
+
         } catch (Exception e) {
             System.err.println("Failed to generate ticket or send email: " + e.getMessage());
             e.printStackTrace();
@@ -86,6 +96,7 @@ public class PaymentController {
 
         return updatedReservation;
     }
+
     @DeleteMapping("/cancel-reservation/{reservationId}")
     public Map<String, String> cancelReservation(@PathVariable int reservationId) {
 

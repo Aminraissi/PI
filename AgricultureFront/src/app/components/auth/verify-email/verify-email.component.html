@@ -1,0 +1,56 @@
+<!-- Success State -->
+<div class="verification-page">
+  <div class="verification-bg">
+    <div class="verification-bg-img"></div>
+    <div class="verification-bg-overlay"></div>
+  </div>
+  <div class="verification-leaf vl1">🌿</div>
+  <div class="verification-leaf vl2">🍃</div>
+  <div class="verification-leaf vl3">🌱</div>
+  <div class="verification-leaf vl4">🌿</div>
+  
+  <div class="verification-container">
+    <div class="verification-card success">
+      <div class="verification-icon">✅</div>
+      <h2 class="verification-title">Email Verified!</h2>
+      <p class="verification-message">
+        Your email has been successfully verified. You can now log in to your account.
+      </p>
+      <button class="verification-btn" onclick="redirectToLogin()">
+        <i class="fas fa-sign-in-alt"></i> Go to Login
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="verification-page">
+  <div class="verification-container">
+    <div class="verification-card error">
+      <div class="verification-icon">❌</div>
+      <h2 class="verification-title">Verification Failed</h2>
+      <p class="verification-message">
+        The verification link is invalid or has expired. Please request a new verification email.
+      </p>
+      <button class="verification-btn verification-btn-secondary" onclick="resendVerification()">
+        <i class="fas fa-envelope"></i> Resend Email
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="verification-page">
+  <div class="verification-container">
+    <div class="verification-card loading">
+      <div class="verification-icon">🌱</div>
+      <h2 class="verification-title">Verifying...</h2>
+      <div class="verification-spinner">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <p class="verification-message">
+        Please wait while we verify your email address.
+      </p>
+    </div>
+  </div>
+</div>

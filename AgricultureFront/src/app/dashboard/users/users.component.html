@@ -11,19 +11,16 @@
     </p>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="loading" class="state-container loading-state">
     <div class="spinner"></div>
     <p>Chargement des utilisateurs...</p>
   </div>
 
-  <!-- Error State -->
   <div *ngIf="error && !loading" class="state-container error-state">
     <i class="fas fa-exclamation-circle"></i>
     <p>{{ error }}</p>
   </div>
 
-  <!-- Success State -->
   <div *ngIf="success && !loading" class="state-container success-state">
     <i class="fas fa-check-circle"></i>
     <p>{{ success }}</p>

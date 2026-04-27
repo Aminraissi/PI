@@ -13,6 +13,8 @@ import { ExplorerHostComponent }             from './components/explorer-host/ex
 import { DiseasePredictorComponent }         from './components/disease-predictor/disease-predictor.component';
 import { HelpRequestComponent }              from './components/help-request/help-request.component';
 import { ExpertAssistanceRequestsComponent } from './components/expert-assistance-requests/expert-assistance-requests.component';
+import { VerifyEmailComponent } from './components/auth/verify-email/verify-email.component';
+
 
 const routes: Routes = [
   { path: '',         component: HomeComponent,  pathMatch: 'full' },
@@ -92,6 +94,8 @@ const routes: Routes = [
   { path: 'agent/home',        component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['AGENT'],                  homeLabel: 'agent home'               } },
   { path: 'organizer/home',    component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['ORGANISATEUR_EVENEMENT'], homeLabel: 'event organizer home'     } },
 
+
+  { path: 'verify-email', component: VerifyEmailComponent },
   { path: 'register-extra', component: RegisterExtraComponent },
   { path: 'blog/:id',       component: BlogDetailComponent    },
   { path: '404',            component: NotFoundComponent      },

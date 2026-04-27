@@ -98,6 +98,10 @@ export class PaymentComponent implements OnInit, OnDestroy {
   });
 }
 
+getImageUrl(image: string): string {
+  return this.eventService.getImageUrl(image);
+}
+
   initStripe(): void {
     if (typeof Stripe === 'undefined') {
       this.paymentError = 'Stripe.js failed to load. Please refresh the page.';

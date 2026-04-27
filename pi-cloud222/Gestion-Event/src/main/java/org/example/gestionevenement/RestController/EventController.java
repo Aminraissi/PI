@@ -1,22 +1,25 @@
 package org.example.gestionevenement.RestController;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.stripe.exception.StripeException;
-import com.stripe.model.Refund;
-import com.stripe.param.RefundCreateParams;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.io.Resource;
 import lombok.AllArgsConstructor;
 import org.example.gestionevenement.DTO.DelayEventRequest;
 import org.example.gestionevenement.DTO.EventDTO;
 import org.example.gestionevenement.DTO.EventNearbyDTO;
+import org.example.gestionevenement.Services.FileStorageService;
 import org.example.gestionevenement.Services.IEvent;
 import org.example.gestionevenement.Services.IOsrm;
-import org.example.gestionevenement.Services.IReservation;
-import org.example.gestionevenement.entities.EtatPaiement;
 import org.example.gestionevenement.entities.Event;
-import org.example.gestionevenement.entities.Reservation;
-import org.example.gestionevenement.entities.StatutEvent;
+import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,17 +30,29 @@ import java.util.Map;
 @RequestMapping("/api/event")
 public class EventController {
     private IEvent ievent;
-    private IReservation ireservation;
     private IOsrm osrm;
+    private FileStorageService fileStorageService;
+    private ObjectMapper objectMapper;
+
 
     @GetMapping("/getAllEvents")
     public List<EventDTO> getAllEvents() {
         return ievent.getAllEvents();
     }
 
+    @GetMapping("/validated")
+    public List<EventDTO> getValidatedEvents() {
+        return ievent.getValidatedEvents();
+    }
+
     @GetMapping("/getEvent/{id}")
     public Event getEvent(@PathVariable int id) {
         return ievent.getEvent(id);
+    }
+
+    @GetMapping("/validated-filtered")
+    public Page<EventDTO> getValidatedFiltered(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "6") int size, @RequestParam(required = false) String type, @RequestParam(required = false) String region) {
+        return ievent.getValidatedEventsFiltered(type, region, page, size);
     }
 
     @PutMapping("/validate/{id}")
@@ -50,20 +65,46 @@ public class EventController {
         return ievent.rejectEvent(id);
     }
 
-    @PostMapping("/addEvent")
-    public Event addEvent(@RequestBody Event event) {
-        return ievent.addEvent(event);
+    @PostMapping(value ="/addEvent",consumes = "multipart/form-data")
+    public Event addEvent(@RequestPart("event") Event event, @RequestPart(value = "image", required = false) MultipartFile image, @RequestPart(value = "auth", required = false) MultipartFile auth) {
+        return ievent.addEvent(event, image, auth);
     }
 
-    @PutMapping("/updateEvent")
-    public Event updateEvent(@RequestBody Event event) {
-        return ievent.updateEvent(event);
+    @PutMapping(value = "/updateEvent", consumes = "multipart/form-data")
+    public Event updateEvent(@RequestPart("event") Event event, @RequestPart(value = "image", required = false) MultipartFile image, @RequestPart(value = "auth", required = false) MultipartFile auth) {
+        return ievent.updateEvent(event, image, auth);
+    }
+
+    @GetMapping("/image/{filename:.+}")
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
+
+        try {
+            Path file = fileStorageService.loadFile(filename);
+            Resource resource = new UrlResource(file.toUri());
+
+            if (!resource.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String contentType = Files.probeContentType(file);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_TYPE, contentType)
+                    .body(resource);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/deleteEvent/{id}")
     public void deleteEvent(@PathVariable int id) {
         ievent.removeEvent(id);
     }
+
     @GetMapping("/GetOrganisateurEvents/{id}")
     public List<Event> getEventsByOrganisateur(@PathVariable Long id) {
         return ievent.getEventsByOrganisateur(id);
@@ -72,66 +113,24 @@ public class EventController {
     @PostMapping("/cancelEvent/{id}")
     public ResponseEntity<Map<String, Object>> cancelEvent(@PathVariable int id) {
 
-        Event event = ievent.getEvent(id);
-        if (event == null) {
+        Map<String, Object> result = ievent.cancelEvent(id);
+        if (result == null) {
             return ResponseEntity.notFound().build();
         }
 
-        event.setStatut(StatutEvent.CANCELLED);
-        ievent.updateEvent(event);
-
-        List<Reservation> reservations = ireservation.getReservationsByEvent(id);
-
-        int refunded = 0, skipped = 0;
-        List<String> errors = new ArrayList<>();
-
-        for (Reservation r : reservations) {
-            if (r.getEtatPaiement() != EtatPaiement.PAID || r.getPaymentIntentId() == null) {
-                skipped++;
-                continue;
-            }
-            try {
-                Refund.create(
-                        RefundCreateParams.builder()
-                                .setPaymentIntent(r.getPaymentIntentId())
-                                .build()
-                );
-                r.setEtatPaiement(EtatPaiement.REFUNDED);
-                ireservation.updateReservation(r);
-                refunded++;
-            } catch (StripeException e) {
-                errors.add("Reservation " + r.getId() + ": " + e.getMessage());
-            }
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "status",   "CANCELLED",
-                "refunded", refunded,
-                "skipped",  skipped,
-                "errors",   errors
-        ));
+        return ResponseEntity.ok(result);
     }
-    @PutMapping("/delayEvent/{id}")
-    public ResponseEntity<Event> delayEvent(@PathVariable int id, @RequestBody DelayEventRequest req) {
 
-        Event event = ievent.getEvent(id);
-        if (event == null) {
-            return ResponseEntity.notFound().build();
+    @PutMapping(value = "/delayEvent/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<Event> delayEvent(@PathVariable int id, @RequestPart("data") String dataJson, @RequestPart(value = "file", required = false) MultipartFile file) {
+        DelayEventRequest req = null;
+        try {
+            req = objectMapper.readValue(dataJson, DelayEventRequest.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
         }
-
-        event.setStatut(StatutEvent.POSTPONED);
-        event.setDateDebut(req.getNewDateDebut());
-        event.setDateFin(req.getNewDateFin());
-
-        if (req.getAutorisationMunicipale() != null && !req.getAutorisationMunicipale().isBlank()) {
-            event.setAutorisationmunicipale(req.getAutorisationMunicipale());
-        }
-
-        if (req.getReason() != null && !req.getReason().isBlank()) {
-            event.setDescription("[POSTPONED – " + req.getReason() + "] " + event.getDescription());
-        }
-
-        Event updated = ievent.updateEvent(event);
+        Event updated = ievent.delayEvent(id, req, file);
         return ResponseEntity.ok(updated);
     }
 

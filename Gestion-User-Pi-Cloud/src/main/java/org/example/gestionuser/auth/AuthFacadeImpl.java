@@ -1,6 +1,7 @@
 package org.example.gestionuser.auth;
 
 import lombok.AllArgsConstructor;
+import org.example.gestionuser.Services.EmailVerificationService;
 import org.example.gestionuser.Services.IUser;
 import org.example.gestionuser.dtos.LoginResponse;
 import org.example.gestionuser.dtos.SignupResponse;
@@ -23,6 +24,7 @@ public class AuthFacadeImpl implements AuthFacade {
 
     private final IUser userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailVerificationService emailVerificationService;
 
     @Override
     public LoginResponse login(String email, String motDePasse) {
@@ -113,7 +115,6 @@ public class AuthFacadeImpl implements AuthFacade {
 
         User saved = userService.adduser(user);
 
-        // TODO(email-team): Generate verification token and send confirmation email to saved.getEmail().
         triggerEmailVerificationEmail(saved);
 
         String nextStep = roleNeedsExtendedProfile(saved.getRole()) ? "SIGNUP_STEP2" : "VERIFY_EMAIL";
@@ -183,34 +184,61 @@ public class AuthFacadeImpl implements AuthFacade {
     }
 
     @Override
-    public SignupResponse verifyEmail(Long userId) {
-        User user = userService.getUser(userId);
-        if (user == null) {
-            return new SignupResponse(null, null, null, null,
-                    null, null, "VERIFY_EMAIL", "User not found");
+    public SignupResponse verifyEmail(String token) {
+
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            return new SignupResponse(
+                    null, null, null, null,
+                    null, null,
+                    "VERIFY_EMAIL",
+                    "Invalid token"
+            );
         }
 
-        // TODO(email-team): Validate verification token and expiration before marking email as verified.
-        // Current implementation is a dummy switch to allow integration progress.
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        User user = userService.getUser(userId);
+
+        if (user == null) {
+            return new SignupResponse(
+                    null, null, null, null,
+                    null, null,
+                    "VERIFY_EMAIL",
+                    "User not found"
+            );
+        }
+
+        if (user.getEmailVerificationStatus() == EmailVerificationStatus.VERIFIED) {
+            return new SignupResponse(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getRole().name(),
+                    user.getStatutCompte().name(),
+                    EmailVerificationStatus.VERIFIED.name(),
+                    user.getProfileValidationStatus().name(),
+                    "LOGIN",
+                    "Already verified"
+            );
+        }
+
         user.setEmailVerificationStatus(EmailVerificationStatus.VERIFIED);
         user.setStatutCompte(StatutCompte.APPROUVE);
 
-        if (user.getProfileValidationStatus() == null) {
-            user.setProfileValidationStatus(roleNeedsDocumentValidation(user.getRole())
-                    ? ProfileValidationStatus.PENDING_VALIDATION
-                    : ProfileValidationStatus.NOT_REQUIRED);
-        }
-
         User updated = userService.updateUser(user);
+
+        String nextStep = roleNeedsExtendedProfile(updated.getRole())
+                ? "SIGNUP_STEP2"
+                : "LOGIN";
+
         return new SignupResponse(
                 updated.getId(),
                 updated.getEmail(),
-                updated.getRole() != null ? updated.getRole().name() : null,
-                updated.getStatutCompte() != null ? updated.getStatutCompte().name() : null,
-                updated.getEmailVerificationStatus() != null ? updated.getEmailVerificationStatus().name() : null,
-                updated.getProfileValidationStatus() != null ? updated.getProfileValidationStatus().name() : null,
-                "LOGIN",
-                "Email verified successfully. You can now log in."
+                updated.getRole().name(),
+                updated.getStatutCompte().name(),
+                EmailVerificationStatus.VERIFIED.name(),
+                updated.getProfileValidationStatus().name(),
+                nextStep,
+                "Email verified successfully"
         );
     }
 
@@ -250,7 +278,8 @@ public class AuthFacadeImpl implements AuthFacade {
     }
 
     private void triggerEmailVerificationEmail(User user) {
-        // TODO(email-team): integrate mail provider here, generate signed token and send verification link.
+        System.out.println("📧 Sending verification email to: " + user.getEmail());
+        emailVerificationService.sendVerification(user);
     }
 
     private String buildUsername(User user) {

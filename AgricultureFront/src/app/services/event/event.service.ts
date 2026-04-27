@@ -27,6 +27,23 @@ export class EventService {
   return this.http.get<EventListItem[]>(`${this.apiUrl}/getAllEvents`);
 }
 
+getValidatedEvents(): Observable<EventListItem[]> {
+  return this.http.get<EventListItem[]>(`${this.apiUrl}/validated`);
+}
+
+getValidatedEventsFiltered(page: number, size: number, type?: string, region?: string): Observable<any> {
+  let params = new HttpParams()
+    .set('page', page)
+    .set('size', size);
+
+  if (type) {
+  params = params.set('type', type.toUpperCase());
+  }
+  if (region) params = params.set('region', region);
+
+  return this.http.get<any>(`${this.apiUrl}/validated-filtered`, { params });
+}
+
   getEventById(id: number): Observable<Events> {
   return this.http.get<Events>(`${this.apiUrl}/getEvent/${id}`);
   }
@@ -35,13 +52,45 @@ export class EventService {
     return this.http.get<any[]>(`${this.apiUrl}/GetOrganisateurEvents/${id}`);
   }
  
-  addEvent(event: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/addEvent`, event);
+ addEvent(event: any, image?: File, auth?: File): Observable<any> {
+
+  const formData = new FormData();
+
+  formData.append(
+    "event",
+    new Blob([JSON.stringify(event)], { type: "application/json" })
+  );
+
+  if (image) {
+    formData.append("image", image);
   }
+
+  if (auth) {
+    formData.append("auth", auth);
+  }
+  
+  return this.http.post(`${this.apiUrl}/addEvent`, formData);
+}
  
-  updateEvent(event: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/updateEvent`, event);
+ updateEvent(event: any, image?: File, auth?: File): Observable<any> {
+
+  const formData = new FormData();
+
+  formData.append(
+    "event",
+    new Blob([JSON.stringify(event)], { type: "application/json" })
+  );
+
+  if (image instanceof File) {
+    formData.append("image", image);
   }
+
+  if (auth instanceof File) {
+    formData.append("auth", auth);
+  }
+
+  return this.http.put(`${this.apiUrl}/updateEvent`, formData);
+}
  
   deleteEvent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/deleteEvent/${id}`);
@@ -50,9 +99,10 @@ export class EventService {
     return this.http.post<any>(`${this.apiUrl}/cancelEvent/${id}`, {});
   }
  
-  delayEvent(id: number, payload: DelayEventRequest): Observable<Events> {
-    return this.http.put<Events>(`${this.apiUrl}/delayEvent/${id}`, payload);
+ delayEvent(id: number, formData: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/delayEvent/${id}`, formData);
   }
+
 
  getAllEventsMap(lat: number, lon: number): Observable<EventNearby[]> {
   const params = new HttpParams()
@@ -94,8 +144,11 @@ snapRoute(coords: number[][]): Observable<any> {
   }
 
   getDocumentUrl(fileName: string): string {
-  return `assets/images/${encodeURIComponent(fileName)}`;
+  return `${this.apiUrl}/image/${fileName}`;
 }
 
+getImageUrl(filename: string): string {
+    return `${this.apiUrl}/image/${filename}`;
+  }
 
 }

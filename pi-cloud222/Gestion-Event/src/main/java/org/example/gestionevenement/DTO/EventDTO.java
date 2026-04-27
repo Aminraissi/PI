@@ -25,4 +25,6 @@ public class EventDTO {
     private int capaciteMax;
     private int inscrits;
     private String autorisationmunicipale;
+    private Boolean isValid;
+    private String delayReason;
 }

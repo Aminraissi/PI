@@ -10,7 +10,7 @@ public interface AuthFacade {
     LoginResponse login(String email, String motDePasse);
     SignupResponse signupStep1(SignupStep1Request request);
     SignupResponse signupStep2(Long userId, SignupStep2Request request);
-    SignupResponse verifyEmail(Long userId);
+    SignupResponse verifyEmail(String token);
     TokenValidationResponse validateAuthorizationHeader(String authHeader);
 }
 

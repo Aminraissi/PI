@@ -6,7 +6,6 @@
     {{ toastMessage }}
   </div>
 
-  <!-- Header -->
   <header class="page-header">
     <div class="header-left">
       <h1>Event Validation</h1>
@@ -15,7 +14,6 @@
     <button class="btn-refresh" (click)="loadEvents()">Refresh</button>
   </header>
 
-  <!-- Stats -->
   <div class="stats-strip">
     <div class="stat-card">
       <span class="stat-num">{{ events.length }}</span>
@@ -23,7 +21,7 @@
     </div>
 
     <div class="stat-card planned">
-      <span class="stat-num">{{ countByStatut('PLANNED') }}</span>
+      <span class="stat-num">{{ countByStatut('PENDING') }}</span>
       <span class="stat-label">Pending</span>
     </div>
 
@@ -41,19 +39,14 @@
   <!-- Filters -->
   <div class="filter-tabs">
     <button (click)="setFilter('ALL')" [class.active]="filterStatut === 'ALL'">All</button>
-    <button (click)="setFilter('PLANNED')" [class.active]="filterStatut === 'PLANNED'">Pending</button>
+    <button (click)="setFilter('PENDING')" [class.active]="filterStatut === 'PENDING'">Pending</button>
     <button (click)="setFilter('VALIDATED')" [class.active]="filterStatut === 'VALIDATED'">Validated</button>
     <button (click)="setFilter('REJECTED')" [class.active]="filterStatut === 'REJECTED'">Rejected</button>
   </div>
 
-  <!-- Main -->
   <div class="main-content" [class.has-detail]="selectedEvent">
-
-    <!-- LIST -->
     <div class="event-list">
-
       <div *ngIf="loading">Loading...</div>
-
       <div *ngIf="!loading && filteredEvents.length === 0">
         No events found
       </div>
@@ -61,16 +54,15 @@
       <div *ngFor="let event of filteredEvents"
            class="event-row"
            [class.selected]="selectedEvent?.id === event.id"
-           [class.status-planned]="getStatus(event) === 'PLANNED'"
+           [class.status-planned]="getStatus(event) === 'PENDING'"
            [class.status-validated]="getStatus(event) === 'VALIDATED'"
            [class.status-rejected]="getStatus(event) === 'REJECTED'"
            (click)="selectEvent(event)">
 
         <div>
           <span class="status-pill" [ngClass]="'pill-' + getStatus(event).toLowerCase()">
-            {{ getStatus(event) === 'PLANNED' ? 'Pending'
-              : getStatus(event) === 'VALIDATED' ? 'Validated'
-              : 'Rejected' }}
+            {{ getStatus(event) === 'PENDING' ? 'Pending'
+            : getStatus(event) === 'VALIDATED' ? 'Validated': 'Rejected' }}
           </span>
 
           <strong>{{ event.titre }}</strong>
@@ -80,7 +72,6 @@
       </div>
     </div>
 
-    <!-- DETAIL -->
     <div class="detail-panel" *ngIf="selectedEvent">
 
       <h2>{{ selectedEvent.titre }}</h2>
@@ -106,7 +97,7 @@
 
       <iframe *ngIf="previewUrl" [src]="previewUrl" width="100%" height="300"></iframe>
 
-     <div *ngIf="getStatus(selectedEvent) === 'PLANNED'" class="action-buttons">
+     <div *ngIf="getStatus(selectedEvent) === 'PENDING'" class="action-buttons">
   <button class="btn-validate" (click)="validateEvent()">
     ✔ Validate
   </button>

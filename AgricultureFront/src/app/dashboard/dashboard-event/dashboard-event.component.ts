@@ -33,7 +33,7 @@ previewUrl: SafeResourceUrl | null = null;
   getStatus(event: Events): string {
     if (event.isValid === true) return 'VALIDATED';
     if (event.isValid === false) return 'REJECTED';
-    return 'PLANNED';
+    return 'PENDING';
   }
 
   loadEvents(): void {
@@ -127,8 +127,8 @@ previewDocument() {
   }
 
   countByStatut(statut: string): number {
-    return this.events.filter(e => this.getStatus(e) === statut).length;
-  }
+  return this.events.filter(e => this.getStatus(e) === statut).length;
+}
 
   getDocumentName(path: string | null): string {
     if (!path) return 'No document';

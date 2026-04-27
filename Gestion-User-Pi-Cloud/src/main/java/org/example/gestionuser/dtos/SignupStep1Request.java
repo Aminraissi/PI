@@ -15,4 +15,5 @@ public class SignupStep1Request {
     private String role;
     private String photo;
     private String telephone;
+
 }

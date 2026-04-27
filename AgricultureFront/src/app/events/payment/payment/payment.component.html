@@ -88,8 +88,11 @@
       </div>
 
       <div class="summary-event-hero" *ngIf="event">
-        <img [src]="event.image ? 'assets/images/' + event.image : 'assets/images/placeholder.jpg'"
-             [alt]="event.titre" class="summary-event-img">
+        <img 
+  [src]="event?.image ? getImageUrl(event.image) : 'assets/images/placeholder.jpg'"
+  [alt]="event?.titre"
+  class="summary-event-img"
+/>
         <div class="summary-event-overlay">
           <span class="event-type-pill">{{ event.type }}</span>
         </div>

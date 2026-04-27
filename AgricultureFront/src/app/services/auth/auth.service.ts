@@ -123,9 +123,15 @@ export class AuthService {
         return this.http.put<SignupResponse>(`${this.apiUrl}/signup/step2/${userId}`, payload);
     }
 
-    verifyEmail(userId: number): Observable<SignupResponse> {
-        return this.http.post<SignupResponse>(`${this.apiUrl}/verify-email/${userId}`, {});
-    }
+    verifyEmail(token: string): Observable<SignupResponse> {
+    return this.http.get<SignupResponse>(
+        `${this.apiUrl}/verify-email?token=${token}`
+    );
+}
+
+    // verifyEmail(userId: number): Observable<SignupResponse> {
+    //     return this.http.post<SignupResponse>(`${this.apiUrl}/verify-email/${userId}`, {});
+    // }
 
     logout(): void {
         this.clearSession();

@@ -12,6 +12,7 @@ import { AuthService } from 'src/app/services/auth/auth.service';
   styleUrls: ['./details-event.component.css']
 })
 export class DetailsEventComponent implements OnInit {
+
   event!: Events;
   weatherData: WeatherData | null = null;
   forecastDays: ForecastDay[] = [];
@@ -40,6 +41,10 @@ export class DetailsEventComponent implements OnInit {
       this.loadWeather();
     });
   }
+  
+  getImageUrl(filename: string): string {
+  return this.eventService.getImageUrl(filename);
+}
 
   loadWeather(): void {
     this.loadingWeather = true;

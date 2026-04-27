@@ -14,6 +14,7 @@ export interface Events {
     statut: string; 
     autorisationmunicipale?: string;
     isValid: boolean | null;
+    
 
 }
 

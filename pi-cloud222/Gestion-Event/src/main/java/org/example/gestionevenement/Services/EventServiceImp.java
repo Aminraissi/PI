@@ -1,14 +1,24 @@
 package org.example.gestionevenement.Services;
 
+import com.stripe.exception.StripeException;
+import com.stripe.model.Refund;
+import com.stripe.param.RefundCreateParams;
 import lombok.AllArgsConstructor;
+import org.example.gestionevenement.DTO.DelayEventRequest;
 import org.example.gestionevenement.DTO.EventDTO;
 import org.example.gestionevenement.DTO.EventNearbyDTO;
 import org.example.gestionevenement.Repositories.EventRepo;
-import org.example.gestionevenement.entities.Event;
-import org.example.gestionevenement.entities.StatutEvent;
+import org.example.gestionevenement.Repositories.ReservationRepo;
+import org.example.gestionevenement.entities.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,10 +29,22 @@ public class EventServiceImp implements IEvent {
     private final EventRepo eventRepo;
     private final GeocodingService geocodingService;
     private final OsrmService osrmService;
+    private final FileStorageService fileStorageService;
+    private final ReservationRepo reservationRepo;
+    private IReservation ireservation;
+
 
     @Override
     public List<EventDTO> getAllEvents() {
         return eventRepo.findAll()
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    @Override
+    public List<EventDTO> getValidatedEvents() {
+        return eventRepo.findByIsValidTrue()
                 .stream()
                 .map(this::mapToDTO)
                 .toList();
@@ -44,15 +66,65 @@ public class EventServiceImp implements IEvent {
     }
 
     @Override
-    public Event addEvent(Event event) {
+    public Page<EventDTO> getValidatedEventsFiltered(String type, String region, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        TypeEvent typeEnum = null;
+
+        if (type != null && !type.trim().isEmpty()) {
+            typeEnum = TypeEvent.valueOf(type.trim().toUpperCase());
+        }
+
+        Page<Event> events = eventRepo.findValidatedFiltered(typeEnum, (region == null || region.trim().isEmpty() ? null : region.trim()), pageable);
+        return events.map(this::mapToDTO);
+    }
+
+    @Override
+    public Event addEvent(Event event, MultipartFile image, MultipartFile auth) {
+        String imageName = fileStorageService.saveFile(image);
+        String authName = fileStorageService.saveFile(auth);
+        event.setImage(imageName);
+        event.setAutorisationmunicipale(authName);
         geocodeIfNeeded(event);
+        event.setIsValid(null);
         return eventRepo.save(event);
     }
 
     @Override
-    public Event updateEvent(Event event) {
-        geocodeIfNeeded(event);
-        return eventRepo.save(event);
+    public Event updateEvent(Event event, MultipartFile image, MultipartFile auth) {
+
+        Event existing = eventRepo.findById(event.getId())
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        existing.setTitre(event.getTitre());
+        existing.setDescription(event.getDescription());
+        existing.setType(event.getType());
+        existing.setDateDebut(event.getDateDebut());
+        existing.setDateFin(event.getDateFin());
+        existing.setLieu(event.getLieu());
+        existing.setRegion(event.getRegion());
+        existing.setCapaciteMax(event.getCapaciteMax());
+        existing.setMontant(event.getMontant());
+        existing.setStatut(event.getStatut());
+        existing.setIsValid(null);
+
+        if (image != null && !image.isEmpty()) {
+            String imageName = fileStorageService.saveFile(image);
+            if (imageName != null) {
+                existing.setImage(imageName);
+            }
+        }
+
+        if (auth != null && !auth.isEmpty()) {
+            String authName = fileStorageService.saveFile(auth);
+            if (authName != null) {
+                existing.setAutorisationmunicipale(authName);
+            }
+        }
+
+        geocodeIfNeeded(existing);
+        return eventRepo.save(existing);
     }
 
     @Override
@@ -70,6 +142,101 @@ public class EventServiceImp implements IEvent {
         return eventRepo.findByIdOrganisateur(id);
     }
 
+    @Override
+    public Event delayEvent(int id, DelayEventRequest req, MultipartFile file) {
+        Event event = eventRepo.findById(id).orElse(null);
+        if (event == null) {
+            return null;
+        }
+        event.setStatut(StatutEvent.POSTPONED);
+        event.setDelayReason(req.getReason());
+
+
+        try {
+            if (req.getNewDateDebut() != null && !req.getNewDateDebut().isEmpty()) {
+                String startDateStr = req.getNewDateDebut();
+                if (!startDateStr.contains(":")) {
+                    startDateStr = startDateStr + ":00";
+                }
+                LocalDateTime startDate = LocalDateTime.parse(startDateStr);
+                event.setDateDebut(startDate);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            if (req.getNewDateFin() != null && !req.getNewDateFin().isEmpty()) {
+                String endDateStr = req.getNewDateFin();
+                if (!endDateStr.contains(":")) {
+                    endDateStr = endDateStr + ":00";
+                }
+                LocalDateTime endDate = LocalDateTime.parse(endDateStr);
+                event.setDateFin(endDate);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (file != null && !file.isEmpty()) {
+            try {
+                String fileName = fileStorageService.saveFile(file);
+                event.setAutorisationmunicipale(fileName);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        Event savedEvent = eventRepo.save(event);
+        return savedEvent;
+    }
+
+    @Override
+    public Map<String, Object> cancelEvent(int id) {
+
+        Event event = eventRepo.findById(id).orElse(null);
+        if (event == null) return null;
+
+        event.setStatut(StatutEvent.CANCELLED);
+        updateEvent(event,null,null);
+
+        List<Reservation> reservations = ireservation.getReservationsByEvent(id);
+
+        int refunded = 0, skipped = 0;
+        List<String> errors = new ArrayList<>();
+
+        for (Reservation r : reservations) {
+
+            if (r.getEtatPaiement() != EtatPaiement.PAID || r.getPaymentIntentId() == null) {
+                skipped++;
+                continue;
+            }
+
+            try {
+                Refund.create(
+                        RefundCreateParams.builder()
+                                .setPaymentIntent(r.getPaymentIntentId())
+                                .build()
+                );
+
+                r.setEtatPaiement(EtatPaiement.REFUNDED);
+                reservationRepo.save(r);
+
+                refunded++;
+
+            } catch (StripeException e) {
+                errors.add("Reservation " + r.getId() + ": " + e.getMessage());
+            }
+        }
+
+        return Map.of(
+                "status", "CANCELLED",
+                "refunded", refunded,
+                "skipped", skipped,
+                "errors", errors
+        );
+    }
+
     private EventDTO mapToDTO(Event event) {
         EventDTO dto = new EventDTO();
         dto.setId(event.getId());
@@ -84,6 +251,9 @@ public class EventServiceImp implements IEvent {
         dto.setCapaciteMax(event.getCapaciteMax());
         dto.setInscrits(event.getInscrits());
         dto.setAutorisationmunicipale(event.getAutorisationmunicipale());
+        dto.setIsValid(event.getIsValid());
+        dto.setDelayReason(event.getDelayReason());
+
         return dto;
     }
 

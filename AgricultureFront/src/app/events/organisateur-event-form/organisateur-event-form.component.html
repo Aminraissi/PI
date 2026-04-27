@@ -53,6 +53,9 @@
           <span class="err" *ngIf="f['dateDebut'].invalid && f['dateDebut'].touched">
             Start date is required
           </span>
+          <span class="err" *ngIf="eventForm.errors?.['startInvalid'] && f['dateDebut'].touched">
+            Start date must be in the future
+         </span>
         </div>
         <div class="form-group">
           <label>End Date <span class="req">*</span></label>
@@ -60,6 +63,13 @@
           <span class="err" *ngIf="f['dateFin'].invalid && f['dateFin'].touched">
             End date is required
           </span>
+          <span class="err" *ngIf="eventForm.errors?.['endInvalid'] && f['dateFin'].touched">
+  End date must be in the future
+</span>
+
+<span class="err" *ngIf="eventForm.errors?.['rangeInvalid'] && f['dateFin'].touched">
+  End date must be strictly after start date
+</span>
         </div>
       </div>
 

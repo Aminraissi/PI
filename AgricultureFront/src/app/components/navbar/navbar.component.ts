@@ -41,11 +41,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
         { label: 'Home', route: '/' },
         { label: 'Marketplace', route: '/marketplace' },
         { label: 'Forum', route: '/forums' },
-        {
-            label: 'Events',
-            route: '/events/listEvents',
-            roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT']
-        }
+         {
+        label: 'Events',
+        route: '/events/listEvents',
+        roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE']
+    },
+    {
+        label: 'Events',
+        route: 'events/organizer/events',
+        roles: ['ORGANISATEUR_EVENEMENT']
+    }
     ];
 
     dropdownLinks: NavDropdownLink[] = [

@@ -572,6 +572,42 @@
 .empty-state { text-align: center; padding: 4rem 0; }
 .empty-state .empty-icon { font-size: 3.5rem; display: block; margin-bottom: 1rem; }
 .empty-state p { font-size: 1rem; color: var(--gr-muted); }
+
+
+.filters {
+  display: flex;
+  margin-left: 200px;
+  font-weight: bold;
+  gap: 10px;
+}
+
+.filters select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.pagination {
+  margin-top: 25px;
+  display: flex;
+  font-weight: bold;
+  justify-content: center;
+  gap: 15px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: none;
+  font-weight: bold;
+  background: #31b600;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background: #ccc;
+}
  
 /* ── RESPONSIVE ───────────────────────────────────────────── */
 @media (max-width: 768px) {

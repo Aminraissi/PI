@@ -1,5 +1,6 @@
 package org.example.gestionuser.RestController;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.example.gestionuser.auth.AuthFacade;
 import org.example.gestionuser.dtos.LoginRequest;
@@ -50,14 +51,25 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/verify-email/{userId}")
-    public ResponseEntity<?> verifyEmail(@PathVariable Long userId) {
-        SignupResponse response = authFacade.verifyEmail(userId);
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+
+        SignupResponse response = authFacade.verifyEmail(token);
         if (response.getUserId() == null) {
             return ResponseEntity.badRequest().body(response);
-        }
+      }
+
         return ResponseEntity.ok(response);
     }
+
+//    @PostMapping("/verify-email/{userId}")
+//    public ResponseEntity<?> verifyEmail(@PathVariable Long userId) {
+//        SignupResponse response = authFacade.verifyEmail(userId);
+//        if (response.getUserId() == null) {
+//            return ResponseEntity.badRequest().body(response);
+//        }
+//        return ResponseEntity.ok(response);
+//    }
 
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -67,4 +79,5 @@ public class AuthController {
         }
         return ResponseEntity.ok(response);
     }
+
 }

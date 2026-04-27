@@ -36,11 +36,12 @@ public class Event {
     private StatutEvent statut;
     private int inscrits;
     private String autorisationmunicipale;
+    private String delayReason;
 
     private Double latitude;
     private Double longitude;
     private Boolean geolocated = false;
-    private Boolean isValid = false;
+    private Boolean isValid  ;
 
     @JsonIgnore
     @OneToMany(mappedBy = "evenement", fetch = FetchType.LAZY)

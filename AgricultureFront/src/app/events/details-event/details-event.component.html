@@ -142,8 +142,8 @@
     <div class="card">
       <div class="hero-banner">
         <img class="hero-img"
-             [src]="event.image ? 'assets/images/' + event.image : 'assets/images/placeholder.jpg'"
-             [alt]="event.titre" />
+     [src]="event.image ? getImageUrl(event.image) : 'assets/images/placeholder.jpg'"
+     [alt]="event.titre" />
         <div class="hero-img-overlay"></div>
 
         <div class="hero-type-pill">

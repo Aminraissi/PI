@@ -1,0 +1,240 @@
+/* ================================================
+   EMAIL VERIFICATION PAGE - ADAPTED TO AUTH DESIGN
+   ================================================ */
+
+/* Container using the same layout structure as auth-page */
+.verification-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Same background as auth page */
+.verification-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.verification-bg-img {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1600&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+}
+
+.verification-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(27, 67, 50, 0.93) 0%,
+    rgba(40, 100, 60, 0.85) 50%,
+    rgba(27, 67, 50, 0.75) 100%
+  );
+}
+
+/* Floating leaf decorations (same as auth page) */
+.verification-leaf {
+  position: absolute;
+  font-size: 70px;
+  opacity: 0.08;
+  pointer-events: none;
+  animation: float 7s ease-in-out infinite;
+}
+
+.vl1 { top: 8%; left: 3%; font-size: 90px; animation-delay: 0s; }
+.vl2 { top: 60%; left: 2%; font-size: 55px; animation-delay: 2s; }
+.vl3 { bottom: 10%; right: 52%; font-size: 45px; animation-delay: 4s; }
+.vl4 { top: 30%; left: 20%; font-size: 38px; animation-delay: 1s; }
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+/* Main card container - styled like auth-form-panel */
+.verification-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+  margin: 20px;
+  animation: fadeInUp 0.7s ease both;
+}
+
+/* Card styled like the auth form panel */
+.verification-card {
+  background: #f5f8f0;
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Icon styling */
+.verification-icon {
+  font-size: 72px;
+  margin-bottom: 24px;
+  animation: leafSway 3s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes leafSway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+/* Success state */
+.verification-card.success .verification-icon {
+  color: var(--primary, #4caf50);
+}
+
+/* Error state */
+.verification-card.error .verification-icon {
+  color: #e53935;
+}
+
+/* Loading state */
+.verification-card.loading .verification-icon {
+  color: var(--primary, #4caf50);
+}
+
+/* Title styling - matches auth-title */
+.verification-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--dark, #1e2a1e);
+}
+
+/* Gradient title for success */
+.verification-card.success .verification-title {
+  background: linear-gradient(45deg, #326e34, #87c88a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Error title color */
+.verification-card.error .verification-title {
+  color: #e53935;
+}
+
+/* Message text - matches brand-sub style */
+.verification-message {
+  font-size: 15px;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+/* Spinner - matches auth-btn loading style */
+.verification-spinner {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto;
+}
+
+.verification-spinner span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary, #4caf50);
+  animation: spinDot 0.9s ease-in-out infinite;
+}
+
+.verification-spinner span:nth-child(2) { animation-delay: 0.15s; }
+.verification-spinner span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes spinDot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.25) translateY(-3px); }
+}
+
+/* Button styling - matches auth-btn */
+.verification-btn {
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--primary, #4caf50) 0%, var(--primary-dark, #2e7d32) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.35);
+  letter-spacing: 0.3px;
+  margin-top: 8px;
+}
+
+.verification-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(76, 175, 80, 0.45);
+}
+
+.verification-btn:active {
+  transform: translateY(-1px);
+}
+
+/* Secondary button style */
+.verification-btn-secondary {
+  background: #f5f5f5;
+  color: var(--dark, #1e2a1e);
+  box-shadow: none;
+}
+
+.verification-btn-secondary:hover {
+  background: #e8e8e8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Countdown timer text */
+.verification-timer {
+  font-size: 12px;
+  color: var(--text-light, #6b7280);
+  margin-top: 16px;
+}
+
+.verification-timer span {
+  color: var(--primary, #4caf50);
+  font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .verification-card {
+    padding: 32px 24px;
+  }
+  
+  .verification-title {
+    font-size: 24px;
+  }
+  
+  .verification-icon {
+    font-size: 56px;
+  }
+  
+  .verification-btn {
+    padding: 12px 24px;
+    width: 100%;
+  }
+}

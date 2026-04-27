@@ -32,6 +32,7 @@ import { SharedModule }                      from './shared/shared.module';
 import { ShopModule }                        from './shop/shop.module';
 import { ToastComponent }                    from './shared/components/toast/toast.component';
 import { AppToastComponent }                 from './shared/components/app-toast/app-toast.component';
+import {VerifyEmailComponent  } from "./components/auth/verify-email/verify-email.component";
 
 registerLocaleData(localeFr);
 
@@ -58,6 +59,9 @@ registerLocaleData(localeFr);
         ExpertAssistanceRequestsComponent,
         ToastComponent,
         AppToastComponent,
+        VerifyEmailComponent
+        
+        
     ],
     imports: [
         BrowserModule,
@@ -69,6 +73,7 @@ registerLocaleData(localeFr);
         AppRoutingModule,
         SharedModule,
         ShopModule,
+        
     ],
     providers: [
         {
