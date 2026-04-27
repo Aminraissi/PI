@@ -19,6 +19,8 @@ export class NewClaimComponent implements OnInit {
   submitSuccess = false;
   selectedAttachment: File | null = null;
   attachmentError: string | null = null;
+  correctingDescription = false;
+  correctionError: string | null = null;
 
   categories: { value: ReclamationCategory; label: string }[] = [
     { value: 'COMMANDE',     label: CATEGORY_LABELS.COMMANDE },
@@ -79,11 +81,39 @@ export class NewClaimComponent implements OnInit {
     this.attachmentError = null;
   }
 
+  improveDescription(): void {
+    const description = (this.form.get('description')?.value || '').trim();
+    if (description.length < 20) {
+      this.correctionError = 'Write at least 20 characters before using AI correction.';
+      this.form.get('description')?.markAsTouched();
+      return;
+    }
+
+    this.correctingDescription = true;
+    this.correctionError = null;
+
+    this.claimsService.correctDescription({
+      subject: this.form.get('subject')?.value || '',
+  category: this.form.get('category')?.value || '',
+      description
+    }).subscribe({
+      next: (response) => {
+        this.correctingDescription = false;
+        this.form.patchValue({ description: response.description });
+      },
+      error: (error) => {
+        this.correctingDescription = false;
+        this.correctionError = this.extractErrorMessage(error, 'AI correction is unavailable for the moment.');
+      }
+    });
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+
     const userId = this.authService.getCurrentUserId();
     if (!userId) { this.router.navigate(['/claims/auth']); return; }
 
@@ -101,9 +131,9 @@ export class NewClaimComponent implements OnInit {
         this.submitSuccess = true;
         setTimeout(() => this.router.navigate(['/claims/detail', rec.id]), 1500);
       },
-      error: () => {
+      error: (error) => {
         this.submitting = false;
-        this.submitError = 'An error occurred. Please try again.';
+        this.submitError = this.extractErrorMessage(error, 'An error occurred. Please try again.');
       }
     });
   }
@@ -115,5 +145,21 @@ export class NewClaimComponent implements OnInit {
   fieldInvalid(name: string): boolean {
     const c = this.form.get(name);
     return !!(c && c.invalid && c.touched);
+  }
+
+  private extractErrorMessage(error: any, fallback: string): string {
+    if (typeof error?.error === 'string' && error.error.trim()) {
+      return error.error;
+    }
+
+    if (typeof error?.error?.message === 'string' && error.error.message.trim()) {
+      return error.error.message;
+    }
+
+    if (typeof error?.message === 'string' && error.message.trim()) {
+      return error.message;
+    }
+
+    return fallback;
   }
 }

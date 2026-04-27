@@ -9,6 +9,16 @@ import {
   ReclamationStatus
 } from '../models/claims.models';
 
+export interface CorrectDescriptionRequest {
+  subject: string;
+   category: string | null;
+  description: string;
+}
+
+export interface CorrectDescriptionResponse {
+  description: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClaimsService {
 
@@ -51,5 +61,9 @@ export class ClaimsService {
 
   updateStatus(id: number, request: UpdateStatusRequest): Observable<ReclamationResponse> {
     return this.http.patch<ReclamationResponse>(`${this.BASE}/${id}/status`, request);
+  }
+
+  correctDescription(request: CorrectDescriptionRequest): Observable<CorrectDescriptionResponse> {
+    return this.http.post<CorrectDescriptionResponse>(`${this.BASE}/ai/correct-description`, request);
   }
 }
