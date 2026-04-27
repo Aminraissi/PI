@@ -186,7 +186,7 @@ export class AppointmentsApiService {
     ).pipe(map(r => r.data));
   }
 
-  // ── Health Records ─────────────────────────────────────────
+ 
   getHealthRecordsByAnimal(animalId: number): Observable<HealthRecord[]> {
     return this.http.get<ApiResp<HealthRecord[]>>(
       `${this.inv}/health-records/animal/${animalId}`, { headers: this.h() }
