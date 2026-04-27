@@ -105,6 +105,7 @@
   align-items: center;
   gap: 5px;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   padding: 6px 12px;
   border-radius: 8px;
@@ -258,6 +259,113 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.language-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.lang-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.lang-trigger:hover {
+  background: rgba(255,255,255,0.16);
+}
+
+.lang-trigger i {
+  font-size: 14px;
+}
+
+.lang-chevron {
+  font-size: 10px !important;
+  transition: transform 0.2s ease;
+}
+
+.lang-chevron.open {
+  transform: rotate(180deg);
+}
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 160px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #e4ede4;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(46,125,50,0.14);
+  z-index: 1200;
+  animation: fadeDown 0.18s ease;
+}
+
+.lang-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #2c3e2d;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.lang-option:hover {
+  background: rgba(76,175,80,0.14);
+  color: #2e7d32;
+}
+
+.lang-option.active {
+  background: rgba(76,175,80,0.2);
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.lang-option i {
+  font-size: 12px;
+}
+
+.navbar.scrolled .lang-trigger {
+  border-color: rgba(76,175,80,0.4);
+  background: rgba(76,175,80,0.08);
+}
+
+.navbar.scrolled .lang-trigger {
+  color: #2e7d32;
+}
+
+#google_translate_element,
+.goog-te-gadget,
+.goog-te-banner-frame.skiptranslate,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
 }
 
 .btn-signin {
@@ -425,6 +533,21 @@
 
   .nav-actions .btn-signin,
   .nav-actions .btn-signup { display: none; }
+
+  .language-switcher {
+    margin-right: 2px;
+  }
+
+  .lang-trigger {
+    border-color: rgba(76,175,80,0.45);
+    background: rgba(76,175,80,0.08);
+    color: #2e7d32;
+  }
+
+  .lang-menu {
+    right: 0;
+    min-width: 150px;
+  }
 }
 
 @media (max-width: 480px) {

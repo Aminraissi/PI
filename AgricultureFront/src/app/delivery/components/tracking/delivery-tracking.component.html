@@ -52,7 +52,7 @@
           tabindex="0"
         >
           <div class="d-left">
-            <div class="d-ref">{{ d.reference }}</div>
+            <div class="d-ref notranslate" translate="no">{{ d.reference }}</div>
             <div class="d-meta">{{ d.product }}</div>
             <div class="d-route">{{ d.pickup }} → {{ d.dropoff }}</div>
           </div>
@@ -74,7 +74,7 @@
       <div class="right-header">
         <div class="right-title">
           <i class="fas fa-map"></i>
-          <span *ngIf="selectedDelivery">{{ selectedDelivery.reference }}</span>
+          <span *ngIf="selectedDelivery" class="notranslate" translate="no">{{ selectedDelivery.reference }}</span>
         </div>
         <div class="right-sub" *ngIf="selectedDelivery">
           <span>{{ selectedDelivery.pickup }}</span>
@@ -106,7 +106,7 @@
         </div>
         <div class="detail-card" *ngIf="!isFarmer()">
           <div class="detail-label">Farmer</div>
-          <div class="detail-value actor-name">{{ getFarmerDisplayName(selectedDelivery) }}</div>
+          <div class="detail-value actor-name notranslate" translate="no">{{ getFarmerDisplayName(selectedDelivery) }}</div>
         </div>
         <div class="detail-card">
           <div class="detail-label">Transporter</div>
@@ -115,10 +115,10 @@
             type="button"
             *ngIf="canOpenTransporterProfile(selectedDelivery); else noTransporter"
             (click)="openTransporterProfile(selectedDelivery)">
-            {{ getTransporterDisplayName(selectedDelivery) }}
+            <span class="notranslate" translate="no">{{ getTransporterDisplayName(selectedDelivery) }}</span>
           </button>
           <ng-template #noTransporter>
-            <div class="detail-value actor-name">{{ getTransporterDisplayName(selectedDelivery) }}</div>
+            <div class="detail-value actor-name notranslate" translate="no">{{ getTransporterDisplayName(selectedDelivery) }}</div>
           </ng-template>
         </div>
       </div>
@@ -199,7 +199,7 @@
         <div class="confirm-summary">
           <div class="summary-item">
             <span class="summary-label">Reference</span>
-            <strong>{{ pendingDeleteDelivery.reference }}</strong>
+            <strong class="notranslate" translate="no">{{ pendingDeleteDelivery.reference }}</strong>
           </div>
           <div class="summary-item">
             <span class="summary-label">Product</span>

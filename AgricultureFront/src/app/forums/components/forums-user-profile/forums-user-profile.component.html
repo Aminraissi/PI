@@ -2,9 +2,9 @@
   <button class="back-button" (click)="goBack()">← Back to Forums</button>
 
   <section class="profile-hero">
-    <div class="profile-avatar">{{ userDetails?.name?.charAt(0)?.toUpperCase() || 'U' }}</div>
+    <div class="profile-avatar notranslate" translate="no">{{ userDetails?.name?.charAt(0)?.toUpperCase() || 'U' }}</div>
     <div class="profile-copy">
-      <h1>{{ userDetails?.name || 'Community Member' }}</h1>
+      <h1 class="notranslate" translate="no">{{ userDetails?.name || 'Community Member' }}</h1>
       <p>{{ userProfile?.role || 'Forum contributor' }}</p>
       <div class="hero-badges">
         <span class="expert-badge" *ngIf="userDetails?.isExpert">⭐ Expert</span>

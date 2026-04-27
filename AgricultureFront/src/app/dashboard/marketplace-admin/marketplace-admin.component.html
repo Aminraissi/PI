@@ -75,7 +75,7 @@
               <td><span class="category-badge">{{ p.category || 'Uncategorized' }}</span></td>
               <td>{{ p.prix }} DT/KG</td>
               <td>{{ p.quantiteDisponible }} KG</td>
-              <td><span class="user-badge">{{ p.userName }}</span></td>
+              <td><span class="user-badge notranslate" translate="no">{{ p.userName }}</span></td>
               <td>
                 <button class="delete-post-btn" (click)="deleteProduct(p)">
                   <i class="fas fa-trash"></i>
@@ -146,7 +146,7 @@
                 </div>
               </td>
 
-              <td><span class="user-badge">{{ r.userName }}</span></td>
+              <td><span class="user-badge notranslate" translate="no">{{ r.userName }}</span></td>
 
               <td>
                 <button class="delete-post-btn" (click)="deleteRental(r)">
@@ -217,7 +217,7 @@
 
         <tbody>
             <tr *ngFor="let o of paginatedOrders">
-            <td>#{{ o.id }}</td>
+            <td class="notranslate" translate="no">#{{ o.id }}</td>
             <td>{{ o.dateCommande | date:'medium' }}</td>
             <td>{{ o.montantTotal | number:'1.2-2' }} DT</td>
             <td>
@@ -232,7 +232,7 @@
             </td>
             
             <td>
-                <span class="user-badge">{{ o.userName }}</span>
+                <span class="user-badge notranslate" translate="no">{{ o.userName }}</span>
             </td>
             <td>
                 <button class="details-btn" (click)="openOrderDetails(o)">
@@ -262,14 +262,14 @@
     <div class="order-modal-overlay" *ngIf="showOrderDetails" (click)="closeOrderDetails()">
   <div class="order-modal" (click)="$event.stopPropagation()" *ngIf="selectedOrder">
     <div class="order-modal-header">
-      <h3>Order #{{ selectedOrder.id }}</h3>
+      <h3 class="notranslate" translate="no">Order #{{ selectedOrder.id }}</h3>
       <button class="close-modal-btn" (click)="closeOrderDetails()">✕</button>
     </div>
 
     <div class="order-summary-grid">
       <div class="summary-item">
         <span>User</span>
-        <strong>{{ selectedOrder.userName }}</strong>
+        <strong class="notranslate" translate="no">{{ selectedOrder.userName }}</strong>
       </div>
 
       <div class="summary-item">
@@ -388,7 +388,7 @@
       <tbody>
         <tr *ngFor="let r of paginatedReservations">
           <td>
-            <span class="user-badge">{{ r.userName }}</span>
+            <span class="user-badge notranslate" translate="no">{{ r.userName }}</span>
           </td>
 
           <td>{{ r.dateVisite | date:'mediumDate' }}</td>
@@ -550,8 +550,8 @@
 
           <tbody>
             <tr *ngFor="let o of paginatedPaidOrders">
-              <td>#{{ o.id }}</td>
-              <td><span class="user-badge">{{ o.userName }}</span></td>
+              <td class="notranslate" translate="no">#{{ o.id }}</td>
+              <td><span class="user-badge notranslate" translate="no">{{ o.userName }}</span></td>
               <td>{{ o.dateCommande | date:'medium' }}</td>
               <td>
                 <span class="status-badge validated">
@@ -681,7 +681,7 @@
 
         <tbody>
           <tr *ngFor="let p of paginatedRentalPayments">
-            <td>#{{ p.id }}</td>
+            <td class="notranslate" translate="no">#{{ p.id }}</td>
             <td><span class="user-badge">{{ p.tenantName }}</span></td>
             <td><span class="user-badge">{{ p.farmerName }}</span></td>
             <td>#{{ p.locationId }}</td>
@@ -761,7 +761,7 @@
 
       <tbody>
         <tr *ngFor="let c of paginatedContracts">
-          <td>#{{ c.id }}</td>
+          <td class="notranslate" translate="no">#{{ c.id }}</td>
 
           <td><span class="user-badge">{{ c.ownerName }}</span></td>
 
