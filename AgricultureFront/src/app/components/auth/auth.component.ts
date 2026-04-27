@@ -108,6 +108,10 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const rememberedEmail = localStorage.getItem('rememberedEmail');
+    const authNotice = this.authService.consumeAuthNotice();
+    if (authNotice) {
+      this.loginError = authNotice;
+    }
 
     this.signInForm = new FormGroup({
       email: new FormControl(rememberedEmail || '', [Validators.required, Validators.email]),
@@ -211,9 +215,7 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
     localStorage.setItem('authMode', m);
 
     if (m === 'signin') {
-      this.googleSignupMode = false;
-      this.googleCredential = null;
-      this.googleProfile = null;
+      this.clearSocialSignupState();
       this.restoreNormalSignupValidators();
 
       setTimeout(() => {
@@ -607,6 +609,14 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
     this.authService.loginWithGoogle(credential).subscribe({
       next: (res) => {
         this.isLoading = false;
+        if (res?.nextStep === 'SIGNUP') {
+          this.startGoogleSignup(credential);
+          return;
+        }
+        if (res?.verificationRequired || res?.nextStep === 'VERIFY_EMAIL') {
+          this.enterVerificationMode(res.userId, res.email, res.message || 'Please verify your email.');
+          return;
+        }
         if (!res?.token) {
           this.loginError = res?.message || 'Google login failed.';
           return;
@@ -637,6 +647,9 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
     this.googleSignupMode = true;
     this.googleCredential = credential;
     this.googleProfile = profile;
+    this.facebookSignupMode = false;
+    this.facebookAccessToken = null;
+    this.facebookProfile = null;
     this.mode = 'signup';
     localStorage.setItem('authMode', 'signup');
 
@@ -672,7 +685,7 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
 
   restoreNormalSignupValidators(): void {
     if (!this.signUpForm) return;
-    this.googleSignupMode = false;
+    this.clearSocialSignupState();
 
     this.signUpForm.get('firstName')?.setValidators([Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]);
     this.signUpForm.get('lastName')?.setValidators([Validators.required, Validators.pattern(/^[a-zA-Z]+$/)]);
@@ -685,6 +698,15 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
     Object.keys(this.signUpForm.controls).forEach(key => {
       this.signUpForm.get(key)?.updateValueAndValidity();
     });
+  }
+
+  private clearSocialSignupState(): void {
+    this.googleSignupMode = false;
+    this.googleCredential = null;
+    this.googleProfile = null;
+    this.facebookSignupMode = false;
+    this.facebookAccessToken = null;
+    this.facebookProfile = null;
   }
 
   submitGoogleSignupCompletion(): void {
@@ -728,6 +750,11 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
+        if ('verificationRequired' in response && (response.verificationRequired || response.nextStep === 'VERIFY_EMAIL')) {
+          this.enterVerificationMode(response.userId, response.email, response.message || 'Please verify your email.');
+          return;
+        }
+
         if ('token' in response && response.token) {
           const redirectRoute = this.authService.getDefaultRouteForRole(
             response.role ? response.role as BackendRole : null
@@ -737,9 +764,8 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
         }
 
         this.mode = 'signin';
-        this.googleSignupMode = false;
-        this.googleCredential = null;
-        this.googleProfile = null;
+        this.clearSocialSignupState();
+        this.restoreNormalSignupValidators();
         this.loginError = response.message || 'Google signup completed. You can now sign in.';
       },
       error: (err) => {
@@ -817,7 +843,7 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
-        this.signInWithFacebook(accessToken);
+        this.signInWithFacebook(accessToken, profile);
       });
     }, { scope: 'email,public_profile', return_scopes: true });
   }
@@ -854,13 +880,25 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
     this.applyGoogleSignupValidators();
   }
 
-  signInWithFacebook(accessToken: string): void {
+  signInWithFacebook(accessToken: string, profile?: any): void {
     this.isLoading = true;
     this.loginError = null;
 
     this.authService.loginWithFacebook(accessToken).subscribe({
       next: (res) => {
         this.isLoading = false;
+        if (res?.nextStep === 'SIGNUP') {
+          if (profile) {
+            this.startFacebookSignup(accessToken, profile);
+          } else {
+            this.loginError = res?.message || 'No account found. Please sign up first.';
+          }
+          return;
+        }
+        if (res?.verificationRequired || res?.nextStep === 'VERIFY_EMAIL') {
+          this.enterVerificationMode(res.userId, res.email, res.message || 'Please verify your email.');
+          return;
+        }
         if (!res?.token) {
           this.loginError = res?.message || 'Facebook login failed.';
           return;
@@ -918,6 +956,11 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
+        if ('verificationRequired' in response && (response.verificationRequired || response.nextStep === 'VERIFY_EMAIL')) {
+          this.enterVerificationMode(response.userId, response.email, response.message || 'Please verify your email.');
+          return;
+        }
+
         if ('token' in response && response.token) {
           const redirectRoute = this.authService.getDefaultRouteForRole(
             response.role ? response.role as BackendRole : null
@@ -927,9 +970,8 @@ export class AuthComponent implements OnInit, OnDestroy, AfterViewInit {
         }
 
         this.mode = 'signin';
-        this.facebookSignupMode = false;
-        this.facebookAccessToken = null;
-        this.facebookProfile = null;
+        this.clearSocialSignupState();
+        this.restoreNormalSignupValidators();
         this.loginError = response.message || 'Facebook signup completed. You can now sign in.';
       },
       error: (err) => {
