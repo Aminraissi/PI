@@ -93,8 +93,8 @@
             </div>
 
             <div class="identity-copy">
-              <strong>{{ getFullName(user) }}</strong>
-              <span>{{ user.email || 'No email' }}</span>
+              <strong class="notranslate" translate="no">{{ getFullName(user) }}</strong>
+              <span class="notranslate" translate="no">{{ user.email || 'No email' }}</span>
               <div class="inline-meta">
                 <span class="role-badge">{{ prettyLabel(user.role) }}</span>
                 <span class="inline-meta-text">Region: {{ user.region || '-' }}</span>
@@ -186,7 +186,7 @@
         <div class="user-list-footer">
           <div class="footer-item">
             <label>User ID</label>
-            <strong>#{{ user.id || '-' }}</strong>
+            <strong class="notranslate" translate="no">#{{ user.id || '-' }}</strong>
           </div>
           <div class="footer-item">
             <label>Documents</label>
@@ -233,8 +233,8 @@
                   </ng-template>
                 </div>
                 <div>
-                  <strong>{{ getFullName(user) }}</strong>
-                  <span>{{ user.email || '-' }}</span>
+                  <strong class="notranslate" translate="no">{{ getFullName(user) }}</strong>
+                  <span class="notranslate" translate="no">{{ user.email || '-' }}</span>
                 </div>
               </div>
             </td>
@@ -292,8 +292,8 @@
       <article class="review-item" *ngFor="let user of reviewQueue; trackBy: trackByUserId">
         <div class="review-main">
           <div class="review-title">
-            <strong>{{ getFullName(user) }}</strong>
-            <span>{{ prettyLabel(user.role) }} • {{ user.email }}</span>
+            <strong class="notranslate" translate="no">{{ getFullName(user) }}</strong>
+            <span><span>{{ prettyLabel(user.role) }} • </span><span class="notranslate" translate="no">{{ user.email }}</span></span>
           </div>
           <div class="review-badges">
             <span class="status-badge status-en_attente">{{ prettyLabel(user.statutCompte) }}</span>

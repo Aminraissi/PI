@@ -45,7 +45,7 @@
           <div class="story-author" *ngIf="getUser(currentPost.authorId) as author">
             <img class="user-avatar user-avatar--md" [src]="getAvatarUrl(author)" [alt]="author.name + ' profile image'" title="{{ getAvatarTitle(author) }}" />
             <div class="story-author-copy">
-              <button type="button" class="story-author-link" (click)="openUserProfile(author.id)">{{ author.name }}</button>
+              <button type="button" class="story-author-link notranslate" translate="no" (click)="openUserProfile(author.id)">{{ author.name }}</button>
               <span>{{ author.reputation }} rep</span>
               <app-badge [reputation]="author.reputation"></app-badge>
             </div>
@@ -172,7 +172,7 @@
 
                     <div class="reply-body">
                       <div class="reply-head" *ngIf="getUser(reply.authorId) as author">
-                        <button type="button" class="author author-link" (click)="openUserProfile(author.id)">{{ author.name }}</button>
+                        <button type="button" class="author author-link notranslate" translate="no" (click)="openUserProfile(author.id)">{{ author.name }}</button>
                         <span>{{ author.reputation }} rep</span>
                         <app-badge [reputation]="author.reputation"></app-badge>
                         <span class="expert" *ngIf="author.isExpert">Expert</span>
@@ -236,7 +236,7 @@
 
                             <ng-container *ngIf="!isCommentCollapsed(reply.id, comment.id); else collapsedComment">
                               <div class="comment">
-                                <button type="button" class="comment-author-link" (click)="openUserProfile(comment.authorId)">{{ getUser(comment.authorId)?.name }}:</button>
+                                <button type="button" class="comment-author-link notranslate" translate="no" (click)="openUserProfile(comment.authorId)">{{ getUser(comment.authorId)?.name }}:</button>
                                 <span
                                   [class.state-box]="isCommentDeletedNotice(comment) || isCommentHiddenNotice(comment)"
                                   [class.state-box--deleted]="isCommentDeletedNotice(comment)"
@@ -256,7 +256,7 @@
 
                             <ng-template #collapsedComment>
                               <div class="comment comment-collapsed" *ngIf="getUser(comment.authorId) as commentAuthor" [class.hidden-by-reports]="comment.isHiddenByReports">
-                                <button type="button" class="comment-author-link" (click)="openUserProfile(commentAuthor.id)">{{ commentAuthor.name }}:</button>
+                                <button type="button" class="comment-author-link notranslate" translate="no" (click)="openUserProfile(commentAuthor.id)">{{ commentAuthor.name }}:</button>
                                 <span
                                   [class.state-box]="isCommentDeletedNotice(comment) || isCommentHiddenNotice(comment)"
                                   [class.state-box--deleted]="isCommentDeletedNotice(comment)"
@@ -287,7 +287,7 @@
 
                   <ng-template #collapsedReply>
                     <div class="collapsed-preview" *ngIf="getUser(reply.authorId) as author">
-                      <button type="button" class="collapsed-author-link" (click)="openUserProfile(author.id)">{{ author.name }}</button>
+                      <button type="button" class="collapsed-author-link notranslate" translate="no" (click)="openUserProfile(author.id)">{{ author.name }}</button>
                       <span>
                         Reply hidden · {{ reply.comments.length }} comments · {{ replyScore(reply) }} score
                       </span>

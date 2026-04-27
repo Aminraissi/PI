@@ -4,6 +4,22 @@ import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { AuthService, BackendRole } from 'src/app/services/auth/auth.service';
 
+declare global {
+    interface Window {
+        google?: {
+            translate?: {
+                TranslateElement: {
+                    new (options: Record<string, unknown>, elementId: string): unknown;
+                    InlineLayout: {
+                        SIMPLE: unknown;
+                    };
+                };
+            };
+        };
+        googleTranslateElementInit?: () => void;
+    }
+}
+
 interface NavLink {
     label: string;
     route: string;
@@ -28,6 +44,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     private destroy$ = new Subject<void>();
     private hideSubmenuTimer: any;
+    private googleBannerObserver: MutationObserver | null = null;
 
     isScrolled = false;
     isMobileMenuOpen = false;
@@ -36,6 +53,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
     activeLink = '/';
     moreDropdownOpen = false;
     activeSubmenu: NavDropdownLink['submenu'] | null = null;
+    isLanguageMenuOpen = false;
+    selectedLanguage: 'en' | 'fr' | 'ar' = 'en';
+
+    readonly languageOptions: Array<{ code: 'en' | 'fr' | 'ar'; label: string }> = [
+        { code: 'en', label: 'English' },
+        { code: 'fr', label: 'French' },
+        { code: 'ar', label: 'Arabic' }
+    ];
+
+    private isTranslateReady = false;
+    private readonly languageStorageKey = 'preferredLanguage';
+    private readonly languageReloadGuardKey = 'translationReloadLang';
 
     navLinks: NavLink[] = [
         { label: 'Home', route: '/' },
@@ -126,6 +155,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.isLoggedIn = this.authService.hasActiveSession();
         this.isHomePage = this.router.url === '/';
         this.activeLink = this.router.url.split('?')[0];
+        this.initializeLanguage();
+        this.initGoogleTranslate();
+        this.startGoogleBannerObserver();
 
         this.authService.currentUser$
             .pipe(takeUntil(this.destroy$))
@@ -142,6 +174,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
                 this.isLoggedIn = this.authService.hasActiveSession();
                 this.isHomePage = e.urlAfterRedirects === '/';
                 this.activeLink = e.urlAfterRedirects.split('?')[0];
+                this.syncLanguageFromStorageAndCookie();
+                this.applyGoogleTranslation(this.selectedLanguage);
                 this.moreDropdownOpen = false;
                 this.isMobileMenuOpen = false;
                 this.activeSubmenu = null;
@@ -166,6 +200,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
         const target = event.target as HTMLElement;
         if (!target.closest('.dropdown-wrap')) {
             this.moreDropdownOpen = false;
+        }
+        if (!target.closest('.language-switcher')) {
+            this.isLanguageMenuOpen = false;
         }
     }
 
@@ -198,6 +235,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
         if (!this.moreDropdownOpen) {
             this.activeSubmenu = null;
         }
+    }
+
+    toggleLanguageMenu(event: MouseEvent): void {
+        event.stopPropagation();
+        this.isLanguageMenuOpen = !this.isLanguageMenuOpen;
     }
 
     showSubmenu(dropdownItem: NavDropdownLink): void {
@@ -272,12 +314,228 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         clearTimeout(this.hideSubmenuTimer);
+        this.googleBannerObserver?.disconnect();
         this.destroy$.next();
         this.destroy$.complete();
+    }
+
+    onLanguageChange(language: string): void {
+        if (!this.isValidLanguage(language)) {
+            return;
+        }
+
+        const previousLanguage = this.selectedLanguage;
+        this.isLanguageMenuOpen = false;
+
+        this.selectedLanguage = language;
+        localStorage.setItem(this.languageStorageKey, language);
+        this.setTranslationCookie(language);
+        this.updateDocumentDirection(language);
+        this.applyGoogleTranslation(language);
+
+        // Force one refresh only when language actually changes.
+        if (previousLanguage !== language) {
+            const lastReloadLanguage = sessionStorage.getItem(this.languageReloadGuardKey);
+            if (lastReloadLanguage !== language) {
+                sessionStorage.setItem(this.languageReloadGuardKey, language);
+                window.location.reload();
+                return;
+            }
+        }
+
+        sessionStorage.removeItem(this.languageReloadGuardKey);
     }
 
     private canAccess(roles?: BackendRole[]): boolean {
         if (!roles || roles.length === 0) return true;
         return this.authService.hasAnyRole(...roles);
+    }
+
+    private initializeLanguage(): void {
+        this.syncLanguageFromStorageAndCookie();
+    }
+
+    private initGoogleTranslate(): void {
+        window.googleTranslateElementInit = () => {
+            const translate = window.google?.translate?.TranslateElement;
+            if (!translate) {
+                return;
+            }
+
+            new translate(
+                {
+                    pageLanguage: 'en',
+                    includedLanguages: 'en,fr,ar',
+                    autoDisplay: false,
+                    layout: translate.InlineLayout.SIMPLE
+                },
+                'google_translate_element'
+            );
+
+            this.isTranslateReady = true;
+            this.forceHideGoogleBanner();
+            this.applyGoogleTranslation(this.selectedLanguage);
+        };
+
+        const existingScript = document.getElementById('google-translate-script');
+        if (existingScript) {
+            if (window.google?.translate?.TranslateElement) {
+                window.googleTranslateElementInit?.();
+            }
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.id = 'google-translate-script';
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        script.async = true;
+        document.body.appendChild(script);
+
+        this.forceHideGoogleBanner();
+    }
+
+    private applyGoogleTranslation(language: string, attempt = 0): void {
+        if (!this.isTranslateReady) {
+            if (attempt < 10) {
+                window.setTimeout(() => this.applyGoogleTranslation(language, attempt + 1), 250);
+            }
+            return;
+        }
+
+        const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+        if (!combo) {
+            if (attempt < 10) {
+                window.setTimeout(() => this.applyGoogleTranslation(language, attempt + 1), 250);
+            }
+            return;
+        }
+
+        const targetValue = language;
+        if (combo.value === targetValue) {
+            return;
+        }
+
+        combo.value = targetValue;
+
+        const event = document.createEvent('HTMLEvents');
+        event.initEvent('change', true, true);
+        combo.dispatchEvent(event);
+
+        combo.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    private setTranslationCookie(language: 'en' | 'fr' | 'ar'): void {
+        const cookieValue = `/en/${language}`;
+
+        // Clear potential duplicates first, then set one canonical cookie.
+        document.cookie = 'googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = `googtrans=;path=/;domain=${window.location.hostname};expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        document.cookie = `googtrans=${cookieValue};path=/`;
+    }
+
+    private updateDocumentDirection(language: 'en' | 'fr' | 'ar'): void {
+        document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    }
+
+    private syncLanguageFromStorageAndCookie(): void {
+        const widgetLanguage = this.getLanguageFromTranslateWidget();
+        const cookieLanguage = this.getLanguageFromTranslateCookie();
+        const storedLanguage = localStorage.getItem(this.languageStorageKey);
+
+        let nextLanguage: 'en' | 'fr' | 'ar' = 'en';
+
+        if (this.isValidLanguage(widgetLanguage)) {
+            nextLanguage = widgetLanguage;
+        } else if (this.isValidLanguage(cookieLanguage)) {
+            nextLanguage = cookieLanguage;
+        } else if (this.isValidLanguage(storedLanguage)) {
+            nextLanguage = storedLanguage;
+        }
+
+        this.selectedLanguage = nextLanguage;
+        localStorage.setItem(this.languageStorageKey, nextLanguage);
+        this.setTranslationCookie(nextLanguage);
+        this.updateDocumentDirection(nextLanguage);
+    }
+
+    private getLanguageFromTranslateCookie(): 'en' | 'fr' | 'ar' | null {
+        const rawCookies = document.cookie
+            .split(';')
+            .map(chunk => chunk.trim())
+            .filter(chunk => chunk.startsWith('googtrans='));
+
+        if (rawCookies.length === 0) {
+            return null;
+        }
+
+        let parsedLanguage: 'en' | 'fr' | 'ar' | null = null;
+
+        rawCookies.forEach(cookie => {
+            const rawValue = decodeURIComponent(cookie.split('=')[1] ?? '');
+            const parts = rawValue.split('/').filter(Boolean);
+            const language = parts[parts.length - 1] ?? null;
+
+            if (this.isValidLanguage(language)) {
+                parsedLanguage = language;
+            }
+        });
+
+        return parsedLanguage;
+    }
+
+    private getLanguageFromTranslateWidget(): 'en' | 'fr' | 'ar' | null {
+        const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+        if (!combo) {
+            return null;
+        }
+
+        const value = (combo.value || '').trim().toLowerCase();
+        return this.isValidLanguage(value) ? value : null;
+    }
+
+    private isValidLanguage(language: string | null): language is 'en' | 'fr' | 'ar' {
+        return language === 'en' || language === 'fr' || language === 'ar';
+    }
+
+    private startGoogleBannerObserver(): void {
+        this.forceHideGoogleBanner();
+
+        this.googleBannerObserver = new MutationObserver(() => {
+            this.forceHideGoogleBanner();
+        });
+
+        this.googleBannerObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    private forceHideGoogleBanner(): void {
+        const selectors = [
+            'iframe.goog-te-banner-frame',
+            '.goog-te-banner-frame.skiptranslate',
+            '.goog-te-banner-frame',
+            'iframe.VIpgJd-ZVi9od-ORHb-OEVmcd',
+            '.VIpgJd-ZVi9od-ORHb-OEVmcd',
+            '.VIpgJd-ZVi9od-aZ2wEe-wOHMyf',
+            '#goog-gt-tt'
+        ];
+
+        selectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(node => {
+                const element = node as HTMLElement;
+                element.style.setProperty('display', 'none', 'important');
+                element.style.setProperty('visibility', 'hidden', 'important');
+                element.style.setProperty('height', '0', 'important');
+                element.style.setProperty('min-height', '0', 'important');
+                element.style.setProperty('max-height', '0', 'important');
+                element.style.setProperty('opacity', '0', 'important');
+                element.style.setProperty('pointer-events', 'none', 'important');
+            });
+        });
+
+        document.body.style.setProperty('top', '0px', 'important');
+        document.documentElement.style.setProperty('top', '0px', 'important');
+        document.body.style.setProperty('position', 'static', 'important');
     }
 }
