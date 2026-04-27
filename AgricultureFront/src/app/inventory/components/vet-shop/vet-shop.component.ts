@@ -79,12 +79,12 @@ export class VetShopComponent implements OnInit {
     ).subscribe({
       next: () => {
         this.formLoading = false;
-        this.toast.success('Informations boutique mises à jour !');
+        this.toast.success('Shop information updated!');
         this.cancelForm(); this.load();
       },
       error: e => {
         this.formLoading = false;
-        this.toast.error(e.error?.message || 'Erreur lors de la mise à jour');
+        this.toast.error(e.error?.message || 'Error updating shop information');
       }
     });
   }
@@ -92,11 +92,11 @@ export class VetShopComponent implements OnInit {
   toggle(p: InventoryProduct) {
     this.api.toggleBoutique(p.id).subscribe({
       next: updated => {
-        const msg = updated.enBoutique ? `"${p.nom}" visible dans la boutique !` : `"${p.nom}" masqué de la boutique.`;
+        const msg = updated.enBoutique ? `"${p.nom}" visible in the shop !` : `"${p.nom}" hidden from the shop.`;
         this.toast.success(msg);
         this.load();
       },
-      error: () => this.toast.error('Erreur lors du changement de visibilité')
+      error: () => this.toast.error('Error occurred while changing visibility')
     });
   }
 
@@ -105,7 +105,7 @@ export class VetShopComponent implements OnInit {
   }
 
   categoryLabel(c: string) {
-    return { VACCIN:'Vaccin', MEDICAMENT:'Médicament', ALIMENT:'Aliment', RECOLTE:'Récolte', AUTRE:'Autre' }[c] || c;
+    return { VACCIN:'Vaccin', MEDICAMENT:'Medicine', ALIMENT:'Feed', RECOLTE:'Harvest', AUTRE:'Other' }[c] || c;
   }
 
   categoryEmoji(c: string) {

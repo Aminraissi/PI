@@ -8,22 +8,27 @@
     </div>
 
     <nav class="sidebar-nav">
+      <button class="nav-item home-nav" (click)="goHome()">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </button>
       <button class="nav-item" [class.active]="activeTab === 'inventory'" (click)="setTab('inventory')">
         <i class="fas fa-boxes"></i>
         <span>Inventory</span>
       </button>
-      <button class="nav-item" [class.active]="activeTab === 'animals'" (click)="setTab('animals')">
+      <button class="nav-item" [class.active]="activeTab === 'animals' && animalView === 'list'" (click)="setTab('animals')">
         <i class="fas fa-paw"></i>
         <span>Animals</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab === 'animals' && animalView === 'campaigns'" (click)="openAnimalCampaigns()">
+        <i class="fas fa-syringe"></i>
+        <span>Campagne vaccination</span>
       </button>
         <button class="nav-item" [class.active]="activeTab === 'statistics'" (click)="setTab('statistics')">
         <i class="fas fa-chart-line"></i>
         <span>Statistiques</span>
       </button>
-      <button class="nav-item boutique-nav" [class.active]="activeTab === 'boutique'" (click)="setTab('boutique')">
-        <i class="fas fa-store"></i>
-        <span>Ma Boutique</span>
-      </button>
+      
     </nav>
 
     <div class="sidebar-footer">
@@ -43,7 +48,9 @@
   <!-- ── Main content ─────────────────────────────────────── -->
   <main class="inv-main">
     <app-product-list        *ngIf="activeTab === 'inventory'"></app-product-list>
-    <app-animal-list         *ngIf="activeTab === 'animals'"></app-animal-list>
+    <app-animal-list         *ngIf="activeTab === 'animals'"
+                             [initialView]="animalView"
+                             (viewChanged)="animalView = $event"></app-animal-list>
     <app-statistics-dashboard *ngIf="activeTab === 'statistics'"></app-statistics-dashboard>
     <app-vet-shop            *ngIf="activeTab === 'boutique'"></app-vet-shop>
   </main>

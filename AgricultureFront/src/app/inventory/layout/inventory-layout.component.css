@@ -54,6 +54,13 @@
 .nav-item:hover { background: rgba(126,198,126,.12); color: #7ec67e; }
 .nav-item.active { background: rgba(126,198,126,.2); color: #7ec67e; font-weight: 600; }
 
+.home-nav {
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px 10px 0 0;
+  margin-bottom: 6px;
+}
+.home-nav i { color: #7ec67e; }
+
 .sidebar-footer {
   border-top: 1px solid rgba(255,255,255,.08);
   padding: 14px 12px;

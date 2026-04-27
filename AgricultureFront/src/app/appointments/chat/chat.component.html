@@ -2,18 +2,18 @@
   <aside class="chat-sidebar">
     <div class="chat-sidebar-header">
       <h2>Messagerie</h2>
-      <p>Discussion en temps réel</p>
+      <p>Real-time discussion</p>
     </div>
 
     <div class="new-chat" *ngIf="isFarmer">
-      <label>Nouveau message vers un vétérinaire</label>
+      <label>New message to a veterinarian</label>
       <select (change)="startConversation(+$any($event.target).value)">
-        <option value="">Choisir un vétérinaire</option>
+        <option value="">Choose a veterinarian</option>
         <option *ngFor="let vet of vets" [value]="vet.id">Dr. {{ vet.prenom }} {{ vet.nom }}</option>
       </select>
     </div>
 
-    <div class="side-loading" *ngIf="loadingConversations">Chargement...</div>
+    <div class="side-loading" *ngIf="loadingConversations">Loading...</div>
 
     <button class="conversation-item"
             *ngFor="let c of conversations; trackBy: trackByConversation"
@@ -24,19 +24,19 @@
         <span>{{ c.lastMessageAt | date:'shortTime' }}</span>
       </div>
       <div class="conversation-bottom">
-        <span>{{ c.lastMessage || 'Aucun message' }}</span>
+        <span>{{ c.lastMessage || 'No message' }}</span>
       </div>
     </button>
   </aside>
 
   <section class="chat-main">
-    <div class="empty-chat" *ngIf="!selectedConversation && !loadingConversations">Sélectionnez une conversation.</div>
+    <div class="empty-chat" *ngIf="!selectedConversation && !loadingConversations">Select a conversation.</div>
 
     <ng-container *ngIf="selectedConversation">
       <header class="chat-header">
         <div>
           <h3>{{ getConversationTitle(selectedConversation) }}</h3>
-          <p>{{ selectedConversation.otherParticipant?.role === 'VETERINAIRE' ? 'Vétérinaire' : 'Agriculteur' }}</p>
+          <p>{{ selectedConversation.otherParticipant?.role === 'VETERINAIRE' ? 'Veterinarian' : 'Farmer' }}</p>
         </div>
       </header>
 
@@ -49,7 +49,7 @@
             <img class="msg-image"
                  *ngIf="m.messageType === 'IMAGE' && m.attachmentUrl"
                  [src]="getAttachmentUrl(m)"
-                 [alt]="m.attachmentFileName || 'Image envoyée'" />
+                 [alt]="m.attachmentFileName || 'Image sent'" />
             <audio class="msg-audio"
                    *ngIf="m.messageType === 'AUDIO' && m.attachmentUrl"
                    [src]="getAttachmentUrl(m)"
@@ -59,7 +59,7 @@
                [href]="getAttachmentUrl(m)"
                target="_blank"
                rel="noopener">
-              {{ m.attachmentFileName || 'Télécharger la pièce jointe' }}
+              {{ m.attachmentFileName || 'Download attachment' }}
             </a>
             <div class="time">{{ m.sentAt | date:'short' }}</div>
           </div>
@@ -67,13 +67,13 @@
       </div>
 
       <ng-template #loadingTpl>
-        <div class="empty-chat">Chargement des messages...</div>
+        <div class="empty-chat">Loading messages...</div>
       </ng-template>
 
       <div class="composer">
         <input #fileInput type="file" hidden (change)="onFileSelected($event)" />
-        <textarea [(ngModel)]="draft" rows="2" placeholder="Écrire un message..."></textarea>
-        <button type="button" class="secondary-btn" (click)="fileInput.click()" [disabled]="sending">Fichier</button>
+        <textarea [(ngModel)]="draft" rows="2" placeholder="Write a message..."></textarea>
+        <button type="button" class="secondary-btn" (click)="fileInput.click()" [disabled]="sending">File</button>
         <button type="button"
                 class="secondary-btn"
                 (click)="toggleRecording()"
@@ -81,11 +81,11 @@
                 [class.recording]="recording">
           {{ recording ? 'Stop' : 'Vocal' }}
         </button>
-        <button (click)="send()" [disabled]="sending || (!draft.trim() && !selectedFile)">Envoyer</button>
+        <button (click)="send()" [disabled]="sending || (!draft.trim() && !selectedFile)">Send</button>
       </div>
       <div class="selected-file" *ngIf="selectedFile">
         <span>{{ selectedFile.name }}</span>
-        <button type="button" (click)="clearSelectedFile()">Retirer</button>
+        <button type="button" (click)="clearSelectedFile()">Remove</button>
       </div>
     </ng-container>
 

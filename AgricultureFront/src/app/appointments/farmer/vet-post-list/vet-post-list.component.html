@@ -1,0 +1,143 @@
+<div class="vpl-wrap">
+
+  <!-- ── En-tête ── -->
+  <div class="vpl-header">
+    <div class="vpl-header-left">
+      <i class="fas fa-newspaper"></i>
+      <div>
+        <h2 class="vpl-title">Veterinarian's Publications</h2>
+        <p class="vpl-sub">Articles and videos shared by this practitioner</p>
+      </div>
+    </div>
+    <div class="vpl-counts">
+      <span class="count-chip article-chip">
+        <i class="fas fa-file-alt"></i> {{ articleCount }} article{{ articleCount > 1 ? 's' : '' }}
+      </span>
+      <span class="count-chip video-chip">
+        <i class="fas fa-video"></i> {{ videoCount }} video{{ videoCount > 1 ? 's' : '' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Filtres ── -->
+  <div class="vpl-filters" *ngIf="posts.length > 0">
+    <button class="filter-btn" [class.active]="activeFilter==='ALL'"     (click)="activeFilter='ALL'">
+      <i class="fas fa-th-large"></i> All ({{ posts.length }})
+    </button>
+    <button class="filter-btn article" [class.active]="activeFilter==='ARTICLE'" (click)="activeFilter='ARTICLE'">
+      <i class="fas fa-file-alt"></i> Articles ({{ articleCount }})
+    </button>
+    <button class="filter-btn video" [class.active]="activeFilter==='VIDEO'" (click)="activeFilter='VIDEO'">
+      <i class="fas fa-video"></i> Videos ({{ videoCount }})
+    </button>
+  </div>
+
+  <!-- ── Chargement ── -->
+  <div class="vpl-loading" *ngIf="loading">
+    <div class="loader-ring"></div>
+    <span>Loading publications…</span>
+  </div>
+
+  <!-- ── Erreur ── -->
+  <div class="vpl-error" *ngIf="error">
+    <i class="fas fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- ── Aucune publication ── -->
+  <div class="vpl-empty" *ngIf="!loading && !error && posts.length === 0">
+    <i class="fas fa-newspaper"></i>
+    <p>This veterinarian has not published any content yet.</p>
+  </div>
+
+  <!-- ── Aucun résultat pour le filtre ── -->
+  <div class="vpl-empty" *ngIf="!loading && posts.length > 0 && filtered.length === 0">
+    <i class="fas fa-filter"></i>
+    <p>No publications of this type.</p>
+  </div>
+
+  <!-- ── Grille des publications ── -->
+  <div class="vpl-grid" *ngIf="!loading && filtered.length > 0">
+    <div class="post-card" *ngFor="let post of filtered" (click)="openPost(post)">
+
+      <!-- Badge type -->
+      <div class="post-type-badge" [class.article-badge]="post.type==='ARTICLE'" [class.video-badge]="post.type==='VIDEO'">
+        <i [class]="post.type==='ARTICLE' ? 'fas fa-file-alt' : 'fas fa-video'"></i>
+        {{ post.type === 'ARTICLE' ? 'Article' : 'Vidéo' }}
+      </div>
+
+      <!-- ── IMAGE (article avec image) ── -->
+      <div class="post-media" *ngIf="post.type === 'ARTICLE' && post.mediaUrl">
+        <img [src]="mediaUrl(post)" [alt]="post.titre" class="post-img" loading="lazy">
+      </div>
+
+      <!-- ── VIDÉO ── -->
+      <div class="post-media video-wrap" *ngIf="post.type === 'VIDEO' && post.mediaUrl">
+        <video
+          (click)="$event.stopPropagation()"
+          controls
+          preload="metadata"
+          class="post-video"
+          [src]="mediaUrl(post)">
+          Your browser does not support video playback.
+        </video>
+      </div>
+
+      <!-- ── Icône si pas de média (article sans image) ── -->
+      <div class="post-no-media" *ngIf="!post.mediaUrl">
+        <i [class]="post.type==='ARTICLE' ? 'fas fa-file-alt' : 'fas fa-video'"></i>
+      </div>
+
+      <!-- ── Corps ── -->
+      <div class="post-body">
+        <h3 class="post-title">{{ post.titre }}</h3>
+
+        <div class="post-date">
+          <i class="fas fa-calendar-alt"></i> {{ formatDate(post.createdAt) }}
+        </div>
+
+        <div class="post-desc" *ngIf="post.description">
+          {{ descriptionText(post) }}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="post-detail-overlay" *ngIf="selectedPost" (click)="closePost()">
+  <article class="post-detail" (click)="$event.stopPropagation()">
+    <button type="button" class="detail-close" (click)="closePost()" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div class="detail-media" *ngIf="selectedPost.mediaUrl">
+      <img
+        *ngIf="selectedPost.type === 'ARTICLE'"
+        [src]="mediaUrl(selectedPost)"
+        [alt]="selectedPost.titre"
+        class="detail-img">
+      <video
+        *ngIf="selectedPost.type === 'VIDEO'"
+        [src]="mediaUrl(selectedPost)"
+        controls
+        preload="metadata"
+        class="detail-video">
+        Your browser does not support video playback.
+      </video>
+    </div>
+
+    <div class="detail-body">
+      <div class="post-type-badge detail-badge" [class.article-badge]="selectedPost.type==='ARTICLE'" [class.video-badge]="selectedPost.type==='VIDEO'">
+        <i [class]="selectedPost.type==='ARTICLE' ? 'fas fa-file-alt' : 'fas fa-video'"></i>
+        {{ selectedPost.type === 'ARTICLE' ? 'Article' : 'Video' }}
+      </div>
+
+      <h2 class="detail-title">{{ selectedPost.titre }}</h2>
+      <div class="post-date">
+        <i class="fas fa-calendar-alt"></i> {{ formatDate(selectedPost.createdAt) }}
+      </div>
+      <div class="detail-desc" *ngIf="selectedPost.description" [innerHTML]="selectedPost.description"></div>
+    </div>
+  </article>
+</div>

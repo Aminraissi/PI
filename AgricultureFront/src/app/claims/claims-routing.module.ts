@@ -1,10 +1,10 @@
+
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 import { ClaimsLayoutComponent } from './layout/claims-layout.component';
 import { MyClaimsComponent }     from './user/my-claims/my-claims.component';
 import { NewClaimComponent }     from './user/new-claim/new-claim.component';
-import { ClaimDetailComponent }  from './user/claim-detail/claim-detail.component';
 import { ClaimsAuthGuard }       from './services/claims-auth.guard';
 
 const routes: Routes = [
@@ -20,7 +20,10 @@ const routes: Routes = [
       { path: '',           redirectTo: 'my-claims', pathMatch: 'full' },
       { path: 'my-claims',  component: MyClaimsComponent },
       { path: 'new',        component: NewClaimComponent },
-      { path: 'detail/:id', component: ClaimDetailComponent },
+      {
+        path: 'detail/:id',
+        loadChildren: () => import('./claim-detail-route.module').then(m => m.ClaimDetailRouteModule)
+      },
     ]
   }
 ];

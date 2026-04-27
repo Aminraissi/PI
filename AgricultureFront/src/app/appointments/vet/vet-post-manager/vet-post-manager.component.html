@@ -1,0 +1,239 @@
+<div class="vpm-wrap">
+
+  <!-- ── En-tête ── -->
+  <div class="vpm-header">
+    <div class="vpm-header-left">
+      <i class="fas fa-newspaper"></i>
+      <div>
+        <h2 class="vpm-title">Mes publications</h2>
+        <p class="vpm-sub">Partagez des articles et vidéos avec les agriculteurs</p>
+      </div>
+    </div>
+    <button class="btn-new" (click)="openCreate()">
+      <i class="fas fa-plus"></i> Nouvelle publication
+    </button>
+  </div>
+
+  <!-- ── Stats ── -->
+  <div class="vpm-stats" *ngIf="!loading && posts.length > 0">
+    <div class="stat-pill">
+      <i class="fas fa-file-alt"></i>
+      <span>{{ articleCount }} article{{ articleCount !== 1 ? 's' : '' }}</span>
+    </div>
+    <div class="stat-pill video">
+      <i class="fas fa-video"></i>
+      <span>{{ videoCount }} vidéo{{ videoCount !== 1 ? 's' : '' }}</span>
+    </div>
+    <div class="stat-pill total">
+      <i class="fas fa-layer-group"></i>
+      <span>{{ posts.length }} au total</span>
+    </div>
+  </div>
+
+  <!-- ── Chargement ── -->
+  <div class="vpm-loading" *ngIf="loading">
+    <div class="loader-ring"></div>
+    <span>Chargement des publications…</span>
+  </div>
+
+  <!-- ── Vide ── -->
+  <div class="vpm-empty" *ngIf="!loading && posts.length === 0">
+    <div class="empty-icon"><i class="fas fa-newspaper"></i></div>
+    <h3>Aucune publication pour l'instant</h3>
+    <p>Partagez vos conseils avec les agriculteurs en créant votre premier article ou vidéo.</p>
+    <button class="btn-new" (click)="openCreate()">
+      <i class="fas fa-plus"></i> Créer ma première publication
+    </button>
+  </div>
+
+  <!-- ── Liste ── -->
+  <div class="vpm-list" *ngIf="!loading && posts.length > 0">
+    <div class="post-card" *ngFor="let post of posts">
+
+      <!-- Badge -->
+      <div class="post-badge" [class.article-badge]="post.type==='ARTICLE'" [class.video-badge]="post.type==='VIDEO'">
+        <i [class]="post.type==='ARTICLE' ? 'fas fa-file-alt' : 'fas fa-video'"></i>
+        {{ post.type === 'ARTICLE' ? 'Article' : 'Vidéo' }}
+      </div>
+
+      <!-- Média -->
+      <div class="post-media" *ngIf="post.mediaUrl">
+        <img *ngIf="post.type === 'ARTICLE'" [src]="mediaUrl(post)" [alt]="post.titre" class="post-img" loading="lazy">
+        <video *ngIf="post.type === 'VIDEO'" controls preload="metadata" class="post-video" [src]="mediaUrl(post)">
+          Votre navigateur ne supporte pas la lecture vidéo.
+        </video>
+      </div>
+
+      <div class="post-body">
+        <h3 class="post-title">{{ post.titre }}</h3>
+        <p class="post-desc" *ngIf="post.description">{{ descriptionText(post) }}</p>
+        <div class="post-date">
+          <i class="fas fa-calendar-alt"></i> {{ formatDate(post.createdAt) }}
+        </div>
+      </div>
+
+      <div class="post-actions">
+        <button class="act-btn edit-btn" (click)="openEdit(post)" title="Modifier">
+          <i class="fas fa-edit"></i> Modifier
+        </button>
+        <button class="act-btn del-btn" (click)="confirmDelete(post.id)" title="Supprimer">
+          <i class="fas fa-trash"></i> Supprimer
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MODAL : Créer / Modifier
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>{{ editingPost ? 'Modifier la publication' : 'Nouvelle publication' }}</h3>
+      <button class="modal-close" (click)="closeForm()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="modal-form" autocomplete="off">
+
+      <!-- Type -->
+      <div class="field-group">
+        <label class="field-label"><i class="fas fa-tag"></i> Type de publication *</label>
+        <div class="type-toggle">
+          <label class="type-opt" [class.active]="f['type'].value === 'ARTICLE'">
+            <input type="radio" formControlName="type" value="ARTICLE">
+            <i class="fas fa-file-alt"></i> Article
+          </label>
+          <label class="type-opt video" [class.active]="f['type'].value === 'VIDEO'">
+            <input type="radio" formControlName="type" value="VIDEO">
+            <i class="fas fa-video"></i> Vidéo
+          </label>
+        </div>
+      </div>
+
+      <!-- Titre -->
+      <div class="field-group">
+        <label class="field-label"><i class="fas fa-heading"></i> Titre *</label>
+        <input formControlName="titre" type="text" class="field-input"
+          placeholder="Ex : Vaccination printanière pour bovins"
+          [class.field-err]="f['titre'].invalid && f['titre'].touched">
+        <span class="err-msg" *ngIf="f['titre'].invalid && f['titre'].touched">
+          Le titre est requis (minimum 3 caractères)
+        </span>
+      </div>
+
+      <!-- Description -->
+      <div class="field-group">
+        <label class="field-label"><i class="fas fa-align-left"></i> Description</label>
+        <div class="rich-editor">
+          <div class="editor-toolbar" (click)="$event.stopPropagation()">
+            <select class="toolbar-select" title="Style" (change)="setBlock($event)">
+              <option value="p">Paragraphe</option>
+              <option value="h2">Titre</option>
+              <option value="h3">Sous-titre</option>
+              <option value="blockquote">Citation</option>
+            </select>
+            <select class="toolbar-select" title="Police" (change)="setFont($event)">
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Courier New">Courier</option>
+            </select>
+            <select class="toolbar-select small" title="Taille" (change)="setFontSize($event)">
+              <option value="3">Normal</option>
+              <option value="2">Petit</option>
+              <option value="4">Grand</option>
+              <option value="5">Tres grand</option>
+            </select>
+            <input class="toolbar-color" type="color" value="#374151" title="Couleur" (input)="setColor($event)">
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" title="Gras" (click)="formatText('bold')"><i class="fas fa-bold"></i></button>
+            <button type="button" class="toolbar-btn" title="Italique" (click)="formatText('italic')"><i class="fas fa-italic"></i></button>
+            <button type="button" class="toolbar-btn" title="Souligne" (click)="formatText('underline')"><i class="fas fa-underline"></i></button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" title="Liste a puces" (click)="formatText('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+            <button type="button" class="toolbar-btn" title="Liste numerotee" (click)="formatText('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+            <button type="button" class="toolbar-btn" title="Aligner a gauche" (click)="formatText('justifyLeft')"><i class="fas fa-align-left"></i></button>
+            <button type="button" class="toolbar-btn" title="Centrer" (click)="formatText('justifyCenter')"><i class="fas fa-align-center"></i></button>
+            <button type="button" class="toolbar-btn" title="Aligner a droite" (click)="formatText('justifyRight')"><i class="fas fa-align-right"></i></button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" title="Lien" (click)="addLink()"><i class="fas fa-link"></i></button>
+            <button type="button" class="toolbar-btn" title="Effacer le style" (click)="formatText('removeFormat')"><i class="fas fa-eraser"></i></button>
+            <button type="button" class="toolbar-btn" title="Annuler" (click)="formatText('undo')"><i class="fas fa-undo"></i></button>
+          </div>
+          <div
+            #descriptionEditor
+            class="editor-area"
+            contenteditable="true"
+            data-placeholder="Decrivez le contenu de votre publication..."
+            (input)="syncDescriptionFromEditor()"
+            (keyup)="saveEditorSelection()"
+            (mouseup)="saveEditorSelection()"
+            (blur)="syncDescriptionFromEditor()"></div>
+        </div>
+      </div>
+
+      <!-- Média -->
+      <div class="field-group">
+        <label class="field-label">
+          <i [class]="isVideo ? 'fas fa-video' : 'fas fa-image'"></i>
+          {{ isVideo ? 'Vidéo' : 'Image de couverture' }}
+          <span class="optional">(optionnel)</span>
+        </label>
+
+        <!-- Preview -->
+        <div class="media-preview" *ngIf="filePreviewUrl">
+          <img *ngIf="!isVideo" [src]="filePreviewUrl" alt="Aperçu" class="preview-img">
+          <video *ngIf="isVideo" [src]="filePreviewUrl" controls class="preview-video" preload="metadata"></video>
+          <button type="button" class="remove-media" (click)="filePreviewUrl = null; selectedFile = null">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <label class="upload-zone" [class.video-zone]="isVideo">
+          <input type="file" style="display:none"
+            [accept]="isVideo ? 'video/*' : 'image/*'"
+            (change)="onFileChange($event)">
+          <i [class]="isVideo ? 'fas fa-film' : 'fas fa-cloud-upload-alt'"></i>
+          <span>{{ isVideo ? 'Cliquez pour sélectionner une vidéo (MP4, WebM…)' : 'Cliquez pour sélectionner une image (JPG, PNG…)' }}</span>
+          <span class="upload-hint">{{ isVideo ? 'Max 100 Mo' : 'Max 5 Mo' }}</span>
+        </label>
+        <span class="err-msg" *ngIf="fileError">{{ fileError }}</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="closeForm()" [disabled]="submitting">
+          Annuler
+        </button>
+        <button type="submit" class="btn-submit" [disabled]="submitting">
+          <i class="fas fa-spinner fa-spin" *ngIf="submitting"></i>
+          <i class="fas fa-paper-plane" *ngIf="!submitting"></i>
+          {{ submitting ? 'Enregistrement…' : (editingPost ? 'Mettre à jour' : 'Publier') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MODAL : Confirmation suppression
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="deleteTargetId !== null" (click)="cancelDelete()">
+  <div class="confirm-box" (click)="$event.stopPropagation()">
+    <div class="confirm-icon"><i class="fas fa-trash-alt"></i></div>
+    <h3>Supprimer cette publication ?</h3>
+    <p>Cette action est irréversible. Le contenu et le fichier associé seront définitivement supprimés.</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" (click)="cancelDelete()">Annuler</button>
+      <button class="btn-danger" (click)="doDelete()">
+        <i class="fas fa-trash"></i> Supprimer
+      </button>
+    </div>
+  </div>
+</div>

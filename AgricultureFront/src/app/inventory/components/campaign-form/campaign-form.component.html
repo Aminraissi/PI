@@ -4,7 +4,7 @@
     <div class="modal-header">
       <h2>
         <i class="fas fa-calendar-plus" style="color:#7b2cbf;margin-right:8px;"></i>
-        Planifier une campagne de vaccination
+        Planning a vaccination campaign
       </h2>
       <button class="close-btn" (click)="cancelled.emit()">
         <i class="fas fa-times"></i>
@@ -15,70 +15,84 @@
 
       <div class="form-row">
         <div class="form-group full">
-          <label>Espèce ciblée *</label>
+          <label>Target species *</label>
           <select formControlName="espece" [class.err]="invalid('espece')">
-            <option value="">-- sélectionner une espèce --</option>
+            <option value="">-- Select a species --</option>
             <option *ngFor="let e of speciesOptions" [value]="e">{{ e }}</option>
           </select>
-          <span class="err-msg" *ngIf="invalid('espece')">Champ requis</span>
-
+          <span class="err-msg" *ngIf="invalid('espece')">Field required</span>
           <div class="hint" *ngIf="!loadingSpecies && speciesOptions.length === 0">
-            Aucune espèce disponible. Ajoutez d'abord des animaux.
+            No species available. Please add animals first.
           </div>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Âge min (ans) *</label>
-          <input
-            type="number"
-            formControlName="ageMin"
-            min="0"
-            [class.err]="invalid('ageMin')">
-          <span class="err-msg" *ngIf="invalid('ageMin')">Valeur invalide</span>
+          <label>Minimum age (years) *</label>
+          <input type="number" formControlName="ageMin" min="0" [class.err]="invalid('ageMin')">
+          <span class="err-msg" *ngIf="invalid('ageMin')">Invalid value</span>
         </div>
 
         <div class="form-group">
-          <label>Âge max (ans) *</label>
-          <input
-            type="number"
-            formControlName="ageMax"
-            min="0"
-            [class.err]="invalid('ageMax')">
-          <span class="err-msg" *ngIf="invalid('ageMax')">Valeur invalide</span>
+          <label>Maximum age (years) *</label>
+          <input type="number" formControlName="ageMax" min="0" [class.err]="invalid('ageMax')">
+          <span class="err-msg" *ngIf="invalid('ageMax')">Invalid value</span>
         </div>
 
         <div class="form-group">
-          <label>Date planifiée *</label>
-          <input
-            type="date"
-            formControlName="plannedDate"
-            [class.err]="invalid('plannedDate')">
-          <span class="err-msg" *ngIf="invalid('plannedDate')">Champ requis</span>
+          <label>Planned date *</label>
+          <input type="date" formControlName="plannedDate" [attr.min]="todayIso" [class.err]="invalid('plannedDate')">
+          <span class="err-msg" *ngIf="invalid('plannedDate')">Field required</span>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Produit vaccin *</label>
+          <label>Vaccine product *</label>
           <select formControlName="productId" [class.err]="invalid('productId')">
-            <option [ngValue]="null">-- sélectionner --</option>
+            <option [ngValue]="null">-- Select --</option>
             <option *ngFor="let p of products" [ngValue]="p.id">{{ p.nom }}</option>
           </select>
-          <span class="err-msg" *ngIf="invalid('productId')">Champ requis</span>
+          <span class="err-msg" *ngIf="invalid('productId')">Field required</span>
         </div>
 
         <div class="form-group">
-          <label>Dose par animal *</label>
-          <input
-            type="number"
-            step="0.01"
-            min="0.01"
-            formControlName="dose"
-            placeholder="ex: 2.5"
-            [class.err]="invalid('dose')">
-          <span class="err-msg" *ngIf="invalid('dose')">Valeur invalide</span>
+          <label>Dose per animal *</label>
+          <input type="number" step="0.01" min="0.01" formControlName="dose"
+                 placeholder="ex: 2.5" [class.err]="invalid('dose')">
+          <span class="err-msg" *ngIf="invalid('dose')">Invalid value</span>
+        </div>
+      </div>
+
+      <!-- ✅ Section Google Calendar -->
+      <div class="calendar-section">
+        <div class="calendar-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" formControlName="addToCalendar">
+            <span class="toggle-icon">
+              <img src="https://www.gstatic.com/images/branding/product/2x/calendar_2020q4_48dp.png"
+                   alt="Google Calendar" width="20" height="20">
+            </span>
+            <span class="toggle-text">Add to Google Calendar</span>
+          </label>
+          <span class="toggle-hint" *ngIf="form.get('addToCalendar')?.value">
+            A event will be created on {{ form.get('plannedDate')?.value | date:'dd/MM/yyyy' || '—' }}
+            with reminders 24h and 1h before
+          </span>
+        </div>
+
+        <!-- Statut synchronisation Calendar -->
+        <div class="calendar-status" *ngIf="calendarStatus !== 'idle'">
+          <div class="cs-syncing" *ngIf="calendarStatus === 'syncing'">
+            <i class="fas fa-spinner fa-spin"></i> {{ calendarMessage }}
+          </div>
+          <div class="cs-success" *ngIf="calendarStatus === 'success'">
+            <i class="fas fa-check-circle"></i> {{ calendarMessage }}
+          </div>
+          <div class="cs-error" *ngIf="calendarStatus === 'error'">
+            <i class="fas fa-exclamation-triangle"></i> {{ calendarMessage }}
+          </div>
         </div>
       </div>
 
@@ -87,15 +101,15 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()">
-          Annuler
+        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()"
+                [disabled]="calendarStatus === 'syncing'">
+          Cancel
         </button>
-        <button
-          type="submit"
-          class="btn btn-save"
-          [disabled]="loading || loadingSpecies || speciesOptions.length === 0">
-          <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
-          Planifier
+        <button type="submit" class="btn btn-save"
+                [disabled]="loading || loadingSpecies || speciesOptions.length === 0 || calendarStatus === 'syncing'">
+          <i class="fas fa-spinner fa-spin" *ngIf="loading || calendarStatus === 'syncing'"></i>
+          <i class="fas fa-calendar-check" *ngIf="!loading && calendarStatus === 'idle'"></i>
+          {{ loading ? 'Saving…' : calendarStatus === 'syncing' ? 'Syncing Calendar…' : 'Schedule' }}
         </button>
       </div>
 

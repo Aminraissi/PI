@@ -17,9 +17,12 @@ export interface ReclamationResponse {
   userId: number;
   userFullName: string;
   userEmail: string;
+  userRole?: string | null;
   subject: string;
   category: ReclamationCategory;
   description: string;
+  attachmentUrl?: string | null;
+  attachmentFileName?: string | null;
   status: ReclamationStatus;
   priority: ReclamationPriority;
   createdAt: string;

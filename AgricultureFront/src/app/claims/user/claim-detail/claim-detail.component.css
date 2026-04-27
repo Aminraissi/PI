@@ -1,4 +1,7 @@
-.page-wrap { animation: fadeIn 0.3s ease; }
+.page-wrap {
+  animation: fadeIn 0.3s ease;
+  padding: 28px 32px 40px;
+}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 /* States */
@@ -44,6 +47,20 @@
 .desc-block { padding: 20px; }
 .desc-label { font-size: 12px; font-weight: 700; color: #6b7c6b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 .desc-text { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; }
+.attachment-block { padding: 0 20px 20px; }
+.attachment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f0f8f0;
+  color: #2d7d46;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.attachment-link:hover { background: #e1f1e1; }
 
 /* Thread */
 .thread-card { background: white; border-radius: 16px; border: 1.5px solid #e2e8e2; overflow: hidden; }
@@ -139,6 +156,7 @@
 .ainfo-value.small { font-size: 11px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 768px) {
+  .page-wrap { padding: 20px; }
   .detail-layout { flex-direction: column; }
   .side-col { width: 100%; }
   .info-grid { grid-template-columns: 1fr; }

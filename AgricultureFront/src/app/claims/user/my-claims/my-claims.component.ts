@@ -34,7 +34,7 @@ export class MyClaimsComponent implements OnInit {
     }
     this.claimsService.getByUser(userId).subscribe({
       next: (data) => { this.claims = data; this.loading = false; },
-      error: () => { this.error = 'Impossible de charger vos réclamations.'; this.loading = false; }
+      error: () => { this.error = 'Unable to load your claims.'; this.loading = false; }
     });
   }
 

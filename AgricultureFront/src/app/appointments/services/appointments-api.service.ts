@@ -77,9 +77,9 @@ function normalizeAvailability(av: any): any {
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentsApiService {
-  // Gestion-Inventaire: port 8088, context-path /inventaires
+  
   private inv = 'http://localhost:8088/inventaires/api';
-  // Gestion-User: port 8081, no context-path
+  // Gestion-User: port 8081
   private usr = 'http://localhost:8081/api';
 
 
@@ -89,7 +89,7 @@ export class AppointmentsApiService {
     return new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
   }
 
-  // ── USER SERVICE ──────────────────────────────────────────────
+  
   getAllVets(): Observable<VetUser[]> {
     return this.http.get<VetUser[]>(`${this.usr}/user/getAll`).pipe(
       map((users: any[]) => users.filter(u => u.role === 'VETERINAIRE'))
@@ -104,7 +104,7 @@ export class AppointmentsApiService {
     return this.http.put<VetUser>(`${this.usr}/user/updateaUser`, user);
   }
 
-  // ── AVAILABILITIES ────────────────────────────────────────────
+
   getVetAvailabilities(vetId: number): Observable<VetAvailability[]> {
     return this.http.get<ApiResp<VetAvailability[]>>(
       `${this.inv}/availabilities/veterinarian/${vetId}`, { headers: this.h() }
@@ -129,7 +129,7 @@ export class AppointmentsApiService {
     ).pipe(map(() => void 0));
   }
 
-  // ── UNAVAILABILITIES ──────────────────────────────────────────
+
   getMyUnavailabilities(): Observable<UnavailabilityResponse[]> {
     return this.http.get<ApiResp<UnavailabilityResponse[]>>(
       `${this.inv}/unavailabilities`, { headers: this.h() }
@@ -148,7 +148,7 @@ export class AppointmentsApiService {
     ).pipe(map(() => void 0));
   }
 
-  // ── APPOINTMENTS ──────────────────────────────────────────────
+
   createAppointment(req: CreateAppointmentRequest): Observable<AppointmentResponse> {
     return this.http.post<ApiResp<AppointmentResponse>>(
       `${this.inv}/appointments`, req, { headers: this.h() }
@@ -326,10 +326,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     { headers: this.h() }
   ).pipe(map(r => r.data));
 }
- /**
-   * Récupère la liste des avis d'un vétérinaire.
-   * Les données likedByMe sont calculées côté backend selon l'utilisateur JWT.
-   */
+ 
   getAvisByVet(vetId: number): Observable<AvisResponse[]> {
     return this.http.get<ApiResp<AvisResponse[]>>(
       `${this.inv}/avis/vet/${vetId}`,
@@ -342,10 +339,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     }))));
   }
 
-  /**
-   * Récupère le résumé de notation d'un vétérinaire
-   * (moyenne étoiles, total avis, distribution par note).
-   */
+ 
   getVetRatingSummary(vetId: number): Observable<VetRatingSummary> {
     return this.http.get<ApiResp<VetRatingSummary>>(
       `${this.inv}/avis/vet/${vetId}/summary`,
@@ -353,10 +347,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     ).pipe(map(r => r.data));
   }
 
-  /**
-   * Crée un nouvel avis (agriculteur → vétérinaire).
-   * Un agriculteur ne peut donner qu'un seul avis par vétérinaire.
-   */
+  
   createAvis(req: CreateAvisRequest): Observable<AvisResponse> {
     return this.http.post<ApiResp<AvisResponse>>(
       `${this.inv}/avis`,
@@ -365,10 +356,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     ).pipe(map(r => ({ ...r.data, createdAt: normDate(r.data.createdAt) } as AvisResponse)));
   }
 
-  /**
-   * Toggle le like d'un agriculteur sur un avis.
-   * Si déjà liké → retire le like. Sinon → ajoute le like.
-   */
+  
   toggleLike(avisId: number): Observable<void> {
     return this.http.post<void>(
       `${this.inv}/avis/${avisId}/like`,
@@ -377,9 +365,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     );
   }
 
-  /**
-   * Ajoute un commentaire (réponse d'un agriculteur) sur un avis.
-   */
+ 
   addCommentaire(avisId: number, contenu: string): Observable<CommentaireAvisResponse> {
     return this.http.post<ApiResp<CommentaireAvisResponse>>(
       `${this.inv}/avis/${avisId}/commentaires`,
@@ -388,10 +374,7 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     ).pipe(map(r => ({ ...r.data, createdAt: normDate(r.data.createdAt) } as CommentaireAvisResponse)));
   }
 
-  /**
-   * Ajoute la réponse officielle du vétérinaire à un avis.
-   * Un vétérinaire ne peut répondre qu'une seule fois par avis.
-   */
+  
   addReponseVet(avisId: number, contenu: string): Observable<ReponseAvisResponse> {
     return this.http.post<ApiResp<ReponseAvisResponse>>(
       `${this.inv}/avis/${avisId}/reponse`,
@@ -411,5 +394,42 @@ analyzeChatbotImage(file: File, question = '', audience = 'farmer'): Observable<
     { headers: this.h() }
   ).pipe(map(r => r.data));
 }
+
+
+
+  getVetPosts(vetId: number): Observable<import('../models/appointments.models').VetPost[]> {
+    return this.http.get<ApiResp<import('../models/appointments.models').VetPost[]>>(
+      `${this.inv}/posts/vet/${vetId}`,
+      { headers: this.h() }
+    ).pipe(map(r => r.data));
+  }
+
+  createVetPost(formData: FormData): Observable<import('../models/appointments.models').VetPost> {
+   
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    return this.http.post<ApiResp<import('../models/appointments.models').VetPost>>(
+      `${this.inv}/posts`,
+      formData,
+      { headers }
+    ).pipe(map(r => r.data));
+  }
+
+  updateVetPost(id: number, formData: FormData): Observable<import('../models/appointments.models').VetPost> {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    return this.http.put<ApiResp<import('../models/appointments.models').VetPost>>(
+      `${this.inv}/posts/${id}`,
+      formData,
+      { headers }
+    ).pipe(map(r => r.data));
+  }
+
+  deleteVetPost(id: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.inv}/posts/${id}`,
+      { headers: this.h() }
+    );
+  }
 
 }

@@ -104,6 +104,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
             route: '/farm/calendar',
             roles: ['AGRICULTEUR']
         }
+
+       { label: 'Inventory & Animals',         
+        icon: 'fas fa-boxes',          
+         route: '/inventory',
+          roles: ['AGRICULTEUR']  
+         },
+        { label: 'Veterinaire & IA',
+      icon: 'fas fa-calendar-check', 
+route: '/appointments',
+
+ roles: ['AGRICULTEUR']      },
+
+
            
 
     ];
@@ -280,4 +293,29 @@ export class NavbarComponent implements OnInit, OnDestroy {
         if (!roles || roles.length === 0) return true;
         return this.authService.hasAnyRole(...roles);
     }
+
+
+
+
+
+
+   //profile
+
+    private syncProfileAccess(): void {
+  const role = this.authService.getCurrentRole();
+  this.canEditProfile = this.authService.hasActiveSession() && role !== null && role !== 'ADMIN';
+
+  const profileRoute = '/profile/edit';
+  const hasProfileLink = this.navLinks.some(link => link.route === profileRoute);
+
+  if (this.canEditProfile && !hasProfileLink) {
+    this.navLinks.splice(1, 0, { label: 'Profil', route: profileRoute });
+  }
+
+  if (!this.canEditProfile && hasProfileLink) {
+    this.navLinks = this.navLinks.filter(link => link.route !== profileRoute);
+  }
+}
+
+
 }

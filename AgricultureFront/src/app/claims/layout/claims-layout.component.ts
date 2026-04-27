@@ -13,6 +13,7 @@ export class ClaimsLayoutComponent implements OnInit {
   user: any = null;
 
   navItems = [
+    { label: 'Home', icon: 'fas fa-home', route: '/' },
     { label: 'Mes Réclamations', icon: 'fas fa-list-alt', route: '/claims/my-claims' },
     { label: 'Nouvelle Réclamation', icon: 'fas fa-plus-circle', route: '/claims/new' },
   ];
@@ -39,6 +40,10 @@ export class ClaimsLayoutComponent implements OnInit {
   }
 
   isActive(route: string): boolean {
+    if (route === '/') {
+      return this.router.url === '/';
+    }
+
     return this.router.url.startsWith(route);
   }
 }
