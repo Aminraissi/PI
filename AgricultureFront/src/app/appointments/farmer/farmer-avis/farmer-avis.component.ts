@@ -153,13 +153,37 @@ export class FarmerAvisComponent implements OnInit {
       },
       error: e => {
         this.submittingAvis = false;
-        this.avisError = e.error?.message || 'Error occurred while submitting your review';
+        this.avisError = this.extractErrorMessage(e, 'Error occurred while submitting your review');
       }
     });
   }
 
   get hasInappropriateContent(): boolean {
     return this.newCommentaire.length > 2 && this.badWords.containsBadWord(this.newCommentaire);
+  }
+
+  private extractErrorMessage(error: any, fallback: string): string {
+    if (typeof error?.error === 'string' && error.error.trim()) {
+      return error.error;
+    }
+
+    if (error?.error?.message && String(error.error.message).trim()) {
+      return String(error.error.message);
+    }
+
+    if (error?.error?.error && String(error.error.error).trim()) {
+      return String(error.error.error);
+    }
+
+    if (error?.message && String(error.message).trim()) {
+      return String(error.message);
+    }
+
+    if (error?.status === 400) {
+      return 'Your review was rejected by moderation. Please rephrase it.';
+    }
+
+    return fallback;
   }
 
   // ── Traduction intelligente ───────────────────────────────────────────────

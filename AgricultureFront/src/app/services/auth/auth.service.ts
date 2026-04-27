@@ -463,4 +463,9 @@ export class AuthService {
             .join(' ');
     }
 
+      private storeUser(user: AuthUser): void {
+        const storage = localStorage.getItem(this.userKey) ? localStorage : sessionStorage;
+        storage.setItem(this.userKey, JSON.stringify(user));
+    }
+
 }

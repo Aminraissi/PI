@@ -80,7 +80,7 @@ export class AppointmentsApiService {
   
   private inv = 'http://localhost:8088/inventaires/api';
   // Gestion-User: port 8081
-  private usr = 'http://localhost:8081/api';
+   private usr = 'http://localhost:8089/user/api';
 
 
   constructor(private http: HttpClient, private auth: AuthService) {}
