@@ -35,6 +35,14 @@ public class VaccinationService {
             throw new IllegalArgumentException("ownerId est obligatoire pour créer une campagne");
         }
 
+        if (campaign.getPlannedDate() == null) {
+            throw new BadRequestException("La date planifiee est obligatoire");
+        }
+
+        if (campaign.getPlannedDate().isBefore(LocalDate.now())) {
+            throw new BadRequestException("La date planifiee ne peut pas etre inferieure a la date d'aujourd'hui");
+        }
+
         // Charger le produit vaccin depuis l'inventaire
         InventoryProduct product = productRepository.findById(campaign.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Produit vaccin non trouvé"));
@@ -47,7 +55,7 @@ public class VaccinationService {
         // Récupérer les animaux ciblés
         List<Animal> animals = animalRepo.findByOwnerIdAndEspeceAndAgeBetween(
                 campaign.getOwnerId(),
-               campaign.getEspece().trim().toLowerCase(),
+                campaign.getEspece().trim().toLowerCase(),
                 campaign.getAgeMin(),
                 campaign.getAgeMax()
         );
@@ -152,3 +160,4 @@ public class VaccinationService {
                 .stream().map(mapper::toCampaignAnimalDTO).toList();
     }
 }
+

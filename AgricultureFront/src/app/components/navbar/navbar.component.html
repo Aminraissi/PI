@@ -74,6 +74,9 @@
           </button>
         </ng-container>
         <ng-container *ngIf="isLoggedIn">
+           <button *ngIf="canEditProfile" class="btn-signin" (click)="navigate('/profile/edit')">
+    <i class="fas fa-user-circle"></i> Profile
+  </button>
           <button class="btn-logout" (click)="logout()">
             <i class="fas fa-sign-out-alt"></i> Sign Out
           </button>

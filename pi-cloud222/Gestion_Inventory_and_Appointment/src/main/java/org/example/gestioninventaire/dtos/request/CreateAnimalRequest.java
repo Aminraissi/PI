@@ -17,7 +17,6 @@ public class CreateAnimalRequest {
     @Positive
     private Double poids;
 
-    @NotBlank
     private String reference;
 
     @NotNull

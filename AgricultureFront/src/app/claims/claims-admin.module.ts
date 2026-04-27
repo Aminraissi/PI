@@ -5,8 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { AdminClaimsComponent } from './admin/admin-claims/admin-claims.component';
 import { ClaimDetailComponent } from './user/claim-detail/claim-detail.component';
-// ClaimDetailComponent is declared in ClaimsModule and exported — we import ClaimsModule here.
-import { ClaimsModule } from './claims.module';
+import { ClaimsSharedModule } from './claims-shared.module';
 
 const routes: Routes = [
   { path: '',    component: AdminClaimsComponent },
@@ -20,7 +19,7 @@ const routes: Routes = [
   imports: [
     CommonModule,
     FormsModule,
-    ClaimsModule,          // provides ClaimDetailComponent via exports
+    ClaimsSharedModule,
     RouterModule.forChild(routes),
   ]
 })

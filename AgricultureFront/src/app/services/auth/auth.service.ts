@@ -53,7 +53,45 @@ export interface SignupStep1Request {
     photo?:     string | null;
     telephone?: string | null;
 }
+export interface UserProfile {
+    id: number;
+    nom?: string | null;
+    prenom?: string | null;
+    photo?: string | null;
+    email?: string | null;
+    motDePasse?: string | null;
+    telephone?: string | null;
+    region?: string | null;
+    cin?: string | null;
+    role: BackendRole;
+    adresseCabinet?: string | null;
+    presentationCarriere?: string | null;
+    telephoneCabinet?: string | null;
+    agence?: string | null;
+    certificatTravail?: string | null;
+    nom_organisation?: string | null;
+    logo_organisation?: string | null;
+    description?: string | null;
+}
 
+export interface UserProfileUpdateRequest {
+    nom?: string | null;
+    prenom?: string | null;
+    photo?: string | null;
+    email?: string | null;
+    motDePasse?: string | null;
+    telephone?: string | null;
+    region?: string | null;
+    cin?: string | null;
+    adresseCabinet?: string | null;
+    presentationCarriere?: string | null;
+    telephoneCabinet?: string | null;
+    agence?: string | null;
+    certificatTravail?: string | null;
+    nomOrganisation?: string | null;
+    logoOrganisation?: string | null;
+    description?: string | null;
+}
 export interface SignupStep2Request {
     photo?:                string | null;
     telephone?:            string | null;
@@ -383,4 +421,51 @@ export class AuthService {
         sessionStorage.removeItem(this.tokenKey);
         sessionStorage.removeItem(this.userKey);
     }
+
+
+
+
+//profile
+
+
+    getProfile(userId: number): Observable<UserProfile> {
+        return this.http.get<UserProfile>(`http://localhost:8089/user/api/user/getUser/${userId}`);
+    }
+
+    updateProfile(userId: number, payload: UserProfileUpdateRequest): Observable<UserProfile> {
+        return this.http.put<UserProfile>(`http://localhost:8089/user/api/user/profile/${userId}`, payload).pipe(
+            map(profile => {
+                const current = this.getCurrentUser();
+                if (current) {
+                    const updatedUser: AuthUser = {
+                        ...current,
+                        username: this.buildDisplayName(profile) || current.username,
+                        email: profile.email || current.email
+                    };
+                    this.storeUser(updatedUser);
+                    this.currentUserSubject.next(updatedUser);
+                }
+                return profile;
+            })
+        );
+    }
+
+    uploadProfilePhoto(userId: number, file: File): Observable<UserProfile> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<UserProfile>(`http://localhost:8089/user/api/user/profile/${userId}/photo`, formData);
+    }
+
+     private buildDisplayName(profile: UserProfile): string {
+        return [profile.nom, profile.prenom]
+            .map(value => (value || '').trim())
+            .filter(Boolean)
+            .join(' ');
+    }
+
+      private storeUser(user: AuthUser): void {
+        const storage = localStorage.getItem(this.userKey) ? localStorage : sessionStorage;
+        storage.setItem(this.userKey, JSON.stringify(user));
+    }
+
 }

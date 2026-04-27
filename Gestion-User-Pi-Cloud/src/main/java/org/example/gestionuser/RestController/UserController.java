@@ -5,17 +5,24 @@ import org.example.gestionuser.Services.IUser;
 import org.example.gestionuser.Services.LocalUserFileStorageService;
 import org.example.gestionuser.dtos.AdminProfileReviewRequest;
 import org.example.gestionuser.dtos.FileUploadResponse;
+import org.example.gestionuser.dtos.UserProfileUpdateRequest;
 import org.example.gestionuser.entities.ProfileValidationStatus;
 import org.example.gestionuser.entities.StatutCompte;
 import org.example.gestionuser.entities.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
@@ -89,5 +96,79 @@ public class UserController {
     @PutMapping("/reviewProfile/{id}")
     public User reviewProfile(@PathVariable Long id, @RequestBody AdminProfileReviewRequest request) {
         return iu.reviewProfile(id, request.isApproved(), request.getMotifRefus());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //profile
+    @PutMapping("/profile/{id}")
+    public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody UserProfileUpdateRequest request) {
+        try {
+            return ResponseEntity.ok(iu.updateProfile(id, request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/profile/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadProfilePhoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Image is required");
+            }
+
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+                return ResponseEntity.badRequest().body("Only image files are allowed");
+            }
+
+            User user = iu.getUser(id);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String extension = getExtension(file.getOriginalFilename());
+            String filename = UUID.randomUUID() + extension;
+            Path uploadDir = Paths.get("uploads", "profiles").toAbsolutePath().normalize();
+            Files.createDirectories(uploadDir);
+            Files.copy(file.getInputStream(), uploadDir.resolve(filename));
+
+            user.setPhoto("/user/uploads/profiles/" + filename);
+            return ResponseEntity.ok(iu.updateUser(user));
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Could not save image");
+        }
+    }
+
+    private String getExtension(String originalFilename) {
+        if (originalFilename == null) {
+            return ".jpg";
+        }
+        int dotIndex = originalFilename.lastIndexOf('.');
+        if (dotIndex < 0 || dotIndex == originalFilename.length() - 1) {
+            return ".jpg";
+        }
+        return originalFilename.substring(dotIndex).toLowerCase(Locale.ROOT);
     }
 }

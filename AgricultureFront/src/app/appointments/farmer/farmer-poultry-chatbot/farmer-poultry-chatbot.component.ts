@@ -27,7 +27,7 @@ export class FarmerPoultryChatbotComponent {
     this.result = null;
 
     if (!this.selectedFile) {
-      this.error = 'Veuillez selectionner une image de volaille.';
+      this.error = 'Please select an image of poultry.';
       return;
     }
 
@@ -37,7 +37,7 @@ export class FarmerPoultryChatbotComponent {
       .subscribe({
         next: response => this.result = response,
         error: err => {
-          this.error = err?.error?.message || 'Impossible d analyser l image poultry pour le moment.';
+          this.error = err?.error?.message || 'Unable to analyze the poultry image at the moment.';
         }
       });
   }

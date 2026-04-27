@@ -36,11 +36,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
     activeLink = '/';
     moreDropdownOpen = false;
     activeSubmenu: NavDropdownLink['submenu'] | null = null;
-
+canEditProfile = false;
     navLinks: NavLink[] = [
         { label: 'Home', route: '/' },
         { label: 'Marketplace', route: '/marketplace' },
         { label: 'Forum', route: '/forums' },
+        {label : 'profile', route: '/profile/edit', roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT', 'AGENT', 'VETERINAIRE']},
+         { label: 'Reclamations', route: '/claims', roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT', 'AGENT', 'VETERINAIRE'] },
         {
             label: 'Events',
             route: '/events/listEvents',
@@ -103,7 +105,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
             icon: 'fas fa-calendar',
             route: '/farm/calendar',
             roles: ['AGRICULTEUR']
-        }
+        },
+
+       {
+            label: 'Inventory & Animals',
+            icon: 'fas fa-boxes',
+            route: '/inventory',
+            roles: ['AGRICULTEUR']
+        },
+        {
+            label: 'Veterinaire & IA',
+            icon: 'fas fa-calendar-check',
+            route: '/appointments',
+            roles: ['AGRICULTEUR', 'VETERINAIRE']
+        },
+
+
            
 
     ];
@@ -114,7 +131,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         '/help-request',
         '/farm',
         '/loans',
-        '/expert/assistance-requests'
+        '/expert/assistance-requests',
+        '/profile'
     ];
 
     constructor(
@@ -122,31 +140,36 @@ export class NavbarComponent implements OnInit, OnDestroy {
         private authService: AuthService
     ) {}
 
-    ngOnInit(): void {
-        this.isLoggedIn = this.authService.hasActiveSession();
-        this.isHomePage = this.router.url === '/';
-        this.activeLink = this.router.url.split('?')[0];
+   ngOnInit(): void {
+    this.isLoggedIn = this.authService.hasActiveSession();
+    this.isHomePage = this.router.url === '/';
+    this.activeLink = this.router.url.split('?')[0];
 
-        this.authService.currentUser$
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(user => {
-                this.isLoggedIn = !!user && this.authService.hasActiveSession();
-            });
+    this.syncProfileAccess();
 
-        this.router.events
-            .pipe(
-                filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-                takeUntil(this.destroy$)
-            )
-            .subscribe((e: NavigationEnd) => {
-                this.isLoggedIn = this.authService.hasActiveSession();
-                this.isHomePage = e.urlAfterRedirects === '/';
-                this.activeLink = e.urlAfterRedirects.split('?')[0];
-                this.moreDropdownOpen = false;
-                this.isMobileMenuOpen = false;
-                this.activeSubmenu = null;
-            });
-    }
+    this.authService.currentUser$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(user => {
+            this.isLoggedIn = !!user && this.authService.hasActiveSession();
+            this.syncProfileAccess();
+        });
+
+    this.router.events
+        .pipe(
+            filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+            takeUntil(this.destroy$)
+        )
+        .subscribe((e: NavigationEnd) => {
+            this.isLoggedIn = this.authService.hasActiveSession();
+            this.isHomePage = e.urlAfterRedirects === '/';
+            this.activeLink = e.urlAfterRedirects.split('?')[0];
+            this.moreDropdownOpen = false;
+            this.isMobileMenuOpen = false;
+            this.activeSubmenu = null;
+            this.syncProfileAccess();
+        });
+}
+
 
     get visibleNavLinks(): NavLink[] {
         return this.navLinks.filter(link => this.canAccess(link.roles));
@@ -280,4 +303,20 @@ export class NavbarComponent implements OnInit, OnDestroy {
         if (!roles || roles.length === 0) return true;
         return this.authService.hasAnyRole(...roles);
     }
+
+
+
+
+
+
+     //profile
+
+    private syncProfileAccess(): void {
+        const role = this.authService.getCurrentRole();
+       
+    }
+
+    
+
+
 }

@@ -1,4 +1,7 @@
-.page-wrap { animation: fadeIn 0.3s ease; }
+.page-wrap {
+  animation: fadeIn 0.3s ease;
+  padding: 28px 32px 40px;
+}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 /* Header */
@@ -60,6 +63,19 @@
 .user-name { display: block; font-size: 13px; font-weight: 600; color: #1a2e1a; }
 .user-email { display: block; font-size: 11px; color: #a3b5a3; }
 
+.role-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #eef6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .subject-cell { font-size: 14px; font-weight: 600; color: #1a2e1a; display: block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .cat-tag { font-size: 12px; font-weight: 600; padding: 3px 10px; background: #f4f7f4; color: #6b7c6b; border-radius: 20px; white-space: nowrap; }
@@ -83,6 +99,7 @@
 .btn-open:hover { background: #2d7d46; color: white; }
 
 @media (max-width: 768px) {
+  .page-wrap { padding: 20px; }
   .stats-row { gap: 10px; }
   .stat-card { min-width: 80px; padding: 14px; }
   .stat-num { font-size: 22px; }

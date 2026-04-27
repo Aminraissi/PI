@@ -1,0 +1,261 @@
+.profile-page {
+  min-height: 100vh;
+  padding: 112px 24px 48px;
+  background: #f4f7f2;
+  font-family: 'Poppins', sans-serif;
+}
+
+.profile-shell {
+  width: min(1040px, 100%);
+  margin: 0 auto;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-kicker {
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile-header h1 {
+  margin: 4px 0 0;
+  color: #223024;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.back-btn,
+.save-btn {
+  border: none;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.back-btn {
+  background: #fff;
+  color: #2d4930;
+  padding: 11px 16px;
+  box-shadow: 0 6px 18px rgba(43, 75, 46, 0.08);
+}
+
+.profile-form,
+.state-panel {
+  background: #fff;
+  border: 1px solid #e2eadf;
+  border-radius: 8px;
+  box-shadow: 0 16px 45px rgba(46, 78, 50, 0.1);
+}
+
+.state-panel {
+  padding: 28px;
+  color: #526458;
+}
+
+.profile-form {
+  padding: 28px;
+}
+
+.media-panel {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.avatar-upload {
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #bdd2bb;
+  border-radius: 50%;
+  background: #f7faf5;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+}
+
+.avatar-upload img,
+.logo-upload img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6fa86d;
+  font-size: 46px;
+}
+
+.avatar-action {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 9px 6px;
+  background: rgba(38, 91, 43, 0.88);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.form-group.wide {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  color: #2b3f2d;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.input-box {
+  position: relative;
+}
+
+.input-box i {
+  position: absolute;
+  left: 14px;
+  top: 15px;
+  color: #4caf50;
+  font-size: 14px;
+}
+
+.input-box input,
+.input-box textarea {
+  width: 100%;
+  border: 1.5px solid #dfe8dd;
+  border-radius: 8px;
+  background: #fbfdf9;
+  color: #243426;
+  font: inherit;
+  padding: 13px 14px 13px 40px;
+  outline: none;
+}
+
+.input-box textarea {
+  resize: vertical;
+}
+
+.input-box input:focus,
+.input-box textarea:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.12);
+}
+
+.has-error input,
+.has-error textarea {
+  border-color: #d93025;
+}
+
+.role-section {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid #e8efe5;
+}
+
+.role-section h2 {
+  color: #243426;
+  font-size: 18px;
+  margin: 0 0 16px;
+}
+
+.logo-upload {
+  height: 96px;
+  border: 2px dashed #bdd2bb;
+  border-radius: 8px;
+  background: #f7faf5;
+  color: #3b703e;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.message {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.message.error {
+  color: #a8071a;
+  background: #fff1f0;
+}
+
+.message.success {
+  color: #1b5e20;
+  background: #edf7ed;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.save-btn {
+  background: #2e7d32;
+  color: #fff;
+  padding: 13px 24px;
+  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.24);
+}
+
+.save-btn:hover:not(:disabled),
+.back-btn:hover {
+  transform: translateY(-2px);
+}
+
+.save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .profile-page {
+    padding: 96px 14px 32px;
+  }
+
+  .profile-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-form {
+    padding: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

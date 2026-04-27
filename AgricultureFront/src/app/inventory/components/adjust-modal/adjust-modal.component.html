@@ -1,34 +1,34 @@
 <div class="modal-overlay" (click)="cancelled.emit()">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2><i class="fas fa-sliders-h" style="color:#2d6a2d;margin-right:8px;"></i>Ajuster stock — {{ product.nom }}</h2>
+      <h2><i class="fas fa-sliders-h" style="color:#2d6a2d;margin-right:8px;"></i>Adjust Stock — {{ product.nom }}</h2>
       <button class="close-btn" (click)="cancelled.emit()"><i class="fas fa-times"></i></button>
     </div>
     <form [formGroup]="form" (ngSubmit)="submit()" class="modal-body">
       <div class="stock-info">Stock actuel : <strong>{{ product.currentQuantity }} {{ product.unit }}</strong></div>
-      <p class="hint">Entrez la <strong>nouvelle quantité réelle</strong> (positive ou négative pour correction).</p>
+      <p class="hint">Enter the <strong>new actual quantity</strong> (positive or negative for correction).</p>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Nouvelle quantité *</label>
+          <label>New Quantity *</label>
           <input type="number" formControlName="quantity" step="0.01"
                  placeholder="ex: 15.5" [class.err]="invalid('quantity')">
-          <span class="err-msg" *ngIf="invalid('quantity')">Valeur requise</span>
+          <span class="err-msg" *ngIf="invalid('quantity')">Value required</span>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group full">
           <label>Note (optionnel)</label>
-          <input formControlName="note" placeholder="Raison de l'ajustement…">
+          <input formControlName="note" placeholder="Adjustment note…">
         </div>
       </div>
 
       <div class="err-msg" *ngIf="error">{{ error }}</div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()">Annuler</button>
+        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()">Cancel</button>
         <button type="submit" class="btn btn-save" [disabled]="loading">
-          <i class="fas fa-spinner fa-spin" *ngIf="loading"></i> Ajuster
+          <i class="fas fa-spinner fa-spin" *ngIf="loading"></i> Adjust
         </button>
       </div>
     </form>

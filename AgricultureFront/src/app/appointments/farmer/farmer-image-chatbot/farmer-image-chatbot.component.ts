@@ -27,7 +27,7 @@ export class FarmerImageChatbotComponent {
     this.result = null;
 
     if (!this.selectedFile) {
-      this.error = 'Veuillez selectionner une image de votre cattle.';
+      this.error = 'Please select an image of your livestock.';
       return;
     }
 
@@ -37,7 +37,7 @@ export class FarmerImageChatbotComponent {
       .subscribe({
         next: response => this.result = response,
         error: err => {
-          this.error = err?.error?.message || 'Impossible d analyser l image pour le moment.';
+          this.error = err?.error?.message || 'Unable to analyze the image at the moment.';
         }
       });
   }

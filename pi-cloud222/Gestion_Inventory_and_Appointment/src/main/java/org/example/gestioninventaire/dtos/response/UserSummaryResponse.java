@@ -12,4 +12,5 @@ public class UserSummaryResponse {
     private String email;
     private String telephone;
     private String role;
+    private String region;  // Pour la boutique globale (filtrage par région vétérinaire)
 }

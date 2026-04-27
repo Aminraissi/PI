@@ -3,6 +3,7 @@ package org.example.gestioninventaire.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.gestioninventaire.enums.ProductCategory;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -27,6 +28,14 @@ public class InventoryProduct {
     private Double minThreshold;
 
     private Long ownerId;
+
+    // Dernieres infos d'achat fournisseur (synchronisees depuis les lots)
+    private LocalDate dateAchat;
+    private LocalDate datePeremption;
+    private Double prixAchat;
+
+    @Column(columnDefinition = "TEXT")
+    private String note;
 
     // ── Boutique en ligne (nullable) ──────────────────────────────────
     /** Prix de vente affiché aux agriculteurs. Null = non mis en vente */

@@ -32,6 +32,11 @@ import { SharedModule }                      from './shared/shared.module';
 import { ShopModule }                        from './shop/shop.module';
 import { ToastComponent }                    from './shared/components/toast/toast.component';
 import { AppToastComponent }                 from './shared/components/app-toast/app-toast.component';
+import { FarmerModule } from './farmer/farmer.module';
+import { AnimalsModule } from './animals/animals.module';
+import { ProfileEditComponent }              from './components/profile-edit/profile-edit.component';
+
+
 
 registerLocaleData(localeFr);
 
@@ -58,6 +63,7 @@ registerLocaleData(localeFr);
         ExpertAssistanceRequestsComponent,
         ToastComponent,
         AppToastComponent,
+        ProfileEditComponent,
     ],
     imports: [
         BrowserModule,
@@ -69,6 +75,10 @@ registerLocaleData(localeFr);
         AppRoutingModule,
         SharedModule,
         ShopModule,
+
+         FarmerModule,
+        AnimalsModule,
+
     ],
     providers: [
         {

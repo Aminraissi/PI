@@ -1,5 +1,6 @@
 package org.example.gestionuser.Services;
 
+import org.example.gestionuser.dtos.UserProfileUpdateRequest;
 import org.example.gestionuser.entities.ProfileValidationStatus;
 import org.example.gestionuser.entities.StatutCompte;
 import org.example.gestionuser.entities.User;
@@ -24,6 +25,11 @@ public interface IUser {
     public List<User> getInstitutions();
 
     User reviewProfile(Long id, boolean approved, String motifRefus);
+
+
+
+
+    User updateProfile(Long id, UserProfileUpdateRequest request);
 
 
 }

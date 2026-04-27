@@ -3,7 +3,7 @@
 .brand{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
 .logo-img{width:32px;height:32px;object-fit:contain}
 .logo-txt{color:#7ec67e;font-size:1.1rem;font-weight:700}
-.nav{flex:1;padding:18px 12px;display:flex;flex-direction:column;gap:6px}
+.nav{flex:1;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0}
 .ni{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:transparent;border:none;color:rgba(255,255,255,.55);font-size:.9rem;cursor:pointer;transition:all .2s;text-align:left;width:100%}
 .ni i{width:18px;text-align:center;font-size:.95rem}
 .ni:hover{background:rgba(126,198,126,.12);color:#7ec67e}
@@ -48,3 +48,23 @@
 .boutique-nav.active { background: rgba(255,213,79,0.15) !important; }
 .boutique-nav.active i,
 .boutique-nav.active span { color: #ffd54f !important; }
+
+/* Statistics nav button */
+.stats-nav { border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px; padding-top: 4px; }
+.stats-nav i { color: #64b5f6; }
+.stats-nav.active { background: rgba(100,181,246,0.15) !important; }
+.stats-nav.active i,
+.stats-nav.active span { color: #64b5f6 !important; }
+
+/* Sidebar menu scrollbar */
+.nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126,198,126,.45) transparent;
+}
+.nav::-webkit-scrollbar { width: 6px; }
+.nav::-webkit-scrollbar-track { background: transparent; }
+.nav::-webkit-scrollbar-thumb {
+  background: rgba(126,198,126,.45);
+  border-radius: 8px;
+}
+.nav::-webkit-scrollbar-thumb:hover { background: rgba(126,198,126,.65); }

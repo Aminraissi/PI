@@ -1,21 +1,17 @@
-<!-- ============================================================
-     MES RENDEZ-VOUS — UI Premium
-     ============================================================ -->
 
-<!-- Header Page -->
 <div class="page-header">
   <div class="header-left">
     <div class="header-icon">
       <i class="fas fa-calendar-check"></i>
     </div>
     <div>
-      <h1 class="pt">Mes rendez-vous</h1>
-      <p class="ps">Historique de toutes vos demandes de consultation vétérinaire</p>
+      <h1 class="pt">My Appointments</h1>
+      <p class="ps">History of all your veterinary consultation requests</p>
     </div>
   </div>
   <button class="btn-book" (click)="switchView.emit('book')">
     <i class="fas fa-plus"></i>
-    <span>Nouveau RDV</span>
+    <span>New Appointment</span>
   </button>
 </div>
 
@@ -25,7 +21,7 @@
   <div class="stat-card stat-total">
     <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
     <div class="stat-body">
-      <span class="stat-label">Total RDV</span>
+      <span class="stat-label">Total Appointments</span>
       <strong class="stat-value">{{ stats.totalAppointments }}</strong>
     </div>
   </div>
@@ -33,7 +29,7 @@
   <div class="stat-card stat-pending">
     <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
     <div class="stat-body">
-      <span class="stat-label">En attente</span>
+      <span class="stat-label">Pending</span>
       <strong class="stat-value">{{ stats.pendingAppointments }}</strong>
     </div>
   </div>
@@ -41,7 +37,7 @@
   <div class="stat-card stat-accepted">
     <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
     <div class="stat-body">
-      <span class="stat-label">Acceptés</span>
+      <span class="stat-label">Accepted</span>
       <strong class="stat-value">{{ stats.acceptedAppointments }}</strong>
     </div>
   </div>
@@ -49,7 +45,7 @@
   <div class="stat-card stat-refused">
     <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
     <div class="stat-body">
-      <span class="stat-label">Refusés</span>
+      <span class="stat-label">Refused</span>
       <strong class="stat-value">{{ stats.refusedAppointments }}</strong>
     </div>
   </div>
@@ -57,7 +53,7 @@
   <div class="stat-card stat-upcoming">
     <div class="stat-icon"><i class="fas fa-clock"></i></div>
     <div class="stat-body">
-      <span class="stat-label">À venir</span>
+      <span class="stat-label">Upcoming</span>
       <strong class="stat-value">{{ stats.upcomingAppointments }}</strong>
     </div>
   </div>
@@ -65,7 +61,7 @@
   <div class="stat-card stat-animals">
     <div class="stat-icon"><i class="fas fa-paw"></i></div>
     <div class="stat-body">
-      <span class="stat-label">Animaux suivis</span>
+      <span class="stat-label">Distinct Animals</span>
       <strong class="stat-value">{{ stats.distinctAnimals }}</strong>
     </div>
   </div>
@@ -75,7 +71,7 @@
 <!-- Chargement -->
 <div *ngIf="loading" class="sm">
   <i class="fas fa-spinner fa-spin"></i>
-  <span>Chargement de vos rendez-vous…</span>
+  <span>Loading your appointments…</span>
 </div>
 
 <!-- Erreur -->
@@ -87,11 +83,11 @@
 <!-- État vide -->
 <div class="empty" *ngIf="!loading && !error && appointments.length === 0">
   <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
-  <h3 class="empty-title">Aucun rendez-vous</h3>
-  <p class="empty-desc">Vous n'avez pas encore pris de rendez-vous vétérinaire.<br>Commencez dès maintenant pour le suivi de vos animaux.</p>
+  <h3 class="empty-title">No Appointments</h3>
+  <p class="empty-desc">You haven't scheduled any veterinary appointments yet.<br>Start now to keep track of your animals' health.</p>
   <button class="btn-book" (click)="switchView.emit('book')">
     <i class="fas fa-plus"></i>
-    <span>Prendre mon premier RDV</span>
+    <span>Book Your First Appointment</span>
   </button>
 </div>
 
@@ -122,7 +118,7 @@
           </span>
         </span>
         <span class="appt-date appt-date-undefined" *ngIf="!a.dateHeure">
-          <i class="fas fa-calendar-alt"></i> Date non définie
+          <i class="fas fa-calendar-alt"></i> Date not defined
         </span>
       </div>
     </div>
@@ -132,11 +128,11 @@
       <div class="info-row">
 
         <div class="info-item">
-          <span class="il"><i class="fas fa-user-md"></i> Vétérinaire</span>
+          <span class="il"><i class="fas fa-user-md"></i> Veterinarian</span>
           <span class="iv" *ngIf="a.veterinarian">
             Dr. {{ a.veterinarian.prenom }} {{ a.veterinarian.nom }}
           </span>
-          <span class="iv empty-val" *ngIf="!a.veterinarian">Non assigné</span>
+          <span class="iv empty-val" *ngIf="!a.veterinarian">Not assigned</span>
         </div>
 
         <div class="info-item">
@@ -145,16 +141,16 @@
             <span class="animal-espece">{{ a.animal.espece }}</span>
             <span class="animal-ref">{{ a.animal.reference }}</span>
           </span>
-          <span class="iv empty-val" *ngIf="!a.animal">Non renseigné</span>
+          <span class="iv empty-val" *ngIf="!a.animal">Not specified</span>
         </div>
 
         <div class="info-item">
-          <span class="il"><i class="fas fa-notes-medical"></i> Motif</span>
-          <span class="iv motif-text">{{ a.motif || 'Non précisé' }}</span>
+          <span class="il"><i class="fas fa-notes-medical"></i> Reason</span>
+          <span class="iv motif-text">{{ a.motif || 'Not specified' }}</span>
         </div>
 
         <div class="info-item" *ngIf="a.timeSlot">
-          <span class="il"><i class="fas fa-business-time"></i> Créneau</span>
+          <span class="il"><i class="fas fa-business-time"></i> Time slot</span>
           <span class="iv créneau">
             <i class="fas fa-play"></i> {{ a.timeSlot.startTime | slice:0:5 }}
             &nbsp;—&nbsp;
@@ -168,7 +164,7 @@
       <div class="refusal-reason" *ngIf="a.appointmentStatus === 'REFUSEE' && a.refusalReason">
         <div class="refusal-icon"><i class="fas fa-ban"></i></div>
         <div>
-          <span class="refusal-label">Motif de refus</span>
+          <span class="refusal-label">Refusal Reason</span>
           <strong class="refusal-text">{{ a.refusalReason }}</strong>
         </div>
       </div>
@@ -178,7 +174,7 @@
     <!-- Footer -->
     <div class="card-footer">
       <span class="created-at" *ngIf="a.createdAt">
-        <i class="fas fa-history"></i> Créé le {{ a.createdAt | date:'dd/MM/yyyy' }}
+        <i class="fas fa-history"></i> Created on {{ a.createdAt | date:'dd/MM/yyyy' }}
       </span>
       <span class="created-at" *ngIf="!a.createdAt"></span>
 
@@ -188,7 +184,7 @@
         (click)="cancel(a)">
         <i class="fas fa-spinner fa-spin" *ngIf="cancellingId === a.id"></i>
         <i class="fas fa-times" *ngIf="cancellingId !== a.id"></i>
-        <span>Annuler le RDV</span>
+        <span>Cancel Appointment</span>
       </button>
     </div>
 

@@ -17,21 +17,21 @@
 
       <div class="form-row">
         <div class="form-group full">
-          <label>Nom du vaccin *</label>
+          <label>Vaccin name *</label>
           <input formControlName="vaccinName" placeholder="ex: FMD, Brucellose…"
                  [class.err]="invalid('vaccinName')">
-          <span class="err-msg" *ngIf="invalid('vaccinName')">Champ requis</span>
+          <span class="err-msg" *ngIf="invalid('vaccinName')">Field is required</span>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Date de vaccination *</label>
+          <label>Date of vaccination *</label>
           <input type="date" formControlName="dateVaccination" [class.err]="invalid('dateVaccination')">
-          <span class="err-msg" *ngIf="invalid('dateVaccination')">Date requise</span>
+          <span class="err-msg" *ngIf="invalid('dateVaccination')">Date required</span>
         </div>
         <div class="form-group">
-          <label>Prochaine vaccination</label>
+          <label>Next vaccination</label>
           <input type="date" formControlName="nextDueDate">
         </div>
       </div>
@@ -46,10 +46,10 @@
       <div class="err-msg global" *ngIf="error">{{ error }}</div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()">Annuler</button>
+        <button type="button" class="btn btn-cancel" (click)="cancelled.emit()">Cancel</button>
         <button type="submit" class="btn btn-vaccine" [disabled]="loading">
           <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
-          Enregistrer
+          Save
         </button>
       </div>
 

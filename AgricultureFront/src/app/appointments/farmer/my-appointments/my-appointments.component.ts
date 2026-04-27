@@ -43,14 +43,14 @@ export class MyAppointmentsComponent implements OnInit {
     error: e => {
       this.loading = false;
       this.error = e.status === 0
-        ? 'Serveur inaccessible (port 8088).'
-        : e.error?.message || 'Erreur de chargement';
+        ? 'Server inaccessible (port 8088).'
+        : e.error?.message || 'Error loading appointments';
     }
   });
 }
 
   cancel(appt: AppointmentResponse) {
-    if (!confirm('Annuler ce rendez-vous ?')) return;
+    if (!confirm('Cancel this appointment?')) return;
     this.cancellingId = appt.id;
     this.api.cancelAppointment(appt.id).subscribe({
       next: () => { this.cancellingId = null; this.load(); },
@@ -63,7 +63,7 @@ export class MyAppointmentsComponent implements OnInit {
   }
 
   statusLabel(s: AppointmentStatus) {
-    return { EN_ATTENTE:'En attente', ACCEPTEE:'Acceptée', REFUSEE:'Refusée', ANNULEE:'Annulée' }[s] || s;
+    return { EN_ATTENTE:'In Progress', ACCEPTEE:'Accepted', REFUSEE:'Refused', ANNULEE:'Cancelled' }[s] || s;
   }
   statusClass(s: AppointmentStatus) {
     return { EN_ATTENTE:'st-wait', ACCEPTEE:'st-ok', REFUSEE:'st-refused', ANNULEE:'st-cancelled' }[s] || '';

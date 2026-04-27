@@ -20,7 +20,7 @@ export class VetAiChatbotComponent {
   chatMessages: AiChatMessage[] = [
     {
       role: 'ai',
-      content: 'Bonjour. Je suis votre chatbot veterinaire intelligent. Vous pouvez me decrire librement le cas de votre animal ici.'
+      content: 'Hello. I am your intelligent AI vet. Feel free to describe your animal\'s case here.'
     }
   ];
 
@@ -60,17 +60,17 @@ export class VetAiChatbotComponent {
             ...this.chatMessages,
             {
               role: 'ai',
-              content: response.answer || 'Je n ai pas pu generer de reponse pour le moment.'
+              content: response.answer || 'I could not generate a response at the moment.'
             }
           ];
         },
         error: err => {
-          this.chatError = err?.error?.message || 'La conversation IA a echoue.';
+          this.chatError = err?.error?.message || 'The AI conversation failed.';
           this.chatMessages = [
             ...this.chatMessages,
             {
               role: 'ai',
-              content: 'Je n ai pas pu repondre pour le moment. Verifiez le service IA puis reessayez.'
+              content: 'I could not respond at the moment. Please check the AI service and try again.'
             }
           ];
         }

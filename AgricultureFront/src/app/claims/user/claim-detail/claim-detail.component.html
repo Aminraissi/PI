@@ -3,14 +3,14 @@
   <!-- Loading -->
   <div class="state-box" *ngIf="loading">
     <div class="spinner"></div>
-    <p>Chargement du ticket...</p>
+    <p>Loading ticket...</p>
   </div>
 
   <!-- Error -->
   <div class="state-box error" *ngIf="error">
     <i class="fas fa-exclamation-triangle fa-2x"></i>
     <p>{{ error }}</p>
-    <button class="btn-back-inline" (click)="back()">Retour</button>
+    <button class="btn-back-inline" (click)="back()">Back</button>
   </div>
 
   <ng-container *ngIf="!loading && !error && claim">
@@ -36,34 +36,42 @@
         <div class="info-card">
           <div class="info-card-header">
             <i class="fas fa-file-alt"></i>
-            <span>Détails de la réclamation</span>
+            <span>Claim Details</span>
           </div>
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label"><i class="fas fa-tag"></i> Catégorie</span>
+              <span class="info-label"><i class="fas fa-tag"></i> Category</span>
               <span class="info-value">{{ CATEGORY_LABELS[claim.category] }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label"><i class="fas fa-flag"></i> Priorité</span>
+              <span class="info-label"><i class="fas fa-flag"></i> Priority</span>
               <span class="info-value priority-val" [class]="priorityClass(claim.priority)">{{ PRIORITY_LABELS[claim.priority] }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label"><i class="fas fa-user"></i> Utilisateur</span>
+              <span class="info-label"><i class="fas fa-user"></i> User</span>
               <span class="info-value">{{ claim.userFullName || claim.userEmail }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label"><i class="far fa-calendar-alt"></i> Créé le</span>
+              <span class="info-label"><i class="far fa-calendar-alt"></i> Created at</span>
               <span class="info-value">{{ claim.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
             <div class="info-item" *ngIf="claim.closedAt">
-              <span class="info-label"><i class="fas fa-check-circle"></i> Clôturé le</span>
+              <span class="info-label"><i class="fas fa-check-circle"></i> Closed at</span>
               <span class="info-value">{{ claim.closedAt | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
           </div>
 
           <div class="desc-block">
-            <div class="desc-label">Description initiale</div>
+            <div class="desc-label">Initial Description</div>
             <p class="desc-text">{{ claim.description }}</p>
+          </div>
+
+          <div class="attachment-block" *ngIf="claim.attachmentUrl">
+            <div class="desc-label">Attachment</div>
+            <a class="attachment-link" [href]="attachmentUrl()" target="_blank" rel="noopener">
+              <i class="fas fa-paperclip"></i>
+              {{ claim.attachmentFileName || 'Open attachment' }}
+            </a>
           </div>
         </div>
 
@@ -71,7 +79,7 @@
         <div class="thread-card">
           <div class="thread-header">
             <i class="fas fa-comments"></i>
-            <span>Échanges</span>
+            <span>Messages</span>
             <span class="msg-count">{{ claim.messages.length }}</span>
           </div>
 
@@ -79,7 +87,7 @@
           <div class="messages-list" [class.closed]="isClosed()">
             <div *ngIf="claim.messages.length === 0" class="no-messages">
               <i class="fas fa-comment-slash"></i>
-              <p>Aucun échange pour l'instant.</p>
+              <p>No messages yet.</p>
             </div>
 
             <div
@@ -110,14 +118,14 @@
             <textarea
               class="reply-input"
               [(ngModel)]="newMessage"
-              placeholder="Écrivez votre message…"
+              placeholder="Write your message…"
               rows="3"
               (keydown.control.enter)="sendMessage()"></textarea>
             <div class="reply-actions">
-              <span class="reply-hint"><i class="fas fa-keyboard"></i> Ctrl+Entrée pour envoyer</span>
+              <span class="reply-hint"><i class="fas fa-keyboard"></i> Ctrl+Enter to send</span>
               <button class="btn-send" (click)="sendMessage()" [disabled]="!newMessage.trim() || sendingMessage">
                 <i class="fas" [class.fa-paper-plane]="!sendingMessage" [class.fa-spinner]="sendingMessage" [class.fa-spin]="sendingMessage"></i>
-                {{ sendingMessage ? 'Envoi...' : 'Envoyer' }}
+                {{ sendingMessage ? 'Sending...' : 'Send' }}
               </button>
             </div>
             <div class="msg-error" *ngIf="messageError">
@@ -128,7 +136,7 @@
           <!-- Closed notice -->
           <div class="closed-notice" *ngIf="isClosed()">
             <i class="fas fa-lock"></i>
-            <span>Ce ticket est clôturé. Aucune réponse ne peut être ajoutée.</span>
+            <span>This ticket is closed. No new replies can be added.</span>
           </div>
 
         </div>
@@ -138,11 +146,11 @@
       <div class="side-col" *ngIf="isAdmin">
         <div class="admin-panel">
           <div class="admin-panel-title">
-            <i class="fas fa-cog"></i> Actions admin
+            <i class="fas fa-cog"></i> Admin Panel
           </div>
 
           <div class="admin-field">
-            <label>Changer le statut</label>
+            <label>Change status</label>
             <div class="select-wrap">
               <select class="field-select" [(ngModel)]="selectedStatus">
                 <option *ngFor="let s of statuses" [value]="s">{{ STATUS_LABELS[s] }}</option>
@@ -151,7 +159,7 @@
             </div>
             <button class="btn-update-status" (click)="updateStatus()" [disabled]="updatingStatus || selectedStatus === claim.status">
               <i class="fas" [class.fa-check]="!updatingStatus" [class.fa-spinner]="updatingStatus" [class.fa-spin]="updatingStatus"></i>
-              {{ updatingStatus ? 'Mise à jour...' : 'Appliquer' }}
+              {{ updatingStatus ? 'Updating...' : 'Apply' }}
             </button>
           </div>
 
@@ -161,7 +169,7 @@
               <span class="ainfo-value">#{{ claim.id }}</span>
             </div>
             <div class="ainfo-row">
-              <span class="ainfo-label">Utilisateur</span>
+              <span class="ainfo-label">User</span>
               <span class="ainfo-value">{{ claim.userFullName }}</span>
             </div>
             <div class="ainfo-row">

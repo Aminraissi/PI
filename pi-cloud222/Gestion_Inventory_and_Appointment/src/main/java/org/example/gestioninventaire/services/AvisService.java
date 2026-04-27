@@ -37,20 +37,15 @@ public class AvisService {
     private final CommentaireAvisRepository commentaireRepo;
     private final ReponseAvisRepository reponseRepo;
     private final AvisMapper avisMapper;
+    private final HybridTextModerationService moderationService;
 
-    // ─────────────────────────────────────────────────────────────
-    // CRÉER UN AVIS (agriculteur → vétérinaire)
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Un agriculteur évalue un vétérinaire avec une note (1-5) et un commentaire.
-     * Un seul avis est autorisé par couple (agriculteur, vétérinaire).
-     */
     @Transactional
     public AvisResponse createAvis(CreateAvisRequest req, Long agriculteurId) {
         if (avisRepo.existsByAgriculteurIdAndVeterinarianId(agriculteurId, req.getVeterinarianId())) {
             throw new BadRequestException("Vous avez déjà évalué ce vétérinaire.");
         }
+
+        validateText(req.getCommentaire());
 
         Avis avis = Avis.builder()
                 .note(req.getNote())
@@ -63,14 +58,7 @@ public class AvisService {
         return avisMapper.toAvisResponse(saved, agriculteurId);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // LISTE DES AVIS D'UN VÉTÉRINAIRE
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Retourne tous les avis d'un vétérinaire, du plus récent au plus ancien.
-     * Le champ likedByMe est calculé pour l'utilisateur JWT courant.
-     */
     @Transactional(readOnly = true)
     public List<AvisResponse> getAvisByVet(Long vetId, Long currentUserId) {
         return avisRepo.findByVeterinarianIdOrderByCreatedAtDesc(vetId)
@@ -79,14 +67,7 @@ public class AvisService {
                 .collect(Collectors.toList());
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // RÉSUMÉ / NOTATION GLOBALE D'UN VÉTÉRINAIRE
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Calcule la moyenne des notes, le total d'avis et la distribution
-     * par étoile pour un vétérinaire donné.
-     */
     @Transactional(readOnly = true)
     public VetRatingSummaryResponse getRatingSummary(Long vetId) {
         Double moyenne = avisRepo.findAverageNoteByVeterinarianId(vetId);
@@ -118,15 +99,7 @@ public class AvisService {
                 .build();
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // TOGGLE LIKE (agriculteur ↔ avis)
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Si l'agriculteur a déjà liké l'avis → supprime le like.
-     * Sinon → ajoute un like.
-     * Un agriculteur ne peut pas liker son propre avis.
-     */
     @Transactional
     public void toggleLike(Long avisId, Long agriculteurId) {
         Avis avis = avisRepo.findById(avisId)
@@ -149,20 +122,15 @@ public class AvisService {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // COMMENTAIRE D'UN AGRICULTEUR SUR UN AVIS
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Un agriculteur répond au commentaire d'un autre agriculteur.
-     * Plusieurs commentaires sont autorisés par avis.
-     */
     @Transactional
     public CommentaireAvisResponse addCommentaire(Long avisId,
                                                   CommentaireAvisRequest req,
                                                   Long agriculteurId) {
         Avis avis = avisRepo.findById(avisId)
                 .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable : " + avisId));
+
+        validateText(req.getContenu());
 
         CommentaireAvis commentaire = CommentaireAvis.builder()
                 .contenu(req.getContenu())
@@ -173,15 +141,7 @@ public class AvisService {
         return avisMapper.toCommentaireResponse(commentaireRepo.save(commentaire));
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // RÉPONSE OFFICIELLE DU VÉTÉRINAIRE
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Le vétérinaire répond à un avis qui le concerne.
-     * Une seule réponse est autorisée par avis.
-     * Seul le vétérinaire concerné peut répondre.
-     */
     @Transactional
     public ReponseAvisResponse addReponseVet(Long avisId,
                                              ReponseAvisRequest req,
@@ -197,6 +157,8 @@ public class AvisService {
             throw new BadRequestException("Vous avez déjà répondu à cet avis.");
         }
 
+        validateText(req.getContenu());
+
         ReponseAvis reponse = ReponseAvis.builder()
                 .contenu(req.getContenu())
                 .veterinarianId(vetId)
@@ -204,5 +166,12 @@ public class AvisService {
                 .build();
 
         return avisMapper.toReponseResponse(reponseRepo.save(reponse));
+    }
+
+    private void validateText(String text) {
+        TextModerationResult result = moderationService.moderate(text);
+        if (!result.allowed()) {
+            throw new BadRequestException(result.reason());
+        }
     }
 }

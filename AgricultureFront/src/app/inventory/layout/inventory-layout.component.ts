@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
 
@@ -11,19 +10,9 @@ import { AuthService } from '../../services/auth/auth.service';
 })
 export class InventoryLayoutComponent {
   activeTab: 'inventory' | 'animals' | 'statistics' | 'boutique' = 'inventory';
+  animalView: 'list' | 'campaigns' = 'list';
 
-  constructor(
-    private auth: AuthService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
-    this.route.queryParamMap.subscribe(params => {
-      const tab = params.get('tab');
-      if (tab === 'inventory' || tab === 'animals' || tab === 'statistics' || tab === 'boutique') {
-        this.activeTab = tab;
-      }
-    });
-  }
+  constructor(private auth: AuthService, private router: Router) {}
 
   get user() { return this.auth.getCurrentUser(); }
 
@@ -32,12 +21,19 @@ export class InventoryLayoutComponent {
     this.router.navigate(['/']);
   }
 
+  goHome() {
+    this.router.navigate(['/']);
+  }
+
  setTab(tab: 'inventory' | 'animals' | 'statistics' | 'boutique') {
     this.activeTab = tab;
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tab },
-      queryParamsHandling: 'merge'
-    });
+    if (tab === 'animals') {
+      this.animalView = 'list';
+    }
+  }
+
+  openAnimalCampaigns() {
+    this.activeTab = 'animals';
+    this.animalView = 'campaigns';
   }
 }

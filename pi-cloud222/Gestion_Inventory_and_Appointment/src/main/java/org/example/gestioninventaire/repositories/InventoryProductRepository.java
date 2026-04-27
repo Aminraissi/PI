@@ -10,4 +10,5 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
     boolean existsByNomAndOwnerId(String nom, Long ownerId);
     /** Pour la boutique publique agriculteur */
     List<InventoryProduct> findByOwnerIdAndEnBoutiqueTrue(Long ownerId);
+    List<InventoryProduct>findByEnBoutiqueTrue();
 }
