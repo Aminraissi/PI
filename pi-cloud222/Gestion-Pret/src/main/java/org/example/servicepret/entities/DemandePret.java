@@ -50,4 +50,15 @@ public class DemandePret {
 
     @Column(columnDefinition = "TEXT")
     private String motifRejet;
+
+
+    @Column(length = 20)
+    private String fraudRiskLevel;
+
+    private Integer fraudScore;
+
+    private Boolean fraudConfirmed;
+
+    @Column(columnDefinition = "TEXT")
+    private String fraudAnalysisResult;
 }

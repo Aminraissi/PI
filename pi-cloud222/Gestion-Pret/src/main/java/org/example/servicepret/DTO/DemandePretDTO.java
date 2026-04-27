@@ -22,4 +22,8 @@ public class DemandePretDTO {
         private Integer scoreSolvabilite;
         private String statut;
         private String decision;
+        private String fraudRiskLevel;
+        private Integer fraudScore;
+        private Boolean fraudConfirmed;
+        private String fraudAnalysisResult;
 }

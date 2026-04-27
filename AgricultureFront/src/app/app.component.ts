@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CartService } from './services/cart/cart.service';
@@ -14,7 +14,7 @@ import { filter } from 'rxjs/operators';
                 <img src="assets/images/loader1.gif" alt="Loading..." class="preloader-gif">
                 <div class="preloader-logo">
                     <img src="assets/images/logo.png" alt="Logo" class="preloader-img">
-                    <span><span class="green">Green</span>Roots</span>
+                    <span class="notranslate" translate="no"><span class="green">Green</span>Roots</span>
                 </div>
             </div>
         </div>
@@ -38,13 +38,14 @@ import { filter } from 'rxjs/operators';
 
         <!-- Floating Cart -->
         <button
-                class="floating-cart"
-                routerLink="/marketplace/cart"
-                *ngIf="showFloatingCart">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="cart-badge" *ngIf="cartCount > 0">
-        {{ cartCount }}
-      </span>
+        class="floating-cart"
+        routerLink="/marketplace/cart"
+        *ngIf="showFloatingCart">
+        <i class="fas fa-shopping-cart"></i>
+
+        <span class="cart-badge" *ngIf="cartCount > 0">
+            {{ cartCount }}
+        </span>
         </button>
 
         <!-- Toast notifications (both implementations supported) -->
@@ -208,17 +209,19 @@ import { filter } from 'rxjs/operators';
         }
     `]
 })
-export class AppComponent implements OnInit, AfterViewInit {
-    preloaderHidden  = false;
-    showBackTop      = false;
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+    preloaderHidden = false;
+    showBackTop = false;
     showFloatingCart = false;
     fabMode: 'jump-reply' | 'scroll-top' = 'scroll-top';
     isForumsPostPage = false;
-    isExplorerRoute  = false;
-    cartCount        = 0;
+    isExplorerRoute = false;
+    cartCount = 0;
 
     @ViewChild('explorerFrame') private explorerFrame?: ElementRef<HTMLIFrameElement>;
     private explorerLoaded = false;
+    private notranslateObserver: MutationObserver | null = null;
+    private noTranslateScanScheduled = false;
 
     private readonly explorerOrigins = new Set([
         'http://localhost:5173',
@@ -228,17 +231,17 @@ export class AppComponent implements OnInit, AfterViewInit {
     ]);
 
     private readonly folioRouteMap: Record<string, string> = {
-        '/delivery':     '/delivery',
-        '/forum':        '/forums',
-        '/forums':       '/forums',
-        '/inventory':    '/inventory',
-        '/marketplace':  '/marketplace',
-        '/loans':        '/loans',
-        '/events':       '/events',
-        '/training':     '/training',
-        '/formations':   '/training',
+        '/delivery': '/delivery',
+        '/forum': '/forums',
+        '/forums': '/forums',
+        '/inventory': '/inventory',
+        '/marketplace': '/marketplace',
+        '/loans': '/loans',
+        '/events': '/events',
+        '/training': '/training',
+        '/formations': '/training',
         '/appointments': '/',
-        '/animals':      '/',
+        '/animals': '/',
         '/help-request': '/',
     };
 
@@ -246,7 +249,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         private router: Router,
         private sanitizer: DomSanitizer,
         private cartService: CartService
-    ) {}
+    ) { }
 
     ngOnInit() {
         // Initialize reveal animations immediately and when images/content load
@@ -256,6 +259,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             this.preloaderHidden = true;
         }, 1200); // reduced from 3s to be snappier
 
+        
         this.cartService.cartCount$.subscribe(count => {
             this.cartCount = count;
         });
@@ -263,26 +267,28 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.updateFloatingCartVisibility();
 
         this.isForumsPostPage = this.router.url.startsWith('/forums/post/');
-        this.isExplorerRoute  = this.router.url.startsWith('/explorer');
+        this.isExplorerRoute = this.router.url.startsWith('/explorer');
 
         this.router.events
             .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
             .subscribe((event: NavigationEnd) => {
                 this.isForumsPostPage = event.urlAfterRedirects.startsWith('/forums/post/');
-                this.isExplorerRoute  = event.urlAfterRedirects.startsWith('/explorer');
+                this.isExplorerRoute = event.urlAfterRedirects.startsWith('/explorer');
                 this.updateFabState();
                 this.updateFloatingCartVisibility();
                 // Re-scan for new reveal elements after navigation
                 setTimeout(() => this.scanRevealElements(), 200);
+                this.scheduleNoTranslateScan();
             });
 
         this.updateFabState();
+        this.initNoTranslateObserver();
     }
 
     ngAfterViewInit(): void {
         if (this.explorerFrame && !this.explorerLoaded) {
-            const token = localStorage.getItem('authToken');
-            const base  = 'http://localhost:5173/explorer/';
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const base = 'http://localhost:5173/explorer/';
             this.explorerFrame.nativeElement.src = token
                 ? `${base}?token=${encodeURIComponent(token)}`
                 : base;
@@ -290,6 +296,11 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
         // Scan elements once view is fully initialized
         this.scanRevealElements();
+        this.scheduleNoTranslateScan();
+    }
+
+    ngOnDestroy(): void {
+        this.notranslateObserver?.disconnect();
     }
 
     closeExplorer(): void {
@@ -301,8 +312,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         if (!this.explorerOrigins.has(event.origin)) return;
 
         const payload = event.data as { type?: string; route?: string; path?: string; href?: string } | null;
-        const isNav   = payload?.type === 'greenroots:navigate' || payload?.type === 'navigate';
-        const target  = payload?.route || payload?.path || payload?.href;
+        const isNav = payload?.type === 'greenroots:navigate' || payload?.type === 'navigate';
+        const target = payload?.route || payload?.path || payload?.href;
         if (!payload || !isNav || typeof target !== 'string') return;
 
         const angular = this.resolveAngularRoute(target);
@@ -382,7 +393,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             return;
         }
 
-        const composerTop    = window.scrollY + composer.getBoundingClientRect().top;
+        const composerTop = window.scrollY + composer.getBoundingClientRect().top;
         const viewportBottom = window.scrollY + window.innerHeight;
         this.fabMode = viewportBottom < composerTop ? 'jump-reply' : 'scroll-top';
     }
@@ -406,10 +417,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     // Smart cart visibility
     updateFloatingCartVisibility(): void {
-        const url = this.router.url;
+        const url = this.router.url.split('?')[0].split('#')[0];
 
         const token =
             localStorage.getItem('authToken') ||
+            sessionStorage.getItem('authToken') ||
             localStorage.getItem('token') ||
             localStorage.getItem('jwt') ||
             localStorage.getItem('accessToken');
@@ -417,22 +429,85 @@ export class AppComponent implements OnInit, AfterViewInit {
         const user =
             localStorage.getItem('currentUser') ||
             localStorage.getItem('user') ||
-            localStorage.getItem('authUser');
+            localStorage.getItem('authUser') ||
+            sessionStorage.getItem('authUser');
 
         const isLoggedIn = !!token || !!user;
 
-        const hiddenRoutes =
-            url === '/' ||
-            url.startsWith('/auth') ||
-            url.startsWith('/dashboard') ||
+        const isMarketplacePage = url.startsWith('/marketplace');
+
+        const hiddenMarketplaceRoutes =
+            url === '/marketplace/cart' ||
             url.includes('/marketplace/rental-contract/');
 
-        this.showFloatingCart = isLoggedIn && !hiddenRoutes;
+        this.showFloatingCart =
+            isLoggedIn &&
+            isMarketplacePage &&
+            !hiddenMarketplaceRoutes;
 
         if (this.showFloatingCart) {
             this.cartService.refreshCartCount();
         } else {
             this.cartCount = 0;
         }
+    }
+
+    private initNoTranslateObserver(): void {
+        this.scheduleNoTranslateScan();
+
+        this.notranslateObserver = new MutationObserver(() => {
+            this.scheduleNoTranslateScan();
+        });
+
+        this.notranslateObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    private scheduleNoTranslateScan(): void {
+        if (this.noTranslateScanScheduled) {
+            return;
+        }
+
+        this.noTranslateScanScheduled = true;
+        window.requestAnimationFrame(() => {
+            this.noTranslateScanScheduled = false;
+            this.applyNoTranslateMarkers();
+        });
+    }
+
+    private applyNoTranslateMarkers(): void {
+        const selector = [
+            '.brand-name',
+            '.sidebar-title',
+            '.logo-text',
+            '.logo-txt',
+            '.user-name',
+            '.user-badge',
+            '.user-name-link',
+            '.contributor-name-link',
+            '.story-author-link',
+            '.author-link',
+            '.comment-author-link',
+            '.collapsed-author-link',
+            '.actor-name',
+            '.actor-link',
+            '.ticket-id',
+            '.card-id',
+            '.animal-ref',
+            '.ref',
+            '.d-ref',
+            '.rec-id',
+            '.delivery-ref',
+            '.ref-badge',
+            '[data-no-translate]'
+        ].join(',');
+
+        document.querySelectorAll(selector).forEach(node => {
+            const element = node as HTMLElement;
+            element.classList.add('notranslate');
+            element.setAttribute('translate', 'no');
+        });
     }
 }

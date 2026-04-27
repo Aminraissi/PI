@@ -75,7 +75,7 @@
               <td><span class="category-badge">{{ p.category || 'Uncategorized' }}</span></td>
               <td>{{ p.prix }} DT/KG</td>
               <td>{{ p.quantiteDisponible }} KG</td>
-              <td><span class="user-badge">{{ p.userName }}</span></td>
+              <td><span class="user-badge notranslate" translate="no">{{ p.userName }}</span></td>
               <td>
                 <button class="delete-post-btn" (click)="deleteProduct(p)">
                   <i class="fas fa-trash"></i>
@@ -146,7 +146,7 @@
                 </div>
               </td>
 
-              <td><span class="user-badge">{{ r.userName }}</span></td>
+              <td><span class="user-badge notranslate" translate="no">{{ r.userName }}</span></td>
 
               <td>
                 <button class="delete-post-btn" (click)="deleteRental(r)">
@@ -217,7 +217,7 @@
 
         <tbody>
             <tr *ngFor="let o of paginatedOrders">
-            <td>#{{ o.id }}</td>
+            <td class="notranslate" translate="no">#{{ o.id }}</td>
             <td>{{ o.dateCommande | date:'medium' }}</td>
             <td>{{ o.montantTotal | number:'1.2-2' }} DT</td>
             <td>
@@ -232,7 +232,7 @@
             </td>
             
             <td>
-                <span class="user-badge">{{ o.userName }}</span>
+                <span class="user-badge notranslate" translate="no">{{ o.userName }}</span>
             </td>
             <td>
                 <button class="details-btn" (click)="openOrderDetails(o)">
@@ -262,25 +262,43 @@
     <div class="order-modal-overlay" *ngIf="showOrderDetails" (click)="closeOrderDetails()">
   <div class="order-modal" (click)="$event.stopPropagation()" *ngIf="selectedOrder">
     <div class="order-modal-header">
-      <h3>Order #{{ selectedOrder.id }}</h3>
+      <h3 class="notranslate" translate="no">Order #{{ selectedOrder.id }}</h3>
       <button class="close-modal-btn" (click)="closeOrderDetails()">✕</button>
     </div>
 
     <div class="order-summary-grid">
       <div class="summary-item">
         <span>User</span>
-        <strong>{{ selectedOrder.userName }}</strong>
+        <strong class="notranslate" translate="no">{{ selectedOrder.userName }}</strong>
       </div>
+
       <div class="summary-item">
         <span>Date</span>
         <strong>{{ selectedOrder.dateCommande | date:'medium' }}</strong>
       </div>
+
       <div class="summary-item">
         <span>Status</span>
-        <strong>{{ selectedOrder.statut }}</strong>
+        <strong>{{ getOrderStatusLabel(selectedOrder.statut) }}</strong>
       </div>
+
       <div class="summary-item">
-        <span>Total</span>
+        <span>Subtotal</span>
+        <strong>{{ selectedOrder.sousTotal | number:'1.2-2' }} DT</strong>
+      </div>
+
+      <div class="summary-item">
+        <span>Commission</span>
+        <strong>{{ selectedOrder.commission | number:'1.2-2' }} DT</strong>
+      </div>
+
+      <div class="summary-item">
+        <span>Tip</span>
+        <strong>{{ selectedOrder.tip | number:'1.2-2' }} DT</strong>
+      </div>
+
+      <div class="summary-item">
+        <span>Total Paid</span>
         <strong>{{ selectedOrder.montantTotal | number:'1.2-2' }} DT</strong>
       </div>
     </div>
@@ -308,12 +326,14 @@
           </tr>
         </thead>
         <tbody>
+
           <tr *ngFor="let item of selectedOrder.items">
             <td>{{ item.nom }}</td>
             <td>{{ item.quantite }} KG</td>
             <td>{{ item.prixUnitaire | number:'1.2-2' }} DT</td>
             <td>{{ item.sousTotal | number:'1.2-2' }} DT</td>
           </tr>
+
         </tbody>
       </table>
     </div>
@@ -368,7 +388,7 @@
       <tbody>
         <tr *ngFor="let r of paginatedReservations">
           <td>
-            <span class="user-badge">{{ r.userName }}</span>
+            <span class="user-badge notranslate" translate="no">{{ r.userName }}</span>
           </td>
 
           <td>{{ r.dateVisite | date:'mediumDate' }}</td>
@@ -421,39 +441,77 @@
 </div>
   <!--paiement-->
   <div *ngIf="!loading && activeTab === 'paiement'">
+    <div class="income-tabs">
+  <button
+    [class.active]="incomeTab === 'orders'"
+    (click)="setIncomeTab('orders')">
+    <i class="fas fa-shopping-cart"></i>
+    Income Orders
+  </button>
+
+  <button
+    [class.active]="incomeTab === 'rentals'"
+    (click)="setIncomeTab('rentals')">
+    <i class="fas fa-file-invoice-dollar"></i>
+    Income Rentals
+  </button>
+</div>
+<div *ngIf="incomeTab === 'orders'">
     <div class="payment-hero">
       <div class="payment-stat-card income">
-        <div class="payment-icon"><i class="fas fa-coins"></i></div>
+        <div class="payment-icon"><i class="fas fa-wallet"></i></div>
         <div>
-          <span>Total Income</span>
-          <strong>{{ paymentStats.totalIncome | number:'1.2-2' }} DT</strong>
+          <span>Platform Revenue</span>
+          <strong>{{ paymentStats.platformRevenue | number:'1.2-2' }} DT</strong>
         </div>
       </div>
 
       <div class="payment-stat-card orders">
+        <div class="payment-icon"><i class="fas fa-chart-line"></i></div>
+        <div>
+          <span>Total Sales</span>
+          <strong>{{ paymentStats.totalSales | number:'1.2-2' }} DT</strong>
+        </div>
+      </div>
+
+      <div class="payment-stat-card product">
+        <div class="payment-icon"><i class="fas fa-hand-holding-usd"></i></div>
+        <div>
+          <span>Farmers Payout</span>
+          <strong>{{ paymentStats.farmersPayout | number:'1.2-2' }} DT</strong>
+        </div>
+      </div>
+
+      <div class="payment-stat-card commission">
+        <div class="payment-icon"><i class="fas fa-percent"></i></div>
+        <div>
+          <span>Total Commission</span>
+          <strong>{{ paymentStats.totalCommission | number:'1.2-2' }} DT</strong>
+        </div>
+      </div>
+
+      <div class="payment-stat-card tips">
+        <div class="payment-icon"><i class="fas fa-gift"></i></div>
+        <div>
+          <span>Total Tips</span>
+          <strong>{{ paymentStats.totalTips | number:'1.2-2' }} DT</strong>
+        </div>
+      </div>
+
+      <div class="payment-stat-card sold">
         <div class="payment-icon"><i class="fas fa-receipt"></i></div>
         <div>
           <span>Paid Orders</span>
           <strong>{{ paymentStats.paidOrdersCount }}</strong>
         </div>
       </div>
-
-      <div class="payment-stat-card product">
-        <div class="payment-icon"><i class="fas fa-star"></i></div>
-        <div>
-          <span>Most Bought Product</span>
-          <strong>{{ paymentStats.mostBoughtProduct }}</strong>
-        </div>
-      </div>
-
-      <div class="payment-stat-card sold">
-        <div class="payment-icon"><i class="fas fa-shopping-basket"></i></div>
-        <div>
-          <span>Total Sold Quantity</span>
-          <strong>{{ paymentStats.totalProductsSold }} KG</strong>
-        </div>
-      </div>
     </div>
+      <div class="wallet-note">
+        <i class="fas fa-info-circle"></i>
+        <span>
+          Orders Income = Product Commission + Tips. Total Sales represents the full amount paid by product buyers.
+        </span>
+      </div>
 
     <div class="dash-card payment-table-card">
       <div class="admin-toolbar">
@@ -485,14 +543,15 @@
               <th>Date</th>
               <th>Status</th>
               <th>Total</th>
+              <th>Platform Gain</th>
               <th>Products</th>
             </tr>
           </thead>
 
           <tbody>
             <tr *ngFor="let o of paginatedPaidOrders">
-              <td>#{{ o.id }}</td>
-              <td><span class="user-badge">{{ o.userName }}</span></td>
+              <td class="notranslate" translate="no">#{{ o.id }}</td>
+              <td><span class="user-badge notranslate" translate="no">{{ o.userName }}</span></td>
               <td>{{ o.dateCommande | date:'medium' }}</td>
               <td>
                 <span class="status-badge validated">
@@ -501,6 +560,11 @@
               </td>
               <td><strong>{{ o.montantTotal | number:'1.2-2' }} DT</strong></td>
               <td>
+              <span class="gain-badge">
+                {{ ((o.commission || 0) + (o.tip || 0)) | number:'1.2-2' }} DT
+              </span>
+            </td>
+                <td>
                 <div class="payment-products-mini">
                 <span *ngFor="let item of ($any(o.items) || []).slice(0, 2)">
                   {{ item.nom }} ({{ item.quantite }} KG)
@@ -526,6 +590,137 @@
         </div>
       </div>
     </div>
+  </div>
+  <div *ngIf="incomeTab === 'rentals'">
+  <div class="payment-hero">
+    <div class="payment-stat-card income">
+      <div class="payment-icon"><i class="fas fa-wallet"></i></div>
+      <div>
+        <span>Rental Revenue</span>
+        <strong>{{ rentalIncomeStats.rentalRevenue | number:'1.2-2' }} DT</strong>
+      </div>
+    </div>
+
+    <div class="payment-stat-card orders">
+      <div class="payment-icon"><i class="fas fa-chart-line"></i></div>
+      <div>
+        <span>Rental Sales</span>
+        <strong>{{ rentalIncomeStats.rentalSales | number:'1.2-2' }} DT</strong>
+      </div>
+    </div>
+
+    <div class="payment-stat-card product">
+      <div class="payment-icon"><i class="fas fa-hand-holding-usd"></i></div>
+      <div>
+        <span>Farmers Payout</span>
+        <strong>{{ rentalIncomeStats.rentalFarmersPayout | number:'1.2-2' }} DT</strong>
+      </div>
+    </div>
+
+    <div class="payment-stat-card sold">
+      <div class="payment-icon"><i class="fas fa-check-circle"></i></div>
+      <div>
+        <span>Paid Rental Payments</span>
+        <strong>{{ rentalIncomeStats.paidRentalPaymentsCount }}</strong>
+      </div>
+    </div>
+
+    <div class="payment-stat-card tips">
+      <div class="payment-icon"><i class="fas fa-clock"></i></div>
+      <div>
+        <span>Unpaid Rental Payments</span>
+        <strong>{{ rentalIncomeStats.unpaidRentalPaymentsCount }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="wallet-note">
+    <i class="fas fa-info-circle"></i>
+    <span>
+      Rental Revenue = commission_amount from PAID monthly rental payments only. UNPAID months are not counted as income.
+    </span>
+  </div>
+
+  <div class="dash-card payment-table-card">
+    <div class="admin-toolbar">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="applyFilter()"
+          placeholder="Search by payment id, tenant, farmer, rental or status..." />
+      </div>
+
+      <button class="refresh-btn" (click)="loadRentalPayments()">
+        <i class="fas fa-rotate-right"></i>
+        Refresh
+      </button>
+    </div>
+
+    <div *ngIf="paginatedRentalPayments.length === 0" class="empty-state">
+      No rental payments found.
+    </div>
+
+    <div class="products-table-wrap" *ngIf="paginatedRentalPayments.length > 0">
+      <table class="products-table">
+        <thead>
+          <tr>
+            <th>Payment ID</th>
+            <th>Tenant</th>
+            <th>Farmer</th>
+            <th>Location</th>
+            <th>Month</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Total</th>
+            <th>Commission</th>
+            <th>Farmer Amount</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let p of paginatedRentalPayments">
+            <td class="notranslate" translate="no">#{{ p.id }}</td>
+            <td><span class="user-badge">{{ p.tenantName }}</span></td>
+            <td><span class="user-badge">{{ p.farmerName }}</span></td>
+            <td>#{{ p.locationId }}</td>
+            <td>Month {{ p.moisNumero }}</td>
+            <td>{{ p.dateEcheance | date:'mediumDate' }}</td>
+            <td>
+              <span
+                class="status-badge"
+                [ngClass]="{
+                  'validated': p.statut === 'PAID',
+                  'pending': p.statut === 'UNPAID'
+                }">
+                {{ p.statut }}
+              </span>
+            </td>
+            <td><strong>{{ p.montant | number:'1.2-2' }} DT</strong></td>
+            <td>
+              <span class="gain-badge">
+                {{ p.commissionAmount | number:'1.2-2' }} DT
+              </span>
+            </td>
+            <td>{{ p.farmerAmount | number:'1.2-2' }} DT</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Prev</button>
+        <button
+          *ngFor="let page of pages"
+          (click)="goToPage(page)"
+          [class.active]="page === currentPage">
+          {{ page }}
+        </button>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
   </div>
 <!-- contracts -->
 <div *ngIf="!loading && activeTab === 'contracts'">
@@ -566,7 +761,7 @@
 
       <tbody>
         <tr *ngFor="let c of paginatedContracts">
-          <td>#{{ c.id }}</td>
+          <td class="notranslate" translate="no">#{{ c.id }}</td>
 
           <td><span class="user-badge">{{ c.ownerName }}</span></td>
 

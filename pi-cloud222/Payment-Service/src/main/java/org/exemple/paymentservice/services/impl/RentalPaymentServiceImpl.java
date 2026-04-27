@@ -27,6 +27,11 @@ public class RentalPaymentServiceImpl implements RentalPaymentService {
     private final PaiementLocationRepository paiementLocationRepository;
 
     @Override
+    public List<PaiementLocation> getAllPayments() {
+        return paiementLocationRepository.findAll();
+    }
+
+    @Override
     public List<PaiementLocation> createPaymentPlan(CreateRentalPaymentPlanRequest request) {
 
         if (paiementLocationRepository.existsByPropositionId(request.getPropositionId())) {

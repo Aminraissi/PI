@@ -15,8 +15,6 @@ import java.util.Map;
 @Service
 public class AIService {
 
-
-
     private final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
     private final String API_KEY = System.getenv("GROQ_API_KEY");
 

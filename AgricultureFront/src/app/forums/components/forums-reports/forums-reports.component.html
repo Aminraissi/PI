@@ -1,0 +1,124 @@
+<app-navbar></app-navbar>
+
+<section class="forums-page reports-page">
+  <div class="container">
+    <header class="reports-hero glass-card">
+      <div>
+        <p class="hero-kicker">Admin Moderation</p>
+        <h1>Centralized Report Review</h1>
+        <p>Review reported posts, replies, and comments from one place while keeping the highlighted thread cues in the home feed.</p>
+      </div>
+      <div class="reports-hero-actions">
+        <button type="button" class="ghost-btn" [routerLink]="['/forums']">Back to Forums</button>
+        <button type="button" class="refresh-btn" (click)="reload()">Refresh</button>
+      </div>
+    </header>
+
+    <section class="moderation-notice" *ngIf="actionFeedback">{{ actionFeedback }}</section>
+    <section class="moderation-notice moderation-notice--error" *ngIf="loadError">{{ loadError }}</section>
+
+    <section class="reports-shell glass-card">
+      <div class="reports-toolbar">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="applyFilters()"
+          placeholder="Search by reason, content, title, or reporter id"
+        />
+        <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+          <option value="ALL">All statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="APPROVED">Approved</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+      </div>
+
+      <div class="reports-state" *ngIf="loading">Loading reports...</div>
+
+      <div class="reports-grid" *ngIf="!loading">
+        <aside class="reports-list">
+          <button
+            type="button"
+            class="report-case-card"
+            *ngFor="let item of filteredCases"
+            [class.active]="selectedCase?.key === item.key"
+            (click)="selectCase(item)"
+          >
+            <div class="report-case-card__head">
+              <strong>{{ item.targetType }}</strong>
+              <span [class]="'status-pill status-pill--' + item.status.toLowerCase()">{{ getStatusLabel(item.status) }}</span>
+            </div>
+            <h3>{{ item.postTitle }}</h3>
+            <p>{{ item.targetPreview }}</p>
+            <div class="report-case-card__meta">
+              <span>{{ item.reportCount }} report{{ item.reportCount > 1 ? 's' : '' }}</span>
+              <span>{{ item.uniqueReporters }} reporter{{ item.uniqueReporters > 1 ? 's' : '' }}</span>
+            </div>
+          </button>
+
+          <div class="reports-state" *ngIf="filteredCases.length === 0">No report cases match the current filters.</div>
+        </aside>
+
+        <section class="report-detail" *ngIf="selectedCase as item; else chooseCase">
+          <div class="report-detail__head">
+            <div>
+              <p class="detail-kicker">{{ item.targetType }} in thread</p>
+              <h2>{{ item.postTitle }}</h2>
+            </div>
+            <button type="button" class="ghost-btn" (click)="openCaseThread(item)">Open thread</button>
+          </div>
+
+          <article class="detail-panel">
+            <strong>Target content</strong>
+            <p>{{ item.targetPreview }}</p>
+          </article>
+
+          <article class="detail-panel">
+            <strong>Case summary</strong>
+            <p>{{ item.reportCount }} reports from {{ item.uniqueReporters }} reporters.</p>
+            <p>Latest reason: {{ item.latestReason }}</p>
+          </article>
+
+          <article class="detail-panel">
+            <strong>Report history</strong>
+            <div class="report-history-card" *ngFor="let report of item.reports">
+              <div class="report-history-card__head">
+                <span>Reporter #{{ report.reporterId }}</span>
+                <span [class]="'status-pill status-pill--' + report.status.toLowerCase()">{{ report.status }}</span>
+              </div>
+              <p>{{ report.reason }}</p>
+              <img *ngIf="report.screenshotDataUrl" [src]="report.screenshotDataUrl" alt="Report screenshot evidence" />
+            </div>
+          </article>
+
+          <div class="detail-actions">
+            <button
+              type="button"
+              class="moderation-btn moderation-btn--approve"
+              *ngIf="isPending(item)"
+              [disabled]="moderatingCaseKey === item.key"
+              (click)="approveSelected()"
+            >
+              {{ moderatingCaseKey === item.key ? 'Working...' : 'Approve and restore' }}
+            </button>
+            <button
+              type="button"
+              class="moderation-btn moderation-btn--reject"
+              *ngIf="isPending(item)"
+              [disabled]="moderatingCaseKey === item.key"
+              (click)="rejectSelected()"
+            >
+              {{ moderatingCaseKey === item.key ? 'Working...' : 'Reject and remove' }}
+            </button>
+          </div>
+        </section>
+
+        <ng-template #chooseCase>
+          <section class="report-detail report-detail--empty">
+            <p>Select a report case to review its history and moderate it.</p>
+          </section>
+        </ng-template>
+      </div>
+    </section>
+  </div>
+</section>

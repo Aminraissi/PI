@@ -55,4 +55,7 @@ public interface ReservationVisiteRepo extends JpaRepository<ReservationVisite, 
     @Query("DELETE FROM ReservationVisite r WHERE r.location.id = :locationId")
     void deleteByLocationId(@Param("locationId") Long locationId);
 
+    @Query("SELECT COUNT(r) > 0 FROM ReservationVisite r WHERE r.location.id = :locationId")
+    boolean existsAnyReservation(@Param("locationId") Long locationId);
+
 }

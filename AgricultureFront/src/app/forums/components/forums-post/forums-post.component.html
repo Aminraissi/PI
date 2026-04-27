@@ -28,13 +28,13 @@
           </p>
           <div class="post-media-gallery" *ngIf="currentPost.mediaUrls?.length">
             <ng-container *ngFor="let media of currentPost.mediaUrls">
-              <img *ngIf="isImageMedia(media)" [src]="media" alt="Post media" />
-              <video *ngIf="isVideoMedia(media)" [src]="media" controls></video>
+              <img *ngIf="isImageMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" alt="Post media" />
+              <video *ngIf="isVideoMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" controls></video>
               <a *ngIf="!isImageMedia(media) && !isVideoMedia(media)" [href]="media" target="_blank" rel="noopener">Open media attachment</a>
             </ng-container>
           </div>
           <small class="media-pending-note" *ngIf="currentPost.mediaPendingReview && !isCurrentUserAdmin()">
-            Media for this post is hidden until an admin approves it.
+            Media for this post is hidden until an admin reviews it because automatic image moderation could not approve it yet.
           </small>
           <div class="story-tags">
             <span *ngFor="let tag of currentPost.tags" [ngClass]="getTagColorClass(tag)" class="tag-chip">
@@ -45,7 +45,7 @@
           <div class="story-author" *ngIf="getUser(currentPost.authorId) as author">
             <img class="user-avatar user-avatar--md" [src]="getAvatarUrl(author)" [alt]="author.name + ' profile image'" title="{{ getAvatarTitle(author) }}" />
             <div class="story-author-copy">
-              <button type="button" class="story-author-link" (click)="openUserProfile(author.id)">{{ author.name }}</button>
+              <button type="button" class="story-author-link notranslate" translate="no" (click)="openUserProfile(author.id)">{{ author.name }}</button>
               <span>{{ author.reputation }} rep</span>
               <app-badge [reputation]="author.reputation"></app-badge>
             </div>
@@ -172,7 +172,7 @@
 
                     <div class="reply-body">
                       <div class="reply-head" *ngIf="getUser(reply.authorId) as author">
-                        <button type="button" class="author author-link" (click)="openUserProfile(author.id)">{{ author.name }}</button>
+                        <button type="button" class="author author-link notranslate" translate="no" (click)="openUserProfile(author.id)">{{ author.name }}</button>
                         <span>{{ author.reputation }} rep</span>
                         <app-badge [reputation]="author.reputation"></app-badge>
                         <span class="expert" *ngIf="author.isExpert">Expert</span>
@@ -195,10 +195,21 @@
                       </p>
                       <div class="reply-media-gallery" *ngIf="reply.mediaUrls?.length">
                         <ng-container *ngFor="let media of reply.mediaUrls">
-                          <img *ngIf="isImageMedia(media)" [src]="media" alt="Reply media" />
-                          <video *ngIf="isVideoMedia(media)" [src]="media" controls></video>
+                          <img *ngIf="isImageMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" alt="Reply media" />
+                          <video *ngIf="isVideoMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" controls></video>
                           <a *ngIf="!isImageMedia(media) && !isVideoMedia(media)" [href]="media" target="_blank" rel="noopener">Open attachment</a>
                         </ng-container>
+                      </div>
+                      <small class="media-pending-note" *ngIf="reply.mediaPendingReview && !isCurrentUserAdmin()">
+                        Reply media is hidden until an admin reviews it because automatic image moderation could not approve it yet.
+                      </small>
+                      <div class="story-actions" *ngIf="canReviewReplyMedia(reply)">
+                        <button type="button" class="moderation-btn moderation-btn--review" [disabled]="isModeratingReplyMedia(reply.id)" (click)="approveReplyMedia(reply.id)">
+                          {{ isModeratingReplyMedia(reply.id) ? 'Approving...' : 'Approve reply media' }}
+                        </button>
+                        <button type="button" class="moderation-btn moderation-btn--reject" [disabled]="isModeratingReplyMedia(reply.id)" (click)="rejectReplyMedia(reply.id)">
+                          {{ isModeratingReplyMedia(reply.id) ? 'Rejecting...' : 'Reject reply media' }}
+                        </button>
                       </div>
 
                       <div class="comment-thread-wrap" *ngIf="reply.comments.length > 0">
@@ -225,7 +236,7 @@
 
                             <ng-container *ngIf="!isCommentCollapsed(reply.id, comment.id); else collapsedComment">
                               <div class="comment">
-                                <button type="button" class="comment-author-link" (click)="openUserProfile(comment.authorId)">{{ getUser(comment.authorId)?.name }}:</button>
+                                <button type="button" class="comment-author-link notranslate" translate="no" (click)="openUserProfile(comment.authorId)">{{ getUser(comment.authorId)?.name }}:</button>
                                 <span
                                   [class.state-box]="isCommentDeletedNotice(comment) || isCommentHiddenNotice(comment)"
                                   [class.state-box--deleted]="isCommentDeletedNotice(comment)"
@@ -245,7 +256,7 @@
 
                             <ng-template #collapsedComment>
                               <div class="comment comment-collapsed" *ngIf="getUser(comment.authorId) as commentAuthor" [class.hidden-by-reports]="comment.isHiddenByReports">
-                                <button type="button" class="comment-author-link" (click)="openUserProfile(commentAuthor.id)">{{ commentAuthor.name }}:</button>
+                                <button type="button" class="comment-author-link notranslate" translate="no" (click)="openUserProfile(commentAuthor.id)">{{ commentAuthor.name }}:</button>
                                 <span
                                   [class.state-box]="isCommentDeletedNotice(comment) || isCommentHiddenNotice(comment)"
                                   [class.state-box--deleted]="isCommentDeletedNotice(comment)"
@@ -268,6 +279,7 @@
 
                       <div class="comment-composer" *ngIf="!reply.isDeleted">
                         <textarea [(ngModel)]="commentDraftByReply[reply.id]" placeholder="Add a comment" (input)="autoResizeCommentInput($event)"></textarea>
+                        <small class="form-error" *ngIf="commentSubmitErrorByReply[reply.id]">{{ commentSubmitErrorByReply[reply.id] }}</small>
                         <button (click)="addComment(reply.id)">Send</button>
                       </div>
                     </div>
@@ -275,7 +287,7 @@
 
                   <ng-template #collapsedReply>
                     <div class="collapsed-preview" *ngIf="getUser(reply.authorId) as author">
-                      <button type="button" class="collapsed-author-link" (click)="openUserProfile(author.id)">{{ author.name }}</button>
+                      <button type="button" class="collapsed-author-link notranslate" translate="no" (click)="openUserProfile(author.id)">{{ author.name }}</button>
                       <span>
                         Reply hidden · {{ reply.comments.length }} comments · {{ replyScore(reply) }} score
                       </span>
@@ -315,8 +327,8 @@
             </div>
             <div class="composer-media-preview" *ngIf="replyMediaUrls.length > 0">
               <article class="composer-media-card" *ngFor="let mediaUrl of replyMediaUrls; let index = index">
-                <img *ngIf="isImageMedia(mediaUrl)" [src]="mediaUrl" alt="Reply media preview" />
-                <video *ngIf="isVideoMedia(mediaUrl)" [src]="mediaUrl" controls></video>
+                <img *ngIf="isImageMedia(mediaUrl)" [src]="mediaUrl" (error)="onMediaRenderError(mediaUrl, $event)" alt="Reply media preview" />
+                <video *ngIf="isVideoMedia(mediaUrl)" [src]="mediaUrl" (error)="onMediaRenderError(mediaUrl, $event)" controls></video>
                 <a *ngIf="!isImageMedia(mediaUrl) && !isVideoMedia(mediaUrl)" [href]="mediaUrl" target="_blank" rel="noopener">Open media link</a>
                 <button type="button" (click)="removeReplyMedia(index)">Remove</button>
               </article>

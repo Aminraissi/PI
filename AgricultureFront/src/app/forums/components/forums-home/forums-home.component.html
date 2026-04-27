@@ -11,6 +11,9 @@
           <span>{{ group.memberCount }} members</span>
           <button type="button" (click)="changeGroupFilter(null)">Back to all forums</button>
         </div>
+        <div class="admin-hero-actions" *ngIf="isCurrentUserAdmin()">
+          <button type="button" class="admin-review-btn" [routerLink]="['/forums/reports']">Open Report Review</button>
+        </div>
       </div>
       <div class="hero-metrics">
         <article>
@@ -36,7 +39,7 @@
       <main class="river-column">
         <section class="composer-trigger glass-card">
           <div>
-            <h2>Question River</h2>
+            <h2>Question Feed</h2>
             <p>Follow active questions and jump into discussions that match your expertise.</p>
           </div>
           <button class="ask-btn" (click)="toggleComposer()">
@@ -48,7 +51,7 @@
           <div class="groups-hub-head">
             <div>
               <h3>Field Groups</h3>
-              <p>Join focused circles and filter the river by each group's topics.</p>
+              <p>Join focused circles and filter the feed by each group's topics.</p>
             </div>
             <div class="groups-actions">
               <button type="button" class="group-filter-chip" [class.active]="selectedGroupId === null" (click)="changeGroupFilter(null)">
@@ -360,12 +363,12 @@
               </p>
               <div class="post-media-strip" *ngIf="post.mediaUrls?.length">
                 <ng-container *ngFor="let media of (post.mediaUrls || []).slice(0, 2)">
-                  <img *ngIf="isImageMedia(media)" [src]="media" alt="Attached media" />
-                  <video *ngIf="isVideoMedia(media)" [src]="media" controls></video>
+                  <img *ngIf="isImageMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" alt="Attached media" />
+                  <video *ngIf="isVideoMedia(media)" [src]="media" (error)="onMediaRenderError(media, $event)" controls></video>
                 </ng-container>
               </div>
               <small class="media-pending-note" *ngIf="post.mediaPendingReview && !isCurrentUserAdmin()">
-                Media attached to this post is pending admin review.
+                Media attached to this post is waiting for admin review because automatic image moderation could not approve it yet.
               </small>
               <div class="chip-row">
                 <span *ngFor="let tag of post.tags" [ngClass]="getTagColorClass(tag)" class="tag-chip">
@@ -390,7 +393,7 @@
               <div class="user-line">
                 <img class="user-avatar user-avatar--sm" [src]="getAvatarUrl(user)" [alt]="user.name + ' profile image'" title="{{ getAvatarTitle(user) }}" />
                 <div>
-                  <button type="button" class="user-name-link" (click)="openUserProfile(user.id, $event)">{{ user.name }}</button>
+                  <button type="button" class="user-name-link notranslate" translate="no" (click)="openUserProfile(user.id, $event)">{{ user.name }}</button>
                   <span>{{ user.reputation }} rep</span>
                 </div>
               </div>
@@ -429,7 +432,7 @@
           <div class="group-user-list" *ngIf="activeGroupModerators.length > 0; else emptyModerators">
             <button *ngFor="let moderator of activeGroupModerators" type="button" class="group-user-row" (click)="openUserProfile(moderator.id)">
               <img class="user-avatar user-avatar--sm" [src]="getAvatarUrl(moderator)" [alt]="moderator.name + ' profile image'" title="{{ moderator.name }} profile image" />
-              <span>{{ moderator.name }}</span>
+              <span class="notranslate" translate="no">{{ moderator.name }}</span>
             </button>
           </div>
           <ng-template #emptyModerators>
@@ -442,7 +445,7 @@
           <div class="group-user-list" *ngIf="activeGroupMembers.length > 0; else emptyMembers">
             <button *ngFor="let member of activeGroupMembers" type="button" class="group-user-row" (click)="openUserProfile(member.id)">
               <img class="user-avatar user-avatar--sm" [src]="getAvatarUrl(member)" [alt]="member.name + ' profile image'" title="{{ member.name }} profile image" />
-              <span>{{ member.name }}</span>
+              <span class="notranslate" translate="no">{{ member.name }}</span>
             </button>
           </div>
           <ng-template #emptyMembers>
@@ -478,7 +481,7 @@
           <h4><span class="section-icon" aria-hidden="true">👥</span>Top Contributors</h4>
           <article class="contributor" *ngFor="let member of topContributors">
             <div>
-              <button type="button" class="contributor-name-link" (click)="openUserProfile(member.userId)">{{ member.name }}</button>
+              <button type="button" class="contributor-name-link notranslate" translate="no" (click)="openUserProfile(member.userId)">{{ member.name }}</button>
               <small>{{ member.reputation }} rep</small>
             </div>
             <span>{{ member.contributions }}</span>

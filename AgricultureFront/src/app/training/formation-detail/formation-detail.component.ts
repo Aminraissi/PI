@@ -38,6 +38,7 @@ export class FormationDetailComponent implements OnInit {
   activeLiveLeconId: number | null = null;
   leconMode: 'recorded' | 'stream' = 'recorded';
   commentDrafts: Record<number, string> = {};
+  expandedModuleIds: Record<number, boolean> = {};
 
   // Form data
   newModule: Module = { titre: '', ordre: 0 };
@@ -79,21 +80,14 @@ export class FormationDetailComponent implements OnInit {
       this.formationService.getFormationById(Number(id)).subscribe({
         next: (data) => {
           this.formation = data;
-          
-          // Try to load image from localStorage first
-          const imageKey = `formation_image_${data.idFormation}`;
-          const storedImage = localStorage.getItem(imageKey);
-          if (storedImage) {
-            this.formation.imageUrl = storedImage;
-            console.log('📸 Image loaded from localStorage for formation detail:', data.idFormation);
-          }
-          
+          this.initializeExpandedModules();
+
           this.checkIfInscribed();
           this.isLoading = false;
         },
         error: (err) => {
           console.error('Error loading formation:', err);
-          this.error = 'Impossible de charger la formation';
+          this.error = 'Unable to load the training.';
           this.isLoading = false;
         }
       });
@@ -152,7 +146,7 @@ export class FormationDetailComponent implements OnInit {
   }
 
   deleteModule(moduleId: number | undefined): void {
-    if (!this.formation?.idFormation || !moduleId || !confirm('Supprimer ce module ?')) return;
+    if (!this.formation?.idFormation || !moduleId || !confirm('Delete this module?')) return;
 
     this.formationService.deleteModule(this.formation.idFormation, moduleId).subscribe({
       next: () => {
@@ -222,7 +216,7 @@ export class FormationDetailComponent implements OnInit {
   }
 
   deleteLecon(module: Module, leconId: number | undefined): void {
-    if (!this.formation?.idFormation || !module.idModule || !leconId || !confirm('Supprimer cette leçon ?')) return;
+    if (!this.formation?.idFormation || !module.idModule || !leconId || !confirm('Delete this lesson?')) return;
 
     this.formationService.deleteLeconVideo(this.formation.idFormation, module.idModule, leconId).subscribe({
       next: () => {
@@ -304,7 +298,7 @@ export class FormationDetailComponent implements OnInit {
   }
 
   deleteRessource(ressourceId: number | undefined, module?: Module): void {
-    if (!this.formation?.idFormation || !ressourceId || !confirm('Supprimer cette ressource ?')) return;
+    if (!this.formation?.idFormation || !ressourceId || !confirm('Delete this resource?')) return;
 
     const request = module?.idModule
       ? this.formationService.deleteModuleRessource(this.formation.idFormation, module.idModule, ressourceId)
@@ -328,11 +322,11 @@ export class FormationDetailComponent implements OnInit {
     this.formationService.inscribeToFormation(this.formation.idFormation, this.currentUserId).subscribe({
       next: () => {
         this.isInscribed = true;
-        alert('Vous êtes maintenant inscrit à cette formation');
+        alert('You are now enrolled in this training.');
       },
       error: (err) => {
         console.error('Error subscribing:', err);
-        alert('Erreur lors de l\'inscription');
+        alert('An error occurred during enrollment.');
       }
     });
   }
@@ -368,6 +362,22 @@ export class FormationDetailComponent implements OnInit {
     return [...(module.ressources || [])].sort((a, b) => (a.titre || '').localeCompare(b.titre || ''));
   }
 
+  isModuleExpanded(moduleId: number | undefined): boolean {
+    if (!moduleId) {
+      return false;
+    }
+
+    return !!this.expandedModuleIds[moduleId];
+  }
+
+  toggleModuleExpanded(moduleId: number | undefined): void {
+    if (!moduleId) {
+      return;
+    }
+
+    this.expandedModuleIds[moduleId] = !this.expandedModuleIds[moduleId];
+  }
+
   onVideoSelected(event: Event, module: Module): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -383,7 +393,7 @@ export class FormationDetailComponent implements OnInit {
       error: (err) => {
         console.error('Error uploading video:', err);
         this.isUploadingVideo = false;
-        alert('Erreur lors de l upload vidéo');
+        alert('An error occurred while uploading the video.');
       }
     });
   }
@@ -407,7 +417,7 @@ export class FormationDetailComponent implements OnInit {
       error: (err) => {
         console.error('Error uploading resource:', err);
         this.isUploadingRessource = false;
-        alert('Erreur lors de l upload PDF');
+        alert('An error occurred while uploading the PDF.');
       }
     });
   }
@@ -512,5 +522,19 @@ export class FormationDetailComponent implements OnInit {
     }
 
     return null;
+  }
+
+  private initializeExpandedModules(): void {
+    const modules = this.formation?.modules || [];
+    const previousState = { ...this.expandedModuleIds };
+
+    this.expandedModuleIds = modules.reduce<Record<number, boolean>>((state, module, index) => {
+      if (!module.idModule) {
+        return state;
+      }
+
+      state[module.idModule] = previousState[module.idModule] ?? index === 0;
+      return state;
+    }, {});
   }
 }

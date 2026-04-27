@@ -112,4 +112,11 @@ getProposalsByLocation(locationId: number) {
   return this.http.get<any[]>(`http://localhost:8089/Vente/api/proposition-location/location/${locationId}`);
 }
 
+getAllProposals() {
+  return this.http.get<any[]>(
+    `http://localhost:8089/Vente/api/proposition-location`
+  );
+}
+
+
 }

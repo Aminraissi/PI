@@ -354,6 +354,19 @@ img {
   to   { width: 100%; }
 }
 
+/* ---- Google Translate Cleanup ---- */
+iframe.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 992px) {
   .section-padding { padding: 70px 0; }
