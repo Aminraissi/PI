@@ -16,13 +16,12 @@ import org.example.gestioninventaire.entities.InventoryProduct;
 import org.example.gestioninventaire.enums.StatutCommande;
 import org.example.gestioninventaire.exceptions.BadRequestException;
 import org.example.gestioninventaire.exceptions.ResourceNotFoundException;
-import org.example.gestioninventaire.feigns.PaymentClient;
 import org.example.gestioninventaire.feigns.UserClient;
 import org.example.gestioninventaire.repositories.CommandeRepository;
 import org.example.gestioninventaire.repositories.InventoryProductRepository;
 import org.springframework.stereotype.Service;
-
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,14 +34,15 @@ public class CommandeService {
     private final CommandeRepository commandeRepository;
     private final InventoryProductRepository productRepository;
     private final UserClient userClient;
-    private final PaymentClient paymentClient;
+    private final StripeService stripeService;   // ← Stripe intégré, plus de PaymentClient
 
     /**
-     * Cree une commande, decremente le stock et demarre un paiement Stripe via payment-service.
+     * Crée une commande, décrémente le stock et démarre une session Stripe Checkout.
      */
     @Transactional
     public CommandeResponse creerCommande(CommandeRequest request) {
 
+        // Vérification des stocks
         for (CommandeItemRequest item : request.getItems()) {
             InventoryProduct product = productRepository.findById(item.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable: " + item.getProductId()));
@@ -72,6 +72,7 @@ public class CommandeService {
                     InventoryProduct product = productRepository.findById(dto.getProductId())
                             .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable"));
 
+                    // Décrémentation du stock
                     product.setCurrentQuantity(product.getCurrentQuantity() - dto.getQuantite());
                     productRepository.save(product);
 
@@ -92,7 +93,8 @@ public class CommandeService {
         commande.setItems(items);
         Commande saved = commandeRepository.save(commande);
 
-        StripeCheckoutResponse checkout = paymentClient.createCheckoutSession(
+        // Appel Stripe direct (plus de Feign vers payment-service)
+        StripeCheckoutResponse checkout = stripeService.createCheckoutSession(
                 StripeCheckoutRequest.builder()
                         .commandeId(saved.getId())
                         .userId(saved.getAgriculteurId())
@@ -105,22 +107,13 @@ public class CommandeService {
         saved.setStripeClientSecret(checkout.getCheckoutUrl());
         saved = commandeRepository.save(saved);
 
-        log.info("Commande #{} creee - checkout session {}", saved.getId(), checkout.getSessionId());
+        log.info("Commande #{} créée - session Stripe {}", saved.getId(), checkout.getSessionId());
 
         return toResponse(saved);
     }
 
-    @Transactional
-    public void confirmerPaiement(String paymentIntentId) {
-        commandeRepository.findByStripePaymentIntentId(paymentIntentId)
-                .ifPresent(commande -> {
-                    commande.setStatut(StatutCommande.PAYE);
-                    commandeRepository.save(commande);
-                });
-    }
-
     /**
-     * Sans modification de payment-service: confirmation explicite cote Gestion-Inventaire.
+     * Confirmation explicite côté frontend après retour Stripe (?payment=success).
      */
     @Transactional
     public void confirmerPaiementCommande(Long commandeId) {
@@ -128,14 +121,31 @@ public class CommandeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Commande introuvable: " + commandeId));
 
         if (commande.getStatut() == StatutCommande.PAYE) {
+            log.info("Commande #{} déjà marquée PAYE", commandeId);
             return;
         }
 
         commande.setStatut(StatutCommande.PAYE);
         commandeRepository.save(commande);
-        log.info("Commande #{} marquee PAYE apres confirmation frontend", commande.getId());
+        log.info("Commande #{} marquée PAYE", commandeId);
     }
 
+    /**
+     * Confirmation via webhook Stripe (par paymentIntentId).
+     */
+    @Transactional
+    public void confirmerPaiement(String paymentIntentId) {
+        commandeRepository.findByStripePaymentIntentId(paymentIntentId)
+                .ifPresent(commande -> {
+                    commande.setStatut(StatutCommande.PAYE);
+                    commandeRepository.save(commande);
+                    log.info("Commande #{} marquée PAYE via webhook", commande.getId());
+                });
+    }
+
+    /**
+     * Échec paiement — restaure le stock.
+     */
     @Transactional
     public void echouerPaiement(String paymentIntentId) {
         commandeRepository.findByStripePaymentIntentId(paymentIntentId)
@@ -152,6 +162,7 @@ public class CommandeService {
                         });
                     }
                     commandeRepository.save(commande);
+                    log.info("Commande #{} marquée ECHEC, stock restauré", commande.getId());
                 });
     }
 
@@ -167,30 +178,6 @@ public class CommandeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Commande introuvable: " + id));
     }
 
-    private CommandeResponse toResponse(Commande c) {
-        List<CommandeItemResponse> items = c.getItems() == null ? List.of() :
-                c.getItems().stream().map(i -> CommandeItemResponse.builder()
-                        .productId(i.getProduct() != null ? i.getProduct().getId() : null)
-                        .vetId(i.getVetId())
-                        .nomProduit(i.getNomProduit())
-                        .vetNom(i.getVetNom())
-                        .vetRegion(i.getVetRegion())
-                        .prixUnitaire(i.getPrixUnitaire())
-                        .quantite(i.getQuantite())
-                        .sousTotal(i.getSousTotal())
-                        .build()).collect(Collectors.toList());
-
-        return CommandeResponse.builder()
-                .id(c.getId())
-                .agriculteurId(c.getAgriculteurId())
-                .montantTotal(c.getMontantTotal())
-                .dateCommande(c.getDateCommande())
-                .statut(c.getStatut())
-                .stripeClientSecret(c.getStripeClientSecret())
-                .items(items)
-                .build();
-    }
-
     public List<CommandeVetResponse> getCommandesByVetId(Long vetId) {
         List<Commande> commandes = commandeRepository.findCommandesByVetId(vetId);
 
@@ -199,7 +186,7 @@ public class CommandeService {
             try {
                 agriculteur = userClient.getUserById(c.getAgriculteurId());
             } catch (Exception e) {
-                log.warn("Impossible de recuperer l'agriculteur #{}: {}", c.getAgriculteurId(), e.getMessage());
+                log.warn("Impossible de récupérer l'agriculteur #{}: {}", c.getAgriculteurId(), e.getMessage());
             }
 
             List<CommandeItemResponse> itemsVet = c.getItems() == null ? List.of() :
@@ -236,5 +223,29 @@ public class CommandeService {
                     .build();
 
         }).collect(Collectors.toList());
+    }
+
+    private CommandeResponse toResponse(Commande c) {
+        List<CommandeItemResponse> items = c.getItems() == null ? List.of() :
+                c.getItems().stream().map(i -> CommandeItemResponse.builder()
+                        .productId(i.getProduct() != null ? i.getProduct().getId() : null)
+                        .vetId(i.getVetId())
+                        .nomProduit(i.getNomProduit())
+                        .vetNom(i.getVetNom())
+                        .vetRegion(i.getVetRegion())
+                        .prixUnitaire(i.getPrixUnitaire())
+                        .quantite(i.getQuantite())
+                        .sousTotal(i.getSousTotal())
+                        .build()).collect(Collectors.toList());
+
+        return CommandeResponse.builder()
+                .id(c.getId())
+                .agriculteurId(c.getAgriculteurId())
+                .montantTotal(c.getMontantTotal())
+                .dateCommande(c.getDateCommande())
+                .statut(c.getStatut())
+                .stripeClientSecret(c.getStripeClientSecret())
+                .items(items)
+                .build();
     }
 }
