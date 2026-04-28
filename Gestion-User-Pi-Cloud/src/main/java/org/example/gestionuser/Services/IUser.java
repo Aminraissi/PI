@@ -26,4 +26,9 @@ public interface IUser {
     User reviewProfile(Long id, boolean approved, String motifRefus);
 
 
+
+
+    User updateProfile(Long id, UserProfileUpdateRequest request);
+
+
 }

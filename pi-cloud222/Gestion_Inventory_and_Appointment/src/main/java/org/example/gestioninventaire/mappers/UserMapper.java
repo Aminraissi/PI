@@ -17,6 +17,7 @@ public class UserMapper {
                 .email(user.getEmail())
                 .telephone(user.getTelephone())
                 .role(user.getRole())
+                .region(user.getRegion())
                 .build();
     }
 }

@@ -3,6 +3,7 @@ package org.example.gestioninventaire.services;
 import lombok.RequiredArgsConstructor;
 import org.example.gestioninventaire.dtos.request.AddStockRequest;
 import org.example.gestioninventaire.dtos.request.AdjustStockRequest;
+import org.example.gestioninventaire.dtos.request.ConsumeBatchRequest;
 import org.example.gestioninventaire.dtos.request.ConsumeStockRequest;
 import org.example.gestioninventaire.dtos.response.BatchResponse;
 import org.example.gestioninventaire.dtos.response.InventoryProductResponse;
@@ -52,6 +53,13 @@ public class InventoryService {
                 .product(product)
                 .build();
         batchRepository.save(batch);
+
+        // Le prix saisi dans "Ajouter un stock" est le prix achat fournisseur (dernier lot saisi).
+        product.setPrixAchat(request.getPrice());
+        product.setDateAchat(request.getPurchaseDate());
+        product.setDatePeremption(request.getExpiryDate());
+        product.setNote(request.getNote());
+        productRepository.save(product);
         refreshProductStock(product);
 
         StockMovement movement = StockMovement.builder()
@@ -65,6 +73,39 @@ public class InventoryService {
                 .build();
         stockMovementRepository.save(movement);
 
+
+        return inventoryMapper.toProductResponse(product);
+    }
+
+    @Transactional
+    public InventoryProductResponse consumeStockFromBatch(Long productId, Long batchId, ConsumeBatchRequest request, Long userId) {
+        InventoryProduct product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produit non trouve"));
+
+        Batch batch = batchRepository.findByIdAndProductId(batchId, productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lot introuvable pour ce produit"));
+
+        if (request.getQuantity() <= 0) throw new BadRequestException("La quantite doit etre positive");
+        if (batch.getQuantity() == null || batch.getQuantity() < request.getQuantity()) {
+            throw new BadRequestException("Quantite insuffisante dans ce lot");
+        }
+
+        batch.setQuantity(batch.getQuantity() - request.getQuantity());
+        batchRepository.save(batch);
+        refreshProductStock(product);
+
+        StockMovement movement = StockMovement.builder()
+                .movementType(MovementType.OUT)
+                .quantity(request.getQuantity())
+                .dateMouvement(LocalDateTime.now())
+                .reason(request.getReason())
+                .note(request.getNote() != null && !request.getNote().isBlank()
+                        ? request.getNote()
+                        : "Consommation directe lot " + batch.getLotNumber())
+                .product(product)
+                .ownerId(userId)
+                .build();
+        stockMovementRepository.save(movement);
 
         return inventoryMapper.toProductResponse(product);
     }

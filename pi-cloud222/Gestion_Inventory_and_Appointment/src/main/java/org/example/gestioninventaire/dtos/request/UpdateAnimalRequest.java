@@ -1,7 +1,4 @@
 package org.example.gestioninventaire.dtos.request;
-
-
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,9 +15,6 @@ public class UpdateAnimalRequest {
     @NotNull
     @Positive
     private Double poids;
-
-    @NotBlank
-    private String reference;
 
     @NotNull
     private LocalDate dateNaissance;

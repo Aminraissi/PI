@@ -60,7 +60,6 @@ public class AnimalDiagnosticController {
                 .build();
     }
 
-
     @PostMapping(value = "/image-chatbot", consumes = "multipart/form-data")
     public ApiResponse<ImageChatbotResponse> imageChatbot(
             @RequestHeader("Authorization") String authHeader,
@@ -75,6 +74,7 @@ public class AnimalDiagnosticController {
                 .data(response)
                 .build();
     }
+
     @PostMapping(value = "/poultry-image-chatbot", consumes = "multipart/form-data")
     public ApiResponse<ImageChatbotResponse> poultryImageChatbot(
             @RequestHeader("Authorization") String authHeader,
