@@ -3,6 +3,7 @@ package org.example.gestionuser.Services;
 import lombok.AllArgsConstructor;
 import org.example.gestionuser.Repositories.UserRepo;
 
+import org.example.gestionuser.dtos.UserProfileUpdateRequest;
 import org.example.gestionuser.entities.Role;
 
 import org.example.gestionuser.entities.ProfileValidationStatus;

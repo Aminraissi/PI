@@ -11,6 +11,6 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:///C:/Users/MSI/Desktop/gestion vente/uploads/");
+                .addResourceLocations("file:///home/amine/Desktop/integration pi/pi-cloud222/Gestion-Vente-Location/uploads");
     }
 }

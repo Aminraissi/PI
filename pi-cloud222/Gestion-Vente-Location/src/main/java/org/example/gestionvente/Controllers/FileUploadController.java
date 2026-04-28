@@ -9,7 +9,7 @@ import java.nio.file.*;
 @CrossOrigin(origins = "http://localhost:4200")
 public class FileUploadController {
 
-    private final String UPLOAD_DIR = "C:/Users/MSI/Desktop/gestion vente/uploads/";
+    private final String UPLOAD_DIR = "/home/amine/Desktop/integration pi/pi-cloud222/Gestion-Vente-Location/uploads";
 
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
