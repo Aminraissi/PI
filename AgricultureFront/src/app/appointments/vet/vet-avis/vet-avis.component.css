@@ -337,3 +337,59 @@
   .card-header { flex-direction: column; }
   .reply-actions { flex-direction: column; }
 }
+
+/* ── Traduction (reply comments + vet reply) ─────────────────────────────── */
+.translate-bar { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.translate-bar--sm { margin-top: 6px; }
+
+.btn-translate {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--gray-300);
+  color: var(--gray-500); padding: 4px 10px; border-radius: 20px;
+  font-size: 0.75rem; cursor: pointer; transition: all .2s;
+}
+.btn-translate:hover { border-color: var(--primary); color: var(--primary); background: rgba(79,110,247,.05); }
+
+.translate-loading { font-size: 0.75rem; color: var(--gray-400); display: flex; align-items: center; gap: 5px; }
+
+.translate-error { font-size: 0.75rem; color: #e53e3e; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.btn-retry {
+  background: transparent; border: 1px solid #e53e3e; color: #e53e3e;
+  padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; cursor: pointer;
+}
+.btn-retry:hover { background: #fff5f5; }
+
+.btn-show-original {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--gray-300);
+  color: var(--gray-500); padding: 4px 10px; border-radius: 20px;
+  font-size: 0.75rem; cursor: pointer; transition: all .2s;
+}
+.btn-show-original:hover { border-color: var(--gray-500); color: var(--gray-700); }
+
+.translation-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.72rem; color: var(--gray-400);
+  background: var(--gray-50); padding: 2px 8px; border-radius: 10px;
+  margin-top: 4px;
+}
+
+.translated { font-style: italic; color: var(--gray-600); }
+.translated-block { background: var(--gray-50); border-radius: var(--radius-sm); padding: 8px 10px; }
+.reply-translation-block { margin-bottom: 8px; }
+
+/* ── Bad words / Groq indicator ─────────────────────────────────────────── */
+.reply-ta--error { border-color: #e53e3e !important; background: #fff5f5; }
+
+.bad-word-warning {
+  display: flex; align-items: center; gap: 6px;
+  color: #e53e3e; font-size: 0.8rem; margin-top: 4px;
+  background: #fff5f5; padding: 6px 10px; border-radius: 6px;
+  border-left: 3px solid #e53e3e;
+}
+
+.groq-checking {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--gray-400); font-size: 0.75rem; margin-top: 4px;
+}

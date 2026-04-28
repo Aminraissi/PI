@@ -10,6 +10,10 @@ import {
   CommentaireAvisResponse
 } from '../../models/appointments.models';
 
+const GROQ_API_KEY = 'gsk_lqrDYJ6TnFxRBhwlAzp3WGdyb3FYDCaETRWdw5lZHAcjJDm3sWP';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL   = 'llama3-8b-8192';
+
 @Component({
   selector: 'app-farmer-avis',
   standalone: false,
@@ -38,23 +42,31 @@ export class FarmerAvisComponent implements OnInit {
   submittingAvis = false;
   avisError = '';
 
-  // Commentaires
-  commentInputs: { [avisId: number]: string } = {};
+  // Commentaires (reply input)
+  commentInputs:    { [avisId: number]: string }  = {};
   showCommentInput: { [avisId: number]: boolean } = {};
-  submittingComment: { [avisId: number]: boolean } = {};
+  submittingComment:{ [avisId: number]: boolean } = {};
+
+  // ── Bad-word + Groq sur le champ de reply ───────────────────────────────
+  commentBadWord:  { [avisId: number]: boolean } = {};
+  checkingGroq:    { [avisId: number]: boolean } = {};
+  private groqDebounceTimers: { [id: number]: any } = {};
 
   // Likes
   likingId: number | null = null;
 
-  // ── Traduction ────────────────────────────────────────────────────────────
-  /** Texte traduit indexé par id d'avis */
-  translations: { [avisId: number]: string } = {};
-  /** Langue dans laquelle la traduction est affichée ('fr' | 'en') */
-  translationLang: { [avisId: number]: 'fr' | 'en' } = {};
-  /** Spinners */
-  translatingId: { [avisId: number]: boolean } = {};
-  /** Messages d'erreur */
-  translationErrors: { [avisId: number]: string } = {};
+  // ── Traduction de l'avis principal ───────────────────────────────────────
+  translations:      { [avisId: number]: string }        = {};
+  translationLang:   { [avisId: number]: 'fr' | 'en' }  = {};
+  translatingId:     { [avisId: number]: boolean }       = {};
+  translationErrors: { [avisId: number]: string }        = {};
+
+  // ── Traduction des commentaires de reply (par commentaire individuel) ────
+  // Clé = commentId (c.id)
+  cmtTranslations:      { [cmtId: number]: string }       = {};
+  cmtTranslationLang:   { [cmtId: number]: 'fr' | 'en' } = {};
+  cmtTranslatingId:     { [cmtId: number]: boolean }      = {};
+  cmtTranslationErrors: { [cmtId: number]: string }       = {};
 
   constructor(
     private api:  AppointmentsApiService,
@@ -163,47 +175,21 @@ export class FarmerAvisComponent implements OnInit {
   }
 
   private extractErrorMessage(error: any, fallback: string): string {
-    if (typeof error?.error === 'string' && error.error.trim()) {
-      return error.error;
-    }
-
-    if (error?.error?.message && String(error.error.message).trim()) {
-      return String(error.error.message);
-    }
-
-    if (error?.error?.error && String(error.error.error).trim()) {
-      return String(error.error.error);
-    }
-
-    if (error?.message && String(error.message).trim()) {
-      return String(error.message);
-    }
-
-    if (error?.status === 400) {
-      return 'Your review was rejected by moderation. Please rephrase it.';
-    }
-
+    if (typeof error?.error === 'string' && error.error.trim()) return error.error;
+    if (error?.error?.message && String(error.error.message).trim()) return String(error.error.message);
+    if (error?.error?.error  && String(error.error.error).trim())   return String(error.error.error);
+    if (error?.message       && String(error.message).trim())       return String(error.message);
+    if (error?.status === 400) return 'Your review was rejected by moderation. Please rephrase it.';
     return fallback;
   }
 
-  // ── Traduction intelligente ───────────────────────────────────────────────
-  /**
-   * Logique :
-   *  - Passe 1 : essai en|fr (anglais → français)
-   *    → Si résultat différent de l'original : succès, affiche en FR
-   *  - Passe 2 (fallback) : essai ar|fr (arabe → français)
-   *    → Si résultat différent : succès, affiche en FR
-   *  - Si les deux passes donnent un résultat IDENTIQUE à l'original :
-   *    → le texte est probablement déjà en français
-   *    → on traduit automatiquement fr|en (français → anglais)
-   */
+  // ── Traduction de l'avis principal (inchangée) ───────────────────────────
   translateAvis(a: AvisResponse): void {
     if (!a.commentaire?.trim()) return;
     this.translatingId[a.id]     = true;
     this.translationErrors[a.id] = '';
     delete this.translations[a.id];
     delete this.translationLang[a.id];
-
     this.tryTranslate(a, 'en|fr', true);
   }
 
@@ -216,7 +202,6 @@ export class FarmerAvisComponent implements OnInit {
         const translated: string = (res?.responseData?.translatedText || '').trim();
         const status: number     =  res?.responseStatus ?? 0;
 
-        // Quota dépassé
         if (translated.toUpperCase().startsWith('QUERY LENGTH') ||
             translated.toUpperCase().includes('MYMEMORY WARNING')) {
           this.translatingId[a.id]     = false;
@@ -226,35 +211,16 @@ export class FarmerAvisComponent implements OnInit {
 
         if (status === 200 && translated) {
           const sameAsOriginal = translated.toLowerCase() === a.commentaire.toLowerCase().trim();
+          if (sameAsOriginal && allowFallback && langPair === 'en|fr') { this.tryTranslate(a, 'ar|fr', false); return; }
+          if (sameAsOriginal && langPair === 'ar|fr')                  { this.tryTranslate(a, 'fr|en', false); return; }
 
-          // ── Passe 1 : en|fr → identique → tenter ar|fr
-          if (sameAsOriginal && allowFallback && langPair === 'en|fr') {
-            this.tryTranslate(a, 'ar|fr', false);
-            return;
-          }
-
-          // ── Passe 2 : ar|fr → encore identique → le texte est en français → traduire fr|en
-          if (sameAsOriginal && langPair === 'ar|fr') {
-            this.tryTranslate(a, 'fr|en', false);
-            return;
-          }
-
-          // ── fr|en → identique (très rare) → on affiche quand même
-          this.translatingId[a.id]    = false;
-          this.translations[a.id]     = translated;
-          // Stocker la langue cible pour afficher le bon badge
-          this.translationLang[a.id]  = langPair === 'fr|en' ? 'en' : 'fr';
-
+          this.translatingId[a.id]   = false;
+          this.translations[a.id]    = translated;
+          this.translationLang[a.id] = langPair === 'fr|en' ? 'en' : 'fr';
         } else {
-          // Échec → cascade de fallback
-          if (allowFallback && langPair === 'en|fr') {
-            this.tryTranslate(a, 'ar|fr', false);
-          } else if (langPair === 'ar|fr') {
-            this.tryTranslate(a, 'fr|en', false);
-          } else {
-            this.translatingId[a.id]     = false;
-            this.translationErrors[a.id] = 'Translation unavailable for this text.';
-          }
+          if (allowFallback && langPair === 'en|fr') this.tryTranslate(a, 'ar|fr', false);
+          else if (langPair === 'ar|fr')             this.tryTranslate(a, 'fr|en', false);
+          else { this.translatingId[a.id] = false; this.translationErrors[a.id] = 'Translation unavailable for this text.'; }
         }
       },
       error: () => {
@@ -264,32 +230,130 @@ export class FarmerAvisComponent implements OnInit {
     });
   }
 
-  /** Efface la traduction et réaffiche le texte original */
   clearTranslation(avisId: number): void {
     delete this.translations[avisId];
     delete this.translationErrors[avisId];
     delete this.translationLang[avisId];
   }
 
-  /** Libellé du badge selon la langue cible */
   translationBadgeLabel(avisId: number): string {
     return this.translationLang[avisId] === 'en'
       ? '🇬🇧 Translated to English · MyMemory'
       : '🇫🇷 Translated to French · MyMemory';
   }
 
+  // ── Traduction des commentaires de reply (individuel par cmtId) ──────────
+  translateComment(cmtId: number, contenu: string): void {
+    if (!contenu?.trim()) return;
+    this.cmtTranslatingId[cmtId]     = true;
+    this.cmtTranslationErrors[cmtId] = '';
+    delete this.cmtTranslations[cmtId];
+    delete this.cmtTranslationLang[cmtId];
+    this.tryTranslateCmt(cmtId, contenu, 'en|fr', true);
+  }
+
+  private tryTranslateCmt(cmtId: number, text: string, langPair: string, allowFallback: boolean): void {
+    const url = `https://api.mymemory.translated.net/get`
+              + `?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+
+    this.http.get<any>(url).subscribe({
+      next: res => {
+        const translated: string = (res?.responseData?.translatedText || '').trim();
+        const status: number     =  res?.responseStatus ?? 0;
+
+        if (translated.toUpperCase().startsWith('QUERY LENGTH') ||
+            translated.toUpperCase().includes('MYMEMORY WARNING')) {
+          this.cmtTranslatingId[cmtId]     = false;
+          this.cmtTranslationErrors[cmtId] = 'Free translation limit reached. Try again later.';
+          return;
+        }
+
+        if (status === 200 && translated) {
+          const same = translated.toLowerCase() === text.toLowerCase().trim();
+          if (same && allowFallback && langPair === 'en|fr') { this.tryTranslateCmt(cmtId, text, 'ar|fr', false); return; }
+          if (same && langPair === 'ar|fr')                  { this.tryTranslateCmt(cmtId, text, 'fr|en', false); return; }
+
+          this.cmtTranslatingId[cmtId]   = false;
+          this.cmtTranslations[cmtId]    = translated;
+          this.cmtTranslationLang[cmtId] = langPair === 'fr|en' ? 'en' : 'fr';
+        } else {
+          if (allowFallback && langPair === 'en|fr') this.tryTranslateCmt(cmtId, text, 'ar|fr', false);
+          else if (langPair === 'ar|fr')             this.tryTranslateCmt(cmtId, text, 'fr|en', false);
+          else { this.cmtTranslatingId[cmtId] = false; this.cmtTranslationErrors[cmtId] = 'Translation unavailable.'; }
+        }
+      },
+      error: () => {
+        this.cmtTranslatingId[cmtId]     = false;
+        this.cmtTranslationErrors[cmtId] = 'Connection error. Check your network.';
+      }
+    });
+  }
+
+  clearCommentTranslation(cmtId: number): void {
+    delete this.cmtTranslations[cmtId];
+    delete this.cmtTranslationErrors[cmtId];
+    delete this.cmtTranslationLang[cmtId];
+  }
+
+  cmtTranslationBadgeLabel(cmtId: number): string {
+    return this.cmtTranslationLang[cmtId] === 'en'
+      ? '🇬🇧 Translated to English · MyMemory'
+      : '🇫🇷 Translated to French · MyMemory';
+  }
+
+  // ── Bad-word + Groq sur le champ de reply ───────────────────────────────
+  onCommentInput(avisId: number): void {
+    const text = this.commentInputs[avisId] || '';
+    if (this.badWords.containsBadWord(text)) { this.commentBadWord[avisId] = true; return; }
+    this.commentBadWord[avisId] = false;
+    if (text.trim().length >= 10) this.checkWithGroq(avisId, text);
+  }
+
+  private checkWithGroq(avisId: number, text: string): void {
+    clearTimeout(this.groqDebounceTimers[avisId]);
+    this.groqDebounceTimers[avisId] = setTimeout(() => {
+      this.checkingGroq[avisId] = true;
+      const body = {
+        model: GROQ_MODEL,
+        max_tokens: 10,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a strict content moderation assistant. Respond with exactly one word: YES if the text contains offensive, vulgar, abusive, or inappropriate language (insults, hate speech, threats, profanity). Respond NO otherwise. No explanation.'
+          },
+          { role: 'user', content: text }
+        ]
+      };
+      this.http.post<any>(GROQ_API_URL, body, {
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` }
+      }).subscribe({
+        next: res => {
+          this.checkingGroq[avisId] = false;
+          const answer = (res?.choices?.[0]?.message?.content || '').trim().toUpperCase();
+          this.commentBadWord[avisId] = answer.startsWith('YES');
+        },
+        error: () => { this.checkingGroq[avisId] = false; }
+      });
+    }, 600);
+  }
+
+  hasCommentBadWord(avisId: number): boolean {
+    const text = this.commentInputs[avisId] || '';
+    return text.length > 2 && (this.badWords.containsBadWord(text) || !!this.commentBadWord[avisId]);
+  }
+
   // ── Commentaire d'agriculteur ────────────────────────────
   toggleCommentInput(avisId: number) {
     this.showCommentInput[avisId] = !this.showCommentInput[avisId];
     if (!this.commentInputs[avisId]) this.commentInputs[avisId] = '';
+    this.commentBadWord[avisId] = false;
   }
 
   submitCommentaire(a: AvisResponse) {
     const contenu = (this.commentInputs[a.id] || '').trim();
     if (!contenu) return;
-    if (this.badWords.containsBadWord(contenu)) {
-      alert('⚠️ Your response contains inappropriate language. Please rephrase it.');
-      return;
+    if (this.badWords.containsBadWord(contenu) || this.commentBadWord[a.id]) {
+      return; // Le warning inline bloque déjà — pas d'alert()
     }
     this.submittingComment[a.id] = true;
     this.api.addCommentaire(a.id, contenu).subscribe({
@@ -298,11 +362,11 @@ export class FarmerAvisComponent implements OnInit {
         this.commentInputs[a.id]     = '';
         this.showCommentInput[a.id]  = false;
         this.submittingComment[a.id] = false;
+        this.commentBadWord[a.id]    = false;
       },
       error: () => { this.submittingComment[a.id] = false; }
     });
   }
-
 
   toggleLike(a: AvisResponse) {
     if (a.agriculteurId === this.currentUserId) return;

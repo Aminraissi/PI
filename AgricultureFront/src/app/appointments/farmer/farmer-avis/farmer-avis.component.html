@@ -1,6 +1,5 @@
 <div class="avis-section">
 
- 
   <div class="avis-header">
     <div class="avis-title-row">
       <h2 class="avis-title">
@@ -47,52 +46,26 @@
     </div>
   </div>
 
- 
+  <!-- Formulaire nouvel avis -->
   <div class="avis-form-card" *ngIf="showAvisForm">
     <h3 class="form-title"><i class="fas fa-edit"></i> Your review</h3>
 
-    <!-- ★ SÉLECTEUR D'ÉTOILES INTERACTIF ★ -->
     <div class="star-selector">
       <span class="star-hint">Your rating:</span>
       <div class="stars-row">
-        <span class="star-wrap"
-              (mouseenter)="setHover(1)" (mouseleave)="clearHover()" (click)="setNote(1)">
+        <span class="star-wrap" *ngFor="let n of [1,2,3,4,5]"
+              (mouseenter)="setHover(n)" (mouseleave)="clearHover()" (click)="setNote(n)">
           <i class="fas fa-star"
-             [class.star-active]="1 <= (hoverNote || newNote)"
-             [class.star-inactive]="!(1 <= (hoverNote || newNote))"></i>
-        </span>
-        <span class="star-wrap"
-              (mouseenter)="setHover(2)" (mouseleave)="clearHover()" (click)="setNote(2)">
-          <i class="fas fa-star"
-             [class.star-active]="2 <= (hoverNote || newNote)"
-             [class.star-inactive]="!(2 <= (hoverNote || newNote))"></i>
-        </span>
-        <span class="star-wrap"
-              (mouseenter)="setHover(3)" (mouseleave)="clearHover()" (click)="setNote(3)">
-          <i class="fas fa-star"
-             [class.star-active]="3 <= (hoverNote || newNote)"
-             [class.star-inactive]="!(3 <= (hoverNote || newNote))"></i>
-        </span>
-        <span class="star-wrap"
-              (mouseenter)="setHover(4)" (mouseleave)="clearHover()" (click)="setNote(4)">
-          <i class="fas fa-star"
-             [class.star-active]="4 <= (hoverNote || newNote)"
-             [class.star-inactive]="!(4 <= (hoverNote || newNote))"></i>
-        </span>
-        <span class="star-wrap"
-              (mouseenter)="setHover(5)" (mouseleave)="clearHover()" (click)="setNote(5)">
-          <i class="fas fa-star"
-             [class.star-active]="5 <= (hoverNote || newNote)"
-             [class.star-inactive]="!(5 <= (hoverNote || newNote))"></i>
+             [class.star-active]="n <= (hoverNote || newNote)"
+             [class.star-inactive]="!(n <= (hoverNote || newNote))"></i>
         </span>
       </div>
       <span class="note-label" *ngIf="newNote > 0">{{ noteLabel(newNote) }}</span>
     </div>
 
-    <!-- Commentaire -->
     <div class="field-wrap">
       <label class="field-label">
-        <i class="fas fa-comment-dots"></i> Your comment 
+        <i class="fas fa-comment-dots"></i> Your comment
       </label>
       <textarea
         [(ngModel)]="newCommentaire"
@@ -103,7 +76,6 @@
         maxlength="1000">
       </textarea>
       <span class="char-count">{{ newCommentaire.length }}/1000</span>
-
       <div class="bad-word-warning" *ngIf="hasInappropriateContent">
         <i class="fas fa-exclamation-triangle"></i>
         Your comment contains inappropriate words. Please rephrase it.
@@ -115,11 +87,8 @@
     </div>
 
     <div class="form-actions">
-      <button class="btn-cancel" (click)="cancelAvisForm()" [disabled]="submittingAvis">
-        Cancel
-      </button>
-      <button class="btn-submit"
-              (click)="submitAvis()"
+      <button class="btn-cancel" (click)="cancelAvisForm()" [disabled]="submittingAvis">Cancel</button>
+      <button class="btn-submit" (click)="submitAvis()"
               [disabled]="submittingAvis || hasInappropriateContent">
         <i class="fas fa-spinner fa-spin" *ngIf="submittingAvis"></i>
         <i class="fas fa-paper-plane"    *ngIf="!submittingAvis"></i>
@@ -128,17 +97,16 @@
     </div>
   </div>
 
- 
+  <!-- Loading / error -->
   <div class="loading-box" *ngIf="loading">
     <div class="loader"></div>
     <span>Loading reviews…</span>
   </div>
-
   <div class="err-box" *ngIf="error && !loading">
     <i class="fas fa-exclamation-triangle"></i> {{ error }}
   </div>
 
-
+  <!-- Liste des avis -->
   <div class="avis-list" *ngIf="!loading && avis.length > 0">
     <div class="avis-card" *ngFor="let a of avis">
 
@@ -156,7 +124,6 @@
             <span class="avis-date">{{ formatDate(a.createdAt) }}</span>
           </div>
         </div>
-
         <div class="avis-stars">
           <span *ngFor="let filled of starsArray(a.note)">
             <i [class]="filled ? 'fas fa-star star-gold-sm' : 'fas fa-star star-empty-sm'"></i>
@@ -165,13 +132,9 @@
         </div>
       </div>
 
-      <!-- ── Commentaire + Traduction ── -->
+      <!-- ── Commentaire principal + Traduction ── -->
       <div class="avis-text-wrap">
-
-        <!-- Texte original -->
         <p class="avis-text" *ngIf="!translations[a.id]">{{ a.commentaire }}</p>
-
-        <!-- Texte traduit -->
         <div class="translation-block" *ngIf="translations[a.id]">
           <p class="avis-text translated">{{ translations[a.id] }}</p>
           <span class="translation-badge">
@@ -180,42 +143,22 @@
           </span>
         </div>
 
-        <!-- Barre de traduction -->
         <div class="translate-bar">
-
-          <!-- Bouton Traduire (état initial) -->
-          <button
-            class="btn-translate"
+          <button class="btn-translate"
             *ngIf="!translations[a.id] && !translatingId[a.id] && !translationErrors[a.id]"
-            (click)="translateAvis(a)"
-            title="Translate this comment">
-            <i class="fas fa-language"></i>
-            <span>Translate</span>
+            (click)="translateAvis(a)">
+            <i class="fas fa-language"></i> <span>Translate</span>
           </button>
-
-          <!-- Chargement -->
           <span class="translate-loading" *ngIf="translatingId[a.id]">
             <i class="fas fa-spinner fa-spin"></i> Translation in progress…
           </span>
-
-          <!-- Erreur + Réessayer -->
-          <span class="translate-error"
-                *ngIf="translationErrors[a.id] && !translatingId[a.id]">
+          <span class="translate-error" *ngIf="translationErrors[a.id] && !translatingId[a.id]">
             <i class="fas fa-exclamation-circle"></i> {{ translationErrors[a.id] }}
-            <button class="btn-retry" (click)="translateAvis(a)">
-              <i class="fas fa-redo"></i> Retry
-            </button>
+            <button class="btn-retry" (click)="translateAvis(a)"><i class="fas fa-redo"></i> Retry</button>
           </span>
-
-          <!-- Voir l'original (après traduction) -->
-          <button
-            class="btn-show-original"
-            *ngIf="translations[a.id]"
-            (click)="clearTranslation(a.id)">
-            <i class="fas fa-undo-alt"></i>
-            <span>View original</span>
+          <button class="btn-show-original" *ngIf="translations[a.id]" (click)="clearTranslation(a.id)">
+            <i class="fas fa-undo-alt"></i> <span>View original</span>
           </button>
-
         </div>
       </div>
 
@@ -230,7 +173,6 @@
           <span>{{ a.nbLikes }}</span>
           <span class="action-lbl">{{ a.likedByMe ? 'Aimé' : "J'aime" }}</span>
         </button>
-
         <button
           class="action-btn reply-btn"
           (click)="toggleCommentInput(a.id)"
@@ -240,7 +182,7 @@
         </button>
       </div>
 
-      <!-- Affichage des commentaires d'agriculteurs -->
+      <!-- ── Commentaires de reply des agriculteurs avec traduction ── -->
       <div class="sub-comments" *ngIf="a.commentaires && a.commentaires.length > 0">
         <div class="sub-comment" *ngFor="let c of a.commentaires">
           <div class="sub-av">
@@ -254,33 +196,72 @@
               <span class="sub-author">{{ c.agriculteurPrenom }} {{ c.agriculteurNom }}</span>
               <span class="sub-date">{{ formatDate(c.createdAt) }}</span>
             </div>
-            <p class="sub-text">{{ c.contenu }}</p>
+
+            <!-- Texte du commentaire ou traduction -->
+            <p class="sub-text" *ngIf="!cmtTranslations[c.id]">{{ c.contenu }}</p>
+            <div *ngIf="cmtTranslations[c.id]" class="cmt-translation-wrap">
+              <p class="sub-text translated">{{ cmtTranslations[c.id] }}</p>
+              <span class="translation-badge translation-badge--sm">
+                <i class="fas fa-language"></i>
+                {{ cmtTranslationBadgeLabel(c.id) }}
+              </span>
+            </div>
+
+            <!-- Barre de traduction inline -->
+            <div class="translate-bar translate-bar--xs">
+              <button class="btn-translate btn-translate--xs"
+                *ngIf="!cmtTranslations[c.id] && !cmtTranslatingId[c.id] && !cmtTranslationErrors[c.id]"
+                (click)="translateComment(c.id, c.contenu)">
+                <i class="fas fa-language"></i> <span>Translate</span>
+              </button>
+              <span class="translate-loading" *ngIf="cmtTranslatingId[c.id]">
+                <i class="fas fa-spinner fa-spin"></i>
+              </span>
+              <span class="translate-error translate-error--xs" *ngIf="cmtTranslationErrors[c.id] && !cmtTranslatingId[c.id]">
+                <i class="fas fa-exclamation-circle"></i> {{ cmtTranslationErrors[c.id] }}
+                <button class="btn-retry" (click)="translateComment(c.id, c.contenu)">
+                  <i class="fas fa-redo"></i>
+                </button>
+              </span>
+              <button class="btn-show-original btn-translate--xs" *ngIf="cmtTranslations[c.id]"
+                      (click)="clearCommentTranslation(c.id)">
+                <i class="fas fa-undo-alt"></i> <span>Original</span>
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
 
-      <!-- Input pour répondre (agriculteur) -->
+      <!-- ── Input de reply avec bad-words + Groq ── -->
       <div class="comment-input-wrap" *ngIf="showCommentInput[a.id] && isAgriculteur">
         <div class="comment-input-row">
           <input
             type="text"
             [(ngModel)]="commentInputs[a.id]"
-            placeholder="Votre réponse…"
+            placeholder="Your reply…"
             class="comment-input"
-            [class.comment-input--error]="commentInputs[a.id] && badWords.containsBadWord(commentInputs[a.id])"
-            (keyup.enter)="submitCommentaire(a)">
+            [class.comment-input--error]="hasCommentBadWord(a.id)"
+            (input)="onCommentInput(a.id)"
+            (keyup.enter)="!hasCommentBadWord(a.id) && submitCommentaire(a)">
           <button
             class="btn-send-comment"
             (click)="submitCommentaire(a)"
-            [disabled]="submittingComment[a.id] || !commentInputs[a.id]?.trim() || badWords.containsBadWord(commentInputs[a.id] || '')">
+            [disabled]="submittingComment[a.id] || !commentInputs[a.id]?.trim() || hasCommentBadWord(a.id)">
             <i class="fas fa-spinner fa-spin" *ngIf="submittingComment[a.id]"></i>
             <i class="fas fa-paper-plane"    *ngIf="!submittingComment[a.id]"></i>
           </button>
         </div>
-        <div class="bad-word-warning bad-word-warning--sm"
-             *ngIf="commentInputs[a.id] && badWords.containsBadWord(commentInputs[a.id])">
+
+        <!-- Bad word warning -->
+        <div class="bad-word-warning bad-word-warning--sm" *ngIf="hasCommentBadWord(a.id)">
           <i class="fas fa-exclamation-triangle"></i>
-          Your response contains inappropriate words.
+          Your reply contains inappropriate words. Please rephrase it.
+        </div>
+        <!-- Groq checking indicator -->
+        <div class="groq-checking" *ngIf="checkingGroq[a.id] && !hasCommentBadWord(a.id)">
+          <i class="fas fa-shield-alt fa-spin"></i>
+          <span>Checking content…</span>
         </div>
       </div>
 

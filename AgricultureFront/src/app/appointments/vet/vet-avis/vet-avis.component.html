@@ -1,8 +1,6 @@
 <div class="vet-avis-page">
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- PAGE HEADER                                            -->
-  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- PAGE HEADER -->
   <div class="page-header">
     <div>
       <h1 class="pt"><i class="fas fa-star"></i> Mes avis</h1>
@@ -10,11 +8,8 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- RÉSUMÉ GLOBAL                                          -->
-  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- RÉSUMÉ GLOBAL -->
   <div class="summary-card" *ngIf="summary && summary.totalAvis > 0 && !loading">
-
     <div class="summary-score">
       <span class="score-number">{{ averageDisplay }}</span>
       <div class="score-stars">
@@ -24,24 +19,21 @@
       <span class="score-label">Moyenne générale</span>
       <span class="score-total">sur {{ summary.totalAvis }} avis</span>
     </div>
-
     <div class="summary-dist">
       <div class="dist-row" *ngFor="let s of [5,4,3,2,1]">
-        <span class="dist-label">
-          <i class="fas fa-star star-gold-sm"></i> {{ s }}
-        </span>
+        <span class="dist-label"><i class="fas fa-star star-gold-sm"></i> {{ s }}</span>
         <div class="dist-bar-wrap">
           <div class="dist-bar" [style.width.%]="distributionWidth(s)"></div>
         </div>
         <span class="dist-count">{{ distributionCount(s) }}</span>
       </div>
     </div>
-
     <div class="summary-stats">
       <div class="sstat" *ngFor="let s of [5,4,3,2,1]">
         <span class="sstat-val">{{ countByNote(s) }}</span>
         <div class="sstat-stars">
-          <i *ngFor="let i of [1,2,3,4,5]" [class]="i<=s ? 'fas fa-star star-gold-sm' : 'fas fa-star star-empty-sm'"></i>
+          <i *ngFor="let i of [1,2,3,4,5]"
+             [class]="i<=s ? 'fas fa-star star-gold-sm' : 'fas fa-star star-empty-sm'"></i>
         </div>
         <span class="sstat-lbl">{{ noteLabel(s) }}</span>
       </div>
@@ -54,25 +46,19 @@
     <p>Les agriculteurs pourront vous évaluer après leurs consultations.</p>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- FILTRES PAR NOTE                                       -->
-  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- FILTRES PAR NOTE -->
   <div class="filter-bar" *ngIf="!loading && avis.length > 0">
     <button class="filter-chip" [class.active]="filterNote === null" (click)="setFilter(null)">
       Tous <span class="chip-badge">{{ avis.length }}</span>
     </button>
     <button *ngFor="let s of [5,4,3,2,1]"
-      class="filter-chip"
-      [class.active]="filterNote === s"
-      (click)="setFilter(s)">
+      class="filter-chip" [class.active]="filterNote === s" (click)="setFilter(s)">
       <i class="fas fa-star chip-star"></i> {{ s }}
       <span class="chip-badge">{{ countByNote(s) }}</span>
     </button>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- CHARGEMENT / ERREUR                                    -->
-  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- CHARGEMENT / ERREUR -->
   <div class="loading-box" *ngIf="loading">
     <div class="loader"></div> Chargement des avis…
   </div>
@@ -80,9 +66,7 @@
     <i class="fas fa-exclamation-triangle"></i> {{ error }}
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- LISTE DES AVIS                                         -->
-  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- LISTE DES AVIS -->
   <div class="avis-list" *ngIf="!loading && filteredAvis.length > 0">
     <div class="avis-card" *ngFor="let a of filteredAvis; trackBy: trackById"
          [class.has-reply]="!!a.reponseVet">
@@ -103,19 +87,17 @@
             </span>
           </div>
         </div>
-
         <div class="card-note">
           <div class="note-stars">
             <i *ngFor="let filled of starsArray(a.note)"
-               [class]="filled ? 'fas fa-star star-gold-sm' : 'fas fa-star star-empty-sm'">
-            </i>
+               [class]="filled ? 'fas fa-star star-gold-sm' : 'fas fa-star star-empty-sm'"></i>
           </div>
           <span class="note-num">{{ a.note }}/5</span>
           <span class="note-badge" [ngClass]="'badge-'+a.note">{{ noteLabel(a.note) }}</span>
         </div>
       </div>
 
-      <!-- Commentaire -->
+      <!-- Commentaire principal -->
       <p class="avis-comment">{{ a.commentaire }}</p>
 
       <!-- Stats réactions -->
@@ -128,33 +110,118 @@
         </span>
       </div>
 
-      <!-- Commentaires des agriculteurs (résumé) -->
+      <!-- ── Commentaires des agriculteurs avec Traduction ── -->
       <div class="farmer-comments" *ngIf="a.commentaires.length > 0">
-        <div class="fc-item" *ngFor="let c of a.commentaires">
-          <div class="fc-av">
-            <img *ngIf="c.agriculteurPhoto" [src]="c.agriculteurPhoto" alt="">
-            <div *ngIf="!c.agriculteurPhoto" class="fc-av-ph">
-              {{ initials(c.agriculteurNom, c.agriculteurPrenom) }}
+
+        <!-- Texte traduit (tous groupés) -->
+        <div class="reply-translation-block" *ngIf="replyTranslations[a.id]">
+          <div class="fc-item translated-block">
+            <div class="fc-body">
+              <p class="fc-text translated">{{ replyTranslations[a.id] }}</p>
+              <span class="translation-badge">
+                <i class="fas fa-language"></i>
+                {{ replyTranslationBadgeLabel(a.id) }}
+              </span>
             </div>
           </div>
-          <div class="fc-body">
-            <span class="fc-name">{{ c.agriculteurPrenom }} {{ c.agriculteurNom }}</span>
-            <p class="fc-text">{{ c.contenu }}</p>
+        </div>
+
+        <!-- Texte original -->
+        <div *ngIf="!replyTranslations[a.id]">
+          <div class="fc-item" *ngFor="let c of a.commentaires">
+            <div class="fc-av">
+              <img *ngIf="c.agriculteurPhoto" [src]="c.agriculteurPhoto" alt="">
+              <div *ngIf="!c.agriculteurPhoto" class="fc-av-ph">
+                {{ initials(c.agriculteurNom, c.agriculteurPrenom) }}
+              </div>
+            </div>
+            <div class="fc-body">
+              <span class="fc-name">{{ c.agriculteurPrenom }} {{ c.agriculteurNom }}</span>
+              <p class="fc-text">{{ c.contenu }}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Réponse déjà publiée -->
+        <!-- Barre de traduction pour les commentaires -->
+        <div class="translate-bar translate-bar--sm">
+          <button
+            class="btn-translate"
+            *ngIf="!replyTranslations[a.id] && !replyTranslatingId[a.id] && !replyTranslationErrors[a.id]"
+            (click)="translateReplyComments(a)"
+            title="Traduire les commentaires">
+            <i class="fas fa-language"></i>
+            <span>Traduire les commentaires</span>
+          </button>
+          <span class="translate-loading" *ngIf="replyTranslatingId[a.id]">
+            <i class="fas fa-spinner fa-spin"></i> Traduction en cours…
+          </span>
+          <span class="translate-error" *ngIf="replyTranslationErrors[a.id] && !replyTranslatingId[a.id]">
+            <i class="fas fa-exclamation-circle"></i> {{ replyTranslationErrors[a.id] }}
+            <button class="btn-retry" (click)="translateReplyComments(a)">
+              <i class="fas fa-redo"></i> Réessayer
+            </button>
+          </span>
+          <button
+            class="btn-show-original"
+            *ngIf="replyTranslations[a.id]"
+            (click)="clearReplyTranslation(a.id)">
+            <i class="fas fa-undo-alt"></i>
+            <span>Voir l'original</span>
+          </button>
+        </div>
+
+      </div><!-- /farmer-comments -->
+
+      <!-- ── Réponse déjà publiée + traduction ── -->
       <div class="my-reply" *ngIf="a.reponseVet">
         <div class="my-reply-header">
           <i class="fas fa-reply"></i>
           <span>Votre réponse</span>
           <span class="my-reply-date">{{ formatDate(a.reponseVet.createdAt) }}</span>
         </div>
-        <p class="my-reply-text">{{ a.reponseVet.contenu }}</p>
+
+        <!-- Texte original -->
+        <p class="my-reply-text" *ngIf="!vetReplyTranslations[a.id]">{{ a.reponseVet.contenu }}</p>
+
+        <!-- Texte traduit -->
+        <div class="translation-block" *ngIf="vetReplyTranslations[a.id]">
+          <p class="my-reply-text translated">{{ vetReplyTranslations[a.id] }}</p>
+          <span class="translation-badge">
+            <i class="fas fa-language"></i>
+            {{ vetReplyTranslationBadgeLabel(a.id) }}
+          </span>
+        </div>
+
+        <!-- Barre de traduction de la réponse vet -->
+        <div class="translate-bar translate-bar--sm">
+          <button
+            class="btn-translate"
+            *ngIf="!vetReplyTranslations[a.id] && !vetReplyTranslatingId[a.id] && !vetReplyTranslationErrors[a.id]"
+            (click)="translateVetReply(a)"
+            title="Traduire votre réponse">
+            <i class="fas fa-language"></i>
+            <span>Traduire</span>
+          </button>
+          <span class="translate-loading" *ngIf="vetReplyTranslatingId[a.id]">
+            <i class="fas fa-spinner fa-spin"></i> Traduction…
+          </span>
+          <span class="translate-error" *ngIf="vetReplyTranslationErrors[a.id] && !vetReplyTranslatingId[a.id]">
+            <i class="fas fa-exclamation-circle"></i> {{ vetReplyTranslationErrors[a.id] }}
+            <button class="btn-retry" (click)="translateVetReply(a)">
+              <i class="fas fa-redo"></i> Réessayer
+            </button>
+          </span>
+          <button
+            class="btn-show-original"
+            *ngIf="vetReplyTranslations[a.id]"
+            (click)="clearVetReplyTranslation(a.id)">
+            <i class="fas fa-undo-alt"></i>
+            <span>Voir l'original</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Bouton & formulaire de réponse -->
+      <!-- ── Formulaire de réponse avec filtre bad words + Groq ── -->
       <div class="reply-section" *ngIf="!a.reponseVet">
         <button
           class="btn-reply"
@@ -169,16 +236,32 @@
             rows="3"
             placeholder="Rédigez votre réponse professionnelle…"
             class="reply-ta"
-            maxlength="800">
+            [class.reply-ta--error]="hasReplyBadWord(a.id)"
+            maxlength="800"
+            (input)="onReplyInput(a.id)">
           </textarea>
+
+          <!-- Indicateur bad word + Groq -->
+          <div class="bad-word-warning" *ngIf="hasReplyBadWord(a.id)">
+            <i class="fas fa-exclamation-triangle"></i>
+            Votre réponse contient des mots inappropriés. Veuillez la reformuler.
+          </div>
+          <div class="groq-checking" *ngIf="checkingGroq[a.id] && !hasReplyBadWord(a.id)">
+            <i class="fas fa-shield-alt fa-spin"></i>
+            <span>Vérification du contenu…</span>
+          </div>
+
           <div class="reply-err" *ngIf="replyError[a.id]">
             <i class="fas fa-exclamation-circle"></i> {{ replyError[a.id] }}
           </div>
+
           <div class="reply-actions">
-            <button class="btn-cancel-reply" (click)="toggleReplyInput(a.id)" [disabled]="submittingReply[a.id]">
+            <button class="btn-cancel-reply" (click)="toggleReplyInput(a.id)"
+                    [disabled]="submittingReply[a.id]">
               Annuler
             </button>
-            <button class="btn-send-reply" (click)="submitReply(a)" [disabled]="submittingReply[a.id] || !replyInputs[a.id]?.trim()">
+            <button class="btn-send-reply" (click)="submitReply(a)"
+                    [disabled]="submittingReply[a.id] || !replyInputs[a.id]?.trim() || hasReplyBadWord(a.id)">
               <i class="fas fa-spinner fa-spin" *ngIf="submittingReply[a.id]"></i>
               <i class="fas fa-paper-plane"    *ngIf="!submittingReply[a.id]"></i>
               Publier la réponse
