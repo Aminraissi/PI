@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -158,6 +159,12 @@ public class VaccinationService {
     public List<CampaignAnimalDTO> getAnimalsByCampaign(Long campaignId) {
         return vaccinationRepo.findByCampaignId(campaignId)
                 .stream().map(mapper::toCampaignAnimalDTO).toList();
+    }
+    public List<VaccinationCampaignDTO> getCampaignsByOwner(Long ownerId) {
+        return campaignRepo.findByOwnerId(ownerId)
+                .stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
     }
 }
 

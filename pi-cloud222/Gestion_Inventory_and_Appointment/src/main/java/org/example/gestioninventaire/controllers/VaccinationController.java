@@ -11,12 +11,14 @@ import org.example.gestioninventaire.dtos.response.ApiResponse;
 import org.example.gestioninventaire.dtos.response.VaccinationResponse;
 import org.example.gestioninventaire.entities.VaccinationCampaign;
 import org.example.gestioninventaire.mappers.VaccinationMapper;
+import org.example.gestioninventaire.repositories.VaccinationCampaignRepository;
 import org.example.gestioninventaire.services.VaccinationCrudService;
 import org.example.gestioninventaire.services.VaccinationService;
 import org.example.gestioninventaire.util.JwtUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/vaccinations")
@@ -27,6 +29,7 @@ public class VaccinationController {
     private final VaccinationService service;
     private final VaccinationMapper mapper;
     private final JwtUtils jwtUtils;
+    private final VaccinationCampaignRepository campaignRepository;
 
     @PostMapping
     public ApiResponse<VaccinationResponse> create(@Valid @RequestBody CreateVaccinationRequest request) {
@@ -113,9 +116,14 @@ public class VaccinationController {
         return service.getProgress(id);
     }
     @GetMapping("/campaigns")
-    public List<VaccinationCampaignDTO> getAllCampaigns() {
-        return service.getAllCampaigns();
+
+    public List<VaccinationCampaignDTO> getAllCampaigns(
+            @RequestHeader("Authorization") String authHeader) {
+        Long ownerId = jwtUtils.extractUserId(authHeader);
+        return service.getCampaignsByOwner(ownerId); // ✅ filtré par agriculteur
     }
+
+
     // 🔹 2. détails campagne
     @GetMapping("/campaign/{id}")
     public VaccinationCampaignDTO getCampaign(@PathVariable Long id) {
