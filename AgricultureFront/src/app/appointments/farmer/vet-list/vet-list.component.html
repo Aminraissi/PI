@@ -9,25 +9,25 @@
 <ng-container *ngIf="!selectedVet">
   <div class="ph">
     <div>
-      <h1 class="pt">Vétérinaires</h1>
-      <p class="ps">Choisissez un vétérinaire pour prendre rendez-vous</p>
+      <h1 class="pt">Veterinarians</h1>
+      <p class="ps">Choose a veterinarian to book an appointment</p>
     </div>
   </div>
 
   <div class="sb">
     <i class="fas fa-search si"></i>
     <input [(ngModel)]="searchTerm" (ngModelChange)="search()"
-      placeholder="Rechercher par nom, prénom ou région…" class="si-input">
+      placeholder="Search by name, first name or region..." class="si-input">
     <button *ngIf="searchTerm" class="sc" (click)="searchTerm='';search()">
       <i class="fas fa-times"></i>
     </button>
   </div>
 
-  <div *ngIf="loading" class="sm"><i class="fas fa-spinner fa-spin"></i> Chargement…</div>
+  <div *ngIf="loading" class="sm"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
 
   <div class="empty" *ngIf="!loading && filtered.length===0">
     <i class="fas fa-user-md"></i>
-    <p>Aucun vétérinaire trouvé.</p>
+    <p>No veterinarian found.</p>
   </div>
 
   <div class="vlist" *ngIf="!loading && filtered.length>0">

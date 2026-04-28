@@ -21,8 +21,8 @@ export class ConsumeModalComponent {
 
   reasons: Reason[] = ['CONSOMMATION', 'PERTE', 'VENTE', 'PRODUIT_EXPIRE', 'VOL', 'VACCINATION', 'AUTRE'];
   reasonLabels: Record<string, string> = {
-    CONSOMMATION: 'Consommation', PERTE: 'Perte', VENTE: 'Vente',
-    PRODUIT_EXPIRE: 'Produit expiré', VOL: 'Vol', VACCINATION: 'Vaccination', AUTRE: 'Autre'
+    CONSOMMATION: 'Consumption', PERTE: 'Loss', VENTE: 'Sale',
+    PRODUIT_EXPIRE: 'Expired Product', VOL: 'Theft', VACCINATION: 'Vaccination', AUTRE: 'Other'
   };
 
   form = new FormGroup({
@@ -46,7 +46,7 @@ export class ConsumeModalComponent {
 
     const quantity = Number(this.form.getRawValue().quantity ?? 0);
     if (quantity > Number(this.product.currentQuantity ?? 0)) {
-      this.error = 'La quantité à consommer dépasse le stock disponible.';
+      this.error = 'The quantity to consume exceeds the available stock.';
       return;
     }
 

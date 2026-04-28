@@ -102,7 +102,7 @@ export interface CreateUnavailabilityRequest {
   reason?: string | null;
 }
 
-// ── Health Records ────────────────────────────────────────────
+
 export interface HealthRecord {
   id: number;
   maladie: string;
@@ -257,7 +257,7 @@ export interface CommentaireAvisResponse { id: number; contenu: string; agricult
 export interface VetRatingSummary { veterinarianId: number; moyenneNote: number; totalAvis: number; distribution: { [key: number]: number }; }
 export interface CreateAvisRequest { note: number; commentaire: string; veterinarianId: number; }
 
-/** Réponse officielle du vétérinaire à un avis */
+
 export interface ReponseAvisResponse {
   id: number;
   contenu: string;
@@ -268,7 +268,7 @@ export interface ReponseAvisResponse {
   createdAt: string;
 }
 
-/** Commentaire d'un agriculteur sur un avis */
+
 export interface CommentaireAvisResponse {
   id: number;
   contenu: string;
@@ -279,7 +279,7 @@ export interface CommentaireAvisResponse {
   createdAt: string;
 }
 
-/** Avis complet d'un agriculteur sur un vétérinaire */
+
 export interface AvisResponse {
   id: number;
   note: number;              // 1 à 5 étoiles
@@ -290,26 +290,47 @@ export interface AvisResponse {
   agriculteurPhoto: string | null;
   veterinarianId: number;
   createdAt: string;
-  reponseVet: ReponseAvisResponse | null;   // réponse du vétérinaire
-  commentaires: CommentaireAvisResponse[];  // réponses des autres agriculteurs
+  reponseVet: ReponseAvisResponse | null;   
+  commentaires: CommentaireAvisResponse[]; 
   nbLikes: number;
-  likedByMe: boolean;   // true si l'utilisateur courant a liké cet avis
+  likedByMe: boolean;  
 }
 
-/** Résumé des évaluations d'un vétérinaire */
+
 export interface VetRatingSummary {
   veterinarianId: number;
-  moyenneNote: number;      // ex: 4.3
+  moyenneNote: number;      
   totalAvis: number;
-  distribution: { [key: number]: number };  // { 1: 2, 2: 1, 3: 4, 4: 8, 5: 12 }
+  distribution: { [key: number]: number };  
 }
 
-/** Requête de création d'un avis */
+
 export interface CreateAvisRequest {
-  note: number;         // 1-5
+  note: number;        
   commentaire: string;
   veterinarianId: number;
 }
 
 
 
+
+
+export type PostType = 'ARTICLE' | 'VIDEO';
+
+export interface VetPost {
+  id: number;
+  veterinarianId: number;
+  titre: string;
+  description: string;
+  type: PostType;
+  mediaUrl: string | null;
+  mediaFileName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVetPostRequest {
+  titre: string;
+  description: string;
+  type: PostType;
+}

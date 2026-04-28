@@ -28,11 +28,11 @@ export class AdminClaimsComponent implements OnInit {
   searchText = '';
 
   statuses: Array<{ value: ReclamationStatus | ''; label: string }> = [
-    { value: '', label: 'Tous les statuts' },
-    { value: 'EN_ATTENTE', label: 'En attente' },
-    { value: 'EN_COURS',   label: 'En cours' },
-    { value: 'RESOLUE',    label: 'Résolue' },
-    { value: 'REJETEE',    label: 'Rejetée' }
+    { value: '', label: 'All statuses' },
+    { value: 'EN_ATTENTE', label: 'Pending' },
+    { value: 'EN_COURS',   label: 'In Progress' },
+    { value: 'RESOLUE',    label: 'RResolved' },
+    { value: 'REJETEE',    label: 'Rejected' }
   ];
 
   constructor(private claimsService: ClaimsService, private router: Router) {}
@@ -50,7 +50,7 @@ export class AdminClaimsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Impossible de charger les réclamations.';
+        this.error = 'Impossible to load claims.';
         this.loading = false;
       }
     });

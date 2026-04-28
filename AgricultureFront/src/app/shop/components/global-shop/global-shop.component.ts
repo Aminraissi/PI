@@ -1,4 +1,5 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { InventoryApiService } from 'src/app/inventory/services/inventory-api.service';
 import { InventoryProduct } from 'src/app/inventory/models/inventory.models';
 import { CartService } from '../../services/cart.service';
@@ -31,20 +32,30 @@ export class GlobalShopComponent implements OnInit {
   showCheckout = false;
 
   categories = [
-    { value: '',           label: 'Toutes' },
-    { value: 'VACCIN',     label: '💉 Vaccins' },
-    { value: 'MEDICAMENT', label: '💊 Médicaments' },
-    { value: 'ALIMENT',    label: '🌾 Aliments' },
-    { value: 'AUTRE',      label: '📦 Autre' },
+    { value: '',           label: 'All' },
+    { value: 'VACCIN',     label: '💉 Vaccines' },
+    { value: 'MEDICAMENT', label: '💊 Medications' },
+    { value: 'ALIMENT',    label: '🌾 Feeds' },
+    { value: 'AUTRE',      label: '📦 Other' },
   ];
 
   constructor(
     private api: InventoryApiService,
-    public cartService: CartService
+    public cartService: CartService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
-       this.loadShop();
+    this.loadShop();
+    this.openCheckoutOnStripeReturn();
+  }
+
+  private openCheckoutOnStripeReturn() {
+    const paymentStatus = this.route.snapshot.queryParamMap.get('payment');
+    if (paymentStatus === 'success' || paymentStatus === 'cancel') {
+      this.showCart = false;
+      this.showCheckout = true;
+    }
   }
 
   private loadShop() {
@@ -103,7 +114,7 @@ export class GlobalShopComponent implements OnInit {
   }
 
   vetName(p: InventoryProduct): string {
-    return p.owner ? `${p.owner.prenom ?? ''} ${p.owner.nom ?? ''}`.trim() : 'Vétérinaire';
+    return p.owner ? `${p.owner.prenom ?? ''} ${p.owner.nom ?? ''}`.trim() : 'veterinarian';
   }
 
   vetRegion(p: InventoryProduct): string {
@@ -115,7 +126,7 @@ export class GlobalShopComponent implements OnInit {
   }
 
   categoryLabel(c: string) {
-    return { VACCIN:'Vaccin', MEDICAMENT:'Médicament', ALIMENT:'Aliment', RECOLTE:'Récolte', AUTRE:'Autre' }[c] || c;
+    return { VACCIN:'Vaccines', MEDICAMENT:'Medications', ALIMENT:'Feeds', RECOLTE:'Harvest', AUTRE:'Other' }[c] || c;
   }
 
   categoryEmoji(c: string) {

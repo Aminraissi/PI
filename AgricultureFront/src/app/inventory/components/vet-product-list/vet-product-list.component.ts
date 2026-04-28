@@ -28,19 +28,19 @@ export class VetProductListComponent implements OnInit {
 
   // Catégories vétérinaires uniquement
   categories = [
-    { value: '',           label: 'Toutes',      emoji: '🔍' },
-    { value: 'VACCIN',     label: 'Vaccins',      emoji: '💉' },
-    { value: 'MEDICAMENT', label: 'Médicaments',  emoji: '💊' },
-    { value: 'ALIMENT',    label: 'Aliments',     emoji: '🌾' },
-    { value: 'AUTRE',      label: 'Autre',        emoji: '📦' },
+    { value: '',           label: 'All',      emoji: '🔍' },
+    { value: 'VACCIN',     label: 'Vaccines',      emoji: '💉' },
+    { value: 'MEDICAMENT', label: 'Medications',  emoji: '💊' },
+    { value: 'ALIMENT',    label: 'Feeds',     emoji: '🌾' },
+    { value: 'AUTRE',      label: 'Other',        emoji: '📦' },
   ];
 
   catConfig: Record<string, { label: string; emoji: string; color: string }> = {
-    VACCIN:     { label: 'Vaccin',     emoji: '💉', color: '#1565c0' },
-    MEDICAMENT: { label: 'Médicament', emoji: '💊', color: '#6a1b9a' },
-    ALIMENT:    { label: 'Aliment',    emoji: '🌾', color: '#2e7d32' },
-    RECOLTE:    { label: 'Récolte',    emoji: '🌿', color: '#558b2f' },
-    AUTRE:      { label: 'Autre',      emoji: '📦', color: '#e65100' },
+    VACCIN:     { label: 'Vaccine',     emoji: '💉', color: '#1565c0' },
+    MEDICAMENT: { label: 'Medicine', emoji: '💊', color: '#6a1b9a' },
+    ALIMENT:    { label: 'Feed',    emoji: '🌾', color: '#2e7d32' },
+    RECOLTE:    { label: 'Harvest',    emoji: '🌿', color: '#558b2f' },
+    AUTRE:      { label: 'Other',      emoji: '📦', color: '#e65100' },
   };
 
   constructor(private api: InventoryApiService, private toast: ToastService) {}
@@ -55,8 +55,8 @@ export class VetProductListComponent implements OnInit {
       error: e => {
         this.loading = false;
         this.error = e.status === 0
-          ? 'Impossible de joindre le serveur. Vérifiez que le backend est démarré.'
-          : e.error?.message || 'Erreur de chargement.';
+          ? 'Server inaccessible (port 8088).'
+          : e.error?.message || 'Error loading products';
       }
     });
   }
@@ -75,10 +75,10 @@ export class VetProductListComponent implements OnInit {
   onProductSaved()             { this.showProductForm = false; this.load(); }
 
   delete(p: InventoryProduct) {
-    if (!confirm(`Supprimer "${p.nom}" de l'inventaire clinique ?`)) return;
+    if (!confirm(`Delete "${p.nom}" from the veterinary inventory?`)) return;
     this.api.deleteProduct(p.id).subscribe({
-      next: () => { this.toast.success(`"${p.nom}" supprimé avec succès !`); this.load(); },
-      error: e  => this.toast.error(e.error?.message || 'Erreur lors de la suppression.')
+      next: () => { this.toast.success(`"${p.nom}" deleted successfully!`); this.load(); },
+      error: e  => this.toast.error(e.error?.message || 'Error occurred while deleting the product.')
     });
   }
 

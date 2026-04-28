@@ -22,12 +22,19 @@ import { ChatComponent }                 from './chat/chat.component';
 import { AnimalDiagnosticComponent }     from './farmer/animal-diagnostic/animal-diagnostic.component';
 import { VetAiChatbotComponent }         from './farmer/vet-ai-chatbot/vet-ai-chatbot.component';
 import { FarmerImageChatbotComponent }   from './farmer/farmer-image-chatbot/farmer-image-chatbot.component';
+import { FarmerPoultryChatbotComponent } from './farmer/farmer-poultry-chatbot/farmer-poultry-chatbot.component';
 import { VetImageChatbotComponent }      from './vet/vet-image-chatbot/vet-image-chatbot.component';
+import { VetPoultryChatbotComponent }    from './vet/vet-poultry-chatbot/vet-poultry-chatbot.component';
 import { FarmerAvisComponent }           from './farmer/farmer-avis/farmer-avis.component';
 import { VetAvisComponent }              from './vet/vet-avis/vet-avis.component';
 
 import { InventoryModule }               from '../inventory/inventory.module';
 import { ShopModule }                    from '../shop/shop.module';
+import { VetCommandesComponent } from './vet/vet-commandes/vet-commandes.component';
+import { VetStatisticsComponent } from './vet/vet-statistics/vet-statistics.component';
+import { FarmerProfileFormComponent } from './farmer/farmer-profile-form/farmer-profile-form.component';
+import { VetPostListComponent }        from './farmer/vet-post-list/vet-post-list.component';
+import { VetPostManagerComponent }     from './vet/vet-post-manager/vet-post-manager.component';
 
 @NgModule({
   declarations: [
@@ -44,9 +51,17 @@ import { ShopModule }                    from '../shop/shop.module';
     AnimalDiagnosticComponent,
     VetAiChatbotComponent,
     FarmerImageChatbotComponent,
+    FarmerPoultryChatbotComponent,
     VetImageChatbotComponent,
+    VetPoultryChatbotComponent,
     FarmerAvisComponent,
     VetAvisComponent,
+     VetCommandesComponent,
+       VetStatisticsComponent,
+       
+    FarmerProfileFormComponent,
+    VetPostListComponent,
+    VetPostManagerComponent,
   ],
   imports: [
     CommonModule,

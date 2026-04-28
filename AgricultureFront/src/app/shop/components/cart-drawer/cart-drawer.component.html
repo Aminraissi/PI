@@ -6,12 +6,12 @@
     <div class="drawer-header-left">
       <i class="fas fa-shopping-cart"></i>
       <div>
-        <h3>Mon Panier</h3>
+        <h3>My Cart</h3>
         <span class="item-count">{{ cartService.count }} article{{ cartService.count > 1 ? 's' : '' }}</span>
       </div>
     </div>
     <div class="drawer-header-right">
-      <button class="btn-clear" *ngIf="cartService.items.length > 0" (click)="clearCart()" title="Vider le panier">
+      <button class="btn-clear" *ngIf="cartService.items.length > 0" (click)="clearCart()" title="Clear cart">
         <i class="fas fa-trash"></i>
       </button>
       <button class="btn-close" (click)="close.emit()">
@@ -23,9 +23,9 @@
   <!-- Empty state -->
   <div *ngIf="cartService.items.length === 0" class="drawer-empty">
     <div class="empty-icon">🛒</div>
-    <h4>Votre panier est vide</h4>
-    <p>Ajoutez des produits depuis la boutique vétérinaire.</p>
-    <button class="btn-shop" (click)="close.emit()">Parcourir la boutique</button>
+    <h4>Your cart is empty</h4>
+    <p>Add products from the veterinary shop.</p>
+    <button class="btn-shop" (click)="close.emit()">Browse the shop</button>
   </div>
 
   <!-- Items list -->
@@ -42,7 +42,7 @@
       <div class="item-info">
         <p class="item-name">{{ item.product.nom }}</p>
         <p class="item-vet">Dr. {{ item.vetNom }}</p>
-        <p class="item-region"><i class="fas fa-map-marker-alt"></i> {{ item.vetRegion || 'Non précisée' }}</p>
+        <p class="item-region"><i class="fas fa-map-marker-alt"></i> {{ item.vetRegion || 'Unspecified' }}</p>
         <div class="item-price-row">
           <span class="item-unit-price">{{ item.product.prixVente | number:'1.2-2' }} DT / {{ item.product.unit }}</span>
         </div>
@@ -58,7 +58,7 @@
                   [disabled]="item.quantity >= (item.product.currentQuantity ?? 999)">+</button>
         </div>
         <span class="item-subtotal">{{ item.sousTotal | number:'1.2-2' }} DT</span>
-        <button class="btn-remove" (click)="remove(item)" title="Supprimer">
+        <button class="btn-remove" (click)="remove(item)" title="Remove">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -74,10 +74,10 @@
     </div>
     <button class="btn-checkout" (click)="checkout.emit()">
       <i class="fas fa-lock"></i>
-      Valider la commande — {{ cartService.total | number:'1.2-2' }} DT
+      Checkout — {{ cartService.total | number:'1.2-2' }} DT
     </button>
     <p class="checkout-note">
-      <i class="fas fa-shield-alt"></i> Paiement sécurisé par Stripe
+      <i class="fas fa-shield-alt"></i> Secure payment by Stripe
     </p>
   </div>
 </div>

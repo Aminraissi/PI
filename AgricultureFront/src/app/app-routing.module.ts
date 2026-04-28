@@ -14,6 +14,7 @@ import { DiseasePredictorComponent }         from './components/disease-predicto
 import { HelpRequestComponent }              from './components/help-request/help-request.component';
 import { ExpertAssistanceRequestsComponent } from './components/expert-assistance-requests/expert-assistance-requests.component';
 import { VerifyEmailComponent } from './components/auth/verify-email/verify-email.component';
+import { ProfileEditComponent } from './components/profile-edit/profile-edit.component';
 
 
 const routes: Routes = [
@@ -79,6 +80,7 @@ const routes: Routes = [
     loadChildren: () => import('./animals/animals.module').then(m => m.AnimalsModule),
     canActivate: [AuthGuard]
   },
+  { path: 'profile/edit',               component: ProfileEditComponent,               canActivate: [AuthGuard] },
 
   // Standalone page components declared in AppModule
   { path: 'disease-predictor',          component: DiseasePredictorComponent,         canActivate: [AuthGuard] },

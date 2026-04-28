@@ -21,7 +21,7 @@ export class ProductFormComponent implements OnInit {
 
   categories: ProductCategory[] = ['VACCIN', 'MEDICAMENT', 'ALIMENT', 'RECOLTE', 'AUTRE'];
   catLabels: Record<string, string> = {
-    VACCIN: 'Vaccin', MEDICAMENT: 'Médicament', ALIMENT: 'Aliment', RECOLTE: 'Récolte', AUTRE: 'Autre'
+    VACCIN: 'Vaccin', MEDICAMENT: 'Medicament', ALIMENT: 'Food', RECOLTE: 'Harvest', AUTRE: 'Other'
   };
 
   constructor(private api: InventoryApiService, private toast: ToastService) {}
@@ -33,6 +33,7 @@ export class ProductFormComponent implements OnInit {
       unit: new FormControl(this.product?.unit || '', Validators.required),
       isPerishable: new FormControl(this.product?.isPerishable ?? false),
       minThreshold: new FormControl(this.product?.minThreshold ?? 0, [Validators.required, Validators.min(0)]),
+      note: new FormControl(this.product?.note ?? ''),
     });
   }
 
@@ -60,6 +61,7 @@ export class ProductFormComponent implements OnInit {
       isPerishable: !!val.isPerishable,
       currentQuantity: this.isEdit ? Number(this.product?.currentQuantity ?? 0) : 0,
       minThreshold: Number(val.minThreshold ?? 0),
+      note: (val.note || '').trim() || null,
     };
 
     const obs = this.isEdit
@@ -69,18 +71,15 @@ export class ProductFormComponent implements OnInit {
     obs.subscribe({
       next: () => {
         this.loading = false;
-        this.toast.success(this.isEdit
-          ? `Produit "${val.nom}" modifié avec succès !`
-          : `Produit "${val.nom}" ajouté avec succès !`
-        );
+        
         this.saved.emit();
       },
       error: (e) => {
         this.loading = false;
         
         
-        this.error = e.error?.message || 'Erreur';
-        this.toast.error(this.error);
+        this.error = e.error?.message || 'Error';
+        
       }
     });
   }

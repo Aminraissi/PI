@@ -79,23 +79,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
         label: 'Events',
         route: 'events/organizer/events',
         roles: ['ORGANISATEUR_EVENEMENT']
-    }
+    },
+     {label : 'profile', route: '/profile/edit', roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT', 'AGENT', 'VETERINAIRE']},
+         { label: 'Reclamations', route: '/claims', roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT', 'AGENT', 'VETERINAIRE'] },
     ];
 
     dropdownLinks: NavDropdownLink[] = [
-        {
-            label: 'Inventory',
-            icon: 'fas fa-boxes',
-            route: '/inventory',
-            roles: ['AGRICULTEUR']
-        },
-        {
-            label: 'List Animal',
-            icon: 'fas fa-paw',
-            route: '/inventory',
-            queryParams: { tab: 'animals' },
-            roles: ['AGRICULTEUR']
-        },
+      
         {
             label: 'Terrain',
             icon: 'fas fa-leaf',
@@ -137,7 +127,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
             icon: 'fas fa-calendar',
             route: '/farm/calendar',
             roles: ['AGRICULTEUR']
-        }
+        },
+         {
+            label: 'Veterinaire & IA',
+            icon: 'fas fa-calendar-check',
+            route: '/appointments',
+            roles: ['AGRICULTEUR']
+        },
+         {
+            label: 'Appoinyments & Shop',
+            icon: 'fas fa-calendar-check',
+            route: '/appointments',
+            roles: [ 'VETERINAIRE']
+        },
            
 
     ];
@@ -148,7 +150,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         '/help-request',
         '/farm',
         '/loans',
-        '/expert/assistance-requests'
+        '/expert/assistance-requests',
+        '/profile'
     ];
 
     constructor(
@@ -160,6 +163,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.isLoggedIn = this.authService.hasActiveSession();
         this.isHomePage = this.router.url === '/';
         this.activeLink = this.router.url.split('?')[0];
+        this.syncProfileAccess();
         this.initializeLanguage();
         this.initGoogleTranslate();
         this.startGoogleBannerObserver();
@@ -168,6 +172,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe(user => {
                 this.isLoggedIn = !!user && this.authService.hasActiveSession();
+                 this.syncProfileAccess();
             });
 
         this.router.events
@@ -184,6 +189,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
                 this.moreDropdownOpen = false;
                 this.isMobileMenuOpen = false;
                 this.activeSubmenu = null;
+                 this.syncProfileAccess();
             });
     }
 
@@ -543,4 +549,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
         document.documentElement.style.setProperty('top', '0px', 'important');
         document.body.style.setProperty('position', 'static', 'important');
     }
+
+     private syncProfileAccess(): void {
+        const role = this.authService.getCurrentRole();
+       
+    }
+
 }

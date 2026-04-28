@@ -33,6 +33,9 @@ import { ShopModule }                        from './shop/shop.module';
 import { ToastComponent }                    from './shared/components/toast/toast.component';
 import { AppToastComponent }                 from './shared/components/app-toast/app-toast.component';
 import {VerifyEmailComponent  } from "./components/auth/verify-email/verify-email.component";
+import { FarmerModule } from './farmer/farmer.module';
+import { AnimalsModule } from './animals/animals.module';
+import { ProfileEditComponent }              from './components/profile-edit/profile-edit.component';
 
 registerLocaleData(localeFr);
 
@@ -59,7 +62,9 @@ registerLocaleData(localeFr);
         ExpertAssistanceRequestsComponent,
         ToastComponent,
         AppToastComponent,
-        VerifyEmailComponent
+        VerifyEmailComponent,
+         ProfileEditComponent,
+        
         
         
     ],
@@ -73,6 +78,8 @@ registerLocaleData(localeFr);
         AppRoutingModule,
         SharedModule,
         ShopModule,
+         FarmerModule,
+        AnimalsModule,
         
     ],
     providers: [

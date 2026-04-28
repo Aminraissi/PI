@@ -1,3 +1,4 @@
+
 <div class="page-wrap">
 
   <!-- Header -->
@@ -5,20 +6,20 @@
     <div class="page-header-left">
       <div class="page-icon"><i class="fas fa-list-alt"></i></div>
       <div>
-        <h1 class="page-title">Mes Réclamations</h1>
-        <p class="page-subtitle">Suivez l'état de toutes vos demandes</p>
+        <h1 class="page-title">My Claims</h1>
+        <p class="page-subtitle">Follow the status of all your requests</p>
       </div>
     </div>
     <button class="btn-primary" (click)="newClaim()">
       <i class="fas fa-plus"></i>
-      Nouvelle réclamation
+      New Claim
     </button>
   </div>
 
   <!-- Loading -->
   <div class="state-box" *ngIf="loading">
     <div class="spinner"></div>
-    <p>Chargement en cours...</p>
+    <p>Loading...</p>
   </div>
 
   <!-- Error -->
@@ -30,10 +31,10 @@
   <!-- Empty -->
   <div class="state-box empty" *ngIf="!loading && !error && claims.length === 0">
     <div class="empty-icon"><i class="fas fa-inbox"></i></div>
-    <h3>Aucune réclamation</h3>
-    <p>Vous n'avez pas encore soumis de réclamation.</p>
+    <h3>No claims found</h3>
+    <p>You have not submitted any claims yet.</p>
     <button class="btn-primary" (click)="newClaim()">
-      <i class="fas fa-plus"></i> Créer ma première réclamation
+      <i class="fas fa-plus"></i> Create my first claim
     </button>
   </div>
 
