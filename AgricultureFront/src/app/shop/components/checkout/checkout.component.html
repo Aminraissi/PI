@@ -3,34 +3,26 @@
 
     <div *ngIf="step === 'processing'" class="processing-screen">
       <div class="proc-spinner"></div>
-      <h3>Processing...</h3>
-      <p>Please wait</p>
+      <h3>Traitement en cours...</h3>
+      <p>Veuillez patienter</p>
     </div>
 
     <div *ngIf="step === 'redirecting'" class="processing-screen">
       <div class="proc-spinner"></div>
-      <h3>Redirecting to Stripe...</h3>
-      <p>Please do not close this window</p>
-    </div>
-
-    <div *ngIf="step === 'success'" class="success-screen">
-      <div class="success-icon">OK</div>
-      <h3>Payment successful</h3>
-      <p>Your order <strong>{{ orderRef }}</strong> has been validated.</p>
-      <p class="success-sub">You will receive a confirmation by email.</p>
-      <button class="btn-close-success" (click)="success.emit()">Close</button>
+      <h3>Redirection vers Stripe...</h3>
+      <p>Ne fermez pas cette fenêtre</p>
     </div>
 
     <div *ngIf="step === 'error'" class="error-screen">
-      <div class="error-icon">X</div>
-      <h3>Payment failed</h3>
+      <div class="error-icon">✕</div>
+      <h3>Erreur de paiement</h3>
       <p>{{ error }}</p>
-      <button class="btn-retry" (click)="retryPayment()">Try again</button>
+      <button class="btn-retry" (click)="retryPayment()">Réessayer</button>
     </div>
 
     <ng-container *ngIf="step === 'summary'">
       <div class="checkout-header">
-        <h3><i class="fas fa-receipt"></i> Order Summary</h3>
+        <h3><i class="fas fa-receipt"></i> Récapitulatif de commande</h3>
         <button class="btn-close" (click)="close.emit()"><i class="fas fa-times"></i></button>
       </div>
 
@@ -49,20 +41,20 @@
         </div>
 
         <div class="summary-total">
-          <span>Total to pay</span>
+          <span>Total à payer</span>
           <span class="total-amount">{{ cartService.total | number:'1.2-2' }} DT</span>
         </div>
 
         <div class="stripe-badge">
-          <i class="fas fa-lock"></i> Secure payment by <strong>Stripe Checkout</strong>
+          <i class="fas fa-lock"></i> Paiement sécurisé par <strong>Stripe Checkout</strong>
         </div>
       </div>
 
       <div class="checkout-footer">
-        <button class="btn-cancel" (click)="close.emit()">Cancel</button>
+        <button class="btn-cancel" (click)="close.emit()">Annuler</button>
         <button class="btn-pay" (click)="proceedToPayment()">
           <i class="fas fa-credit-card"></i>
-          Pay {{ cartService.total | number:'1.2-2' }} DT
+          Payer {{ cartService.total | number:'1.2-2' }} DT
         </button>
       </div>
     </ng-container>

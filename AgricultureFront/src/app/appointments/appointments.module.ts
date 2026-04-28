@@ -12,6 +12,7 @@ import { VetListComponent }              from './farmer/vet-list/vet-list.compon
 import { VetProfileComponent }           from './farmer/vet-profile/vet-profile.component';
 import { MyAppointmentsComponent }       from './farmer/my-appointments/my-appointments.component';
 import { FarmerShopComponent }           from './farmer/farmer-shop/farmer-shop.component';
+import { PaymentReturnComponent }        from './farmer/payment-return/payment-return.component';
 
 // Vet
 import { VetDashboardComponent }         from './vet/dashboard/vet-dashboard.component';
@@ -30,11 +31,11 @@ import { VetAvisComponent }              from './vet/vet-avis/vet-avis.component
 
 import { InventoryModule }               from '../inventory/inventory.module';
 import { ShopModule }                    from '../shop/shop.module';
-import { VetCommandesComponent } from './vet/vet-commandes/vet-commandes.component';
-import { VetStatisticsComponent } from './vet/vet-statistics/vet-statistics.component';
-import { FarmerProfileFormComponent } from './farmer/farmer-profile-form/farmer-profile-form.component';
-import { VetPostListComponent }        from './farmer/vet-post-list/vet-post-list.component';
-import { VetPostManagerComponent }     from './vet/vet-post-manager/vet-post-manager.component';
+import { VetCommandesComponent }         from './vet/vet-commandes/vet-commandes.component';
+import { VetStatisticsComponent }        from './vet/vet-statistics/vet-statistics.component';
+import { FarmerProfileFormComponent }    from './farmer/farmer-profile-form/farmer-profile-form.component';
+import { VetPostListComponent }          from './farmer/vet-post-list/vet-post-list.component';
+import { VetPostManagerComponent }       from './vet/vet-post-manager/vet-post-manager.component';
 
 @NgModule({
   declarations: [
@@ -43,6 +44,7 @@ import { VetPostManagerComponent }     from './vet/vet-post-manager/vet-post-man
     VetProfileComponent,
     MyAppointmentsComponent,
     FarmerShopComponent,
+    PaymentReturnComponent,       // ← ajouté
     VetDashboardComponent,
     AvailabilityManagerComponent,
     VetProfileFormComponent,
@@ -56,9 +58,8 @@ import { VetPostManagerComponent }     from './vet/vet-post-manager/vet-post-man
     VetPoultryChatbotComponent,
     FarmerAvisComponent,
     VetAvisComponent,
-     VetCommandesComponent,
-       VetStatisticsComponent,
-       
+    VetCommandesComponent,
+    VetStatisticsComponent,
     FarmerProfileFormComponent,
     VetPostListComponent,
     VetPostManagerComponent,
