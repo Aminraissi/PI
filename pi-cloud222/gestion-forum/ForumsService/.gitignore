@@ -2,3 +2,8 @@ target/
 .idea/
 *.iml
 *.log
+
+### Local Configuration ###
+application-local.properties
+application-local.yml
+
