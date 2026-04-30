@@ -20,11 +20,11 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   menuItems = [
     { icon: 'fas fa-th-large',           label: 'Dashboard',    key: 'dashboard',    route: '/dashboard'              },
     { icon: 'fas fa-users',              label: 'Users',        key: 'users',        route: '/dashboard/users'        },
-    { icon: 'fas fa-truck',              label: 'Deliveries',   key: 'deliveries',   route: '/dashboard/deliveries'   },
+    { icon: 'fas fa-truck',              label: 'Deliveries',   key: 'deliveries',   route: '/delivery'   },
     { icon: 'fas fa-calendar-alt',       label: 'Events',       key: 'events',       route: '/dashboard/events'       },
     { icon: 'fas fa-hand-holding-usd',   label: 'Loans',        key: 'loans',        route: '/dashboard/contrats'        },
     { icon: 'fas fa-store',              label: 'Marketplace',  key: 'marketplace',  route: '/dashboard/marketplace'  },
-    { icon: 'fas fa-comments',           label: 'Community',    key: 'community',    route: '/dashboard/forums'       },
+    { icon: 'fas fa-comments',           label: 'Community',    key: 'community',    route: '/forums'       },
     { icon: 'fas fa-graduation-cap',     label: 'Training',     key: 'training',     route: '/dashboard/training'     },
     { icon: 'fas fa-exclamation-circle', label: 'Claims',       key: 'claims',       route: '/dashboard/claims'       },
     { icon: 'fas fa-stethoscope',        label: 'Appointments', key: 'appointments', route: '/dashboard/appointments' },

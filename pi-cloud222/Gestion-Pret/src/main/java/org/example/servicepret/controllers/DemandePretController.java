@@ -74,6 +74,9 @@ public class DemandePretController {
         if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) contentType = "image/jpeg";
 
         return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, max-age=0")
+                .header(HttpHeaders.PRAGMA, "no-cache")
+                .header(HttpHeaders.EXPIRES, "0")
                 .header(HttpHeaders.CONTENT_TYPE, contentType)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"" + filename + "\"")
@@ -120,7 +123,11 @@ public class DemandePretController {
             @RequestParam(value = "validity", defaultValue = "300000") long validityMillis) {
 
         String signedUrl = demandePretService.generateSignedUrl(userId, id, filename, validityMillis);
-        return ResponseEntity.ok(signedUrl);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, max-age=0")
+                .header(HttpHeaders.PRAGMA, "no-cache")
+                .header(HttpHeaders.EXPIRES, "0")
+                .body(signedUrl);
     }
     @PostMapping("/{id}/score")
     public ResponseEntity<?> scorer(@PathVariable Long id) {

@@ -52,6 +52,30 @@ export default class Areas
             }
         })
 
+        // When window loses focus (new tab opened, alt-tab, etc.)
+        // force-reset the currently hovered area so it doesn't stay stuck
+        const clearMouse = () => {
+            this.mouse.coordinates.x = 9999
+            this.mouse.coordinates.y = 9999
+            if (this.mouse.currentArea) {
+                this.mouse.currentArea.out()
+                this.mouse.currentArea = null
+            }
+        }
+        window.addEventListener('mouseleave', clearMouse)
+        window.addEventListener('blur', clearMouse)
+        // Also reset when clicking a link that opens a new tab
+        window.addEventListener('click', () => {
+            window.setTimeout(() => {
+                if (document.hidden && this.mouse.currentArea) {
+                    this.mouse.currentArea.out()
+                    this.mouse.currentArea = null
+                    this.mouse.coordinates.x = 9999
+                    this.mouse.coordinates.y = 9999
+                }
+            }, 50)
+        })
+
         // Touch
         this.renderer.domElement.addEventListener('touchstart', (_event) =>
         {
@@ -64,10 +88,8 @@ export default class Areas
         // Time tick event
         this.time.on('tick', () =>
         {
-            // Only update if needed
-            if(this.mouse.needsUpdate)
-            {
-                this.mouse.needsUpdate = false
+            // Always update because the camera might move away from under the stagnant mouse
+            this.mouse.needsUpdate = false
 
                 // Set up
                 this.mouse.raycaster.setFromCamera(this.mouse.coordinates, this.camera.instance)
@@ -88,13 +110,11 @@ export default class Areas
                         {
                             // Play out
                             this.mouse.currentArea.out()
-                            this.mouse.currentArea.testCar = this.mouse.currentArea.initialTestCar
                         }
 
                         // Play in
                         this.mouse.currentArea = area
                         this.mouse.currentArea.in(false)
-                        this.mouse.currentArea.testCar = false
                     }
                 }
                 // No intersections found but was previously over an area
@@ -102,10 +122,8 @@ export default class Areas
                 {
                     // Play out
                     this.mouse.currentArea.out()
-                    this.mouse.currentArea.testCar = this.mouse.currentArea.initialTestCar
                     this.mouse.currentArea = null
                 }
-            }
         })
     }
 
@@ -118,7 +136,7 @@ export default class Areas
                 return
             }
 
-            const activeArea = this.items.find((_area) => _area.isIn && _area.active)
+            const activeArea = this.items.find((_area) => _area.carIsIn && _area.active)
 
             if(activeArea)
             {

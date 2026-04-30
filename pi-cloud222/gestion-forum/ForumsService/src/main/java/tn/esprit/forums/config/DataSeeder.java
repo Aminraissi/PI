@@ -17,7 +17,7 @@ public class DataSeeder {
     @Bean
     CommandLineRunner seedForumsData(ForumPostRepository postRepository, ForumGroupRepository groupRepository) {
         return args -> {
-        if (postRepository.count() > 0 || groupRepository.count() > 0) {
+        if (true) {
                 return;
             }
 

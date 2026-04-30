@@ -29,18 +29,19 @@ export class VetAvisComponent implements OnInit {
   submittingReply: { [avisId: number]: boolean } = {};
   replyError: { [avisId: number]: string } = {};
 
-  // ── Bad-word check en temps réel pour les réponses ──────────────────────
+  // Bad-word check en temps réel pour les réponses
   replyBadWord: { [avisId: number]: boolean } = {};
   checkingGroq: { [avisId: number]: boolean } = {};
   private groqDebounceTimers: { [id: number]: any } = {};
 
-  // ── Traduction des commentaires d'agriculteurs (replies) ─────────────────
-  replyTranslations: { [avisId: number]: string } = {};
-  replyTranslationLang: { [avisId: number]: 'fr' | 'en' } = {};
-  replyTranslatingId: { [avisId: number]: boolean } = {};
-  replyTranslationErrors: { [avisId: number]: string } = {};
+  // Traduction des commentaires (commentaire principal + sous-commentaires)
+  // Clé = commentId (a.id pour le commentaire principal, c.id pour les sous-commentaires)
+  cmtTranslations:      { [cmtId: number]: string }       = {};
+  cmtTranslationLang:   { [cmtId: number]: 'fr' | 'en' } = {};
+  cmtTranslatingId:     { [cmtId: number]: boolean }      = {};
+  cmtTranslationErrors: { [cmtId: number]: string }       = {};
 
-  // ── Traduction de la réponse du vétérinaire ──────────────────────────────
+  // Traduction de la réponse du vétérinaire
   vetReplyTranslations: { [avisId: number]: string } = {};
   vetReplyTranslationLang: { [avisId: number]: 'fr' | 'en' } = {};
   vetReplyTranslatingId: { [avisId: number]: boolean } = {};
@@ -51,10 +52,10 @@ export class VetAvisComponent implements OnInit {
   stars5 = [1, 2, 3, 4, 5];
 
   constructor(
-    private api:      AppointmentsApiService,
-    private auth:     AuthService,
-    public  badWords: BadWordsService,
-    private http:     HttpClient
+      private api:      AppointmentsApiService,
+      private auth:     AuthService,
+      public  badWords: BadWordsService,
+      private http:     HttpClient
   ) {}
 
   ngOnInit() {
@@ -72,7 +73,7 @@ export class VetAvisComponent implements OnInit {
     });
   }
 
-  // ── Filtrage ──────────────────────────────────────────────
+  // Filtrage
   setFilter(n: number | null) { this.filterNote = n; }
   get filteredAvis(): AvisResponse[] {
     if (this.filterNote === null) return this.avis;
@@ -80,7 +81,7 @@ export class VetAvisComponent implements OnInit {
   }
   countByNote(n: number): number { return this.avis.filter(a => a.note === n).length; }
 
-  // ── Répondre à un avis ────────────────────────────────────
+  // Répondre à un avis
   toggleReplyInput(avisId: number) {
     this.showReplyInput[avisId] = !this.showReplyInput[avisId];
     if (!this.replyInputs[avisId]) this.replyInputs[avisId] = '';
@@ -148,65 +149,83 @@ export class VetAvisComponent implements OnInit {
     return text.length > 2 && (this.badWords.containsBadWord(text) || !!this.replyBadWord[avisId]);
   }
 
-  // ── Traduction commentaires agriculteurs (replies) ────────
-  translateReplyComments(a: AvisResponse): void {
-    if (!a.commentaires || a.commentaires.length === 0) return;
-    const combined = a.commentaires.map(c => c.contenu).join(' || ');
-    this.replyTranslatingId[a.id]     = true;
-    this.replyTranslationErrors[a.id] = '';
-    delete this.replyTranslations[a.id];
-    delete this.replyTranslationLang[a.id];
-    this.tryTranslateReply(a, combined, 'en|fr', true);
+  // ── Traduction des commentaires (commentaire principal ET sous-commentaires) ────
+  translateComment(cmtId: number, contenu: string): void {
+    if (!contenu?.trim()) return;
+    this.cmtTranslatingId[cmtId]     = true;
+    this.cmtTranslationErrors[cmtId] = '';
+    delete this.cmtTranslations[cmtId];
+    delete this.cmtTranslationLang[cmtId];
+    this.tryTranslateCmt(cmtId, contenu, 'fr|en', true);
   }
 
-  private tryTranslateReply(a: AvisResponse, text: string, langPair: string, allowFallback: boolean): void {
+  private tryTranslateCmt(cmtId: number, text: string, langPair: string, allowFallback: boolean): void {
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
     this.http.get<any>(url).subscribe({
       next: res => {
         const translated: string = (res?.responseData?.translatedText || '').trim();
         const status: number     =  res?.responseStatus ?? 0;
+
         if (translated.toUpperCase().startsWith('QUERY LENGTH') || translated.toUpperCase().includes('MYMEMORY WARNING')) {
-          this.replyTranslatingId[a.id] = false;
-          this.replyTranslationErrors[a.id] = 'Limite de traduction atteinte. Réessayez plus tard.';
+          this.cmtTranslatingId[cmtId]     = false;
+          this.cmtTranslationErrors[cmtId] = 'Limite de traduction atteinte. Réessayez plus tard.';
           return;
         }
+
         if (status === 200 && translated) {
           const same = translated.toLowerCase() === text.toLowerCase().trim();
-          if (same && allowFallback && langPair === 'en|fr') { this.tryTranslateReply(a, text, 'ar|fr', false); return; }
-          if (same && langPair === 'ar|fr')                  { this.tryTranslateReply(a, text, 'fr|en', false); return; }
-          this.replyTranslatingId[a.id]   = false;
-          this.replyTranslations[a.id]    = translated;
-          this.replyTranslationLang[a.id] = langPair === 'fr|en' ? 'en' : 'fr';
+
+          if (same && allowFallback) {
+            // Fallback: si fr→en ne change rien, essayer fr→ar
+            if (langPair === 'fr|en') {
+              this.tryTranslateCmt(cmtId, text, 'fr|ar', false);
+            } else if (langPair === 'fr|ar') {
+              this.tryTranslateCmt(cmtId, text, 'fr|en', false);
+            }
+            return;
+          }
+
+          this.cmtTranslatingId[cmtId]   = false;
+          this.cmtTranslations[cmtId]    = translated;
+          this.cmtTranslationLang[cmtId] = langPair === 'fr|en' ? 'en' : 'fr';
         } else {
-          if (allowFallback && langPair === 'en|fr') this.tryTranslateReply(a, text, 'ar|fr', false);
-          else if (langPair === 'ar|fr')             this.tryTranslateReply(a, text, 'fr|en', false);
-          else { this.replyTranslatingId[a.id] = false; this.replyTranslationErrors[a.id] = 'Traduction non disponible.'; }
+          if (allowFallback && langPair === 'fr|en') {
+            this.tryTranslateCmt(cmtId, text, 'fr|ar', false);
+          } else if (allowFallback && langPair === 'fr|ar') {
+            this.tryTranslateCmt(cmtId, text, 'fr|en', false);
+          } else {
+            this.cmtTranslatingId[cmtId] = false;
+            this.cmtTranslationErrors[cmtId] = 'Traduction non disponible.';
+          }
         }
       },
-      error: () => { this.replyTranslatingId[a.id] = false; this.replyTranslationErrors[a.id] = 'Erreur réseau.'; }
+      error: () => {
+        this.cmtTranslatingId[cmtId]     = false;
+        this.cmtTranslationErrors[cmtId] = 'Erreur réseau.';
+      }
     });
   }
 
-  clearReplyTranslation(avisId: number): void {
-    delete this.replyTranslations[avisId];
-    delete this.replyTranslationErrors[avisId];
-    delete this.replyTranslationLang[avisId];
+  clearCommentTranslation(cmtId: number): void {
+    delete this.cmtTranslations[cmtId];
+    delete this.cmtTranslationErrors[cmtId];
+    delete this.cmtTranslationLang[cmtId];
   }
 
-  replyTranslationBadgeLabel(avisId: number): string {
-    return this.replyTranslationLang[avisId] === 'en'
-      ? '🇬🇧 Traduit en anglais · MyMemory'
-      : '🇫🇷 Traduit en français · MyMemory';
+  cmtTranslationBadgeLabel(cmtId: number): string {
+    return this.cmtTranslationLang[cmtId] === 'en'
+        ? '🇬🇧 Traduit en anglais · MyMemory'
+        : '🇫🇷 Traduit en français · MyMemory';
   }
 
-  // ── Traduction réponse vétérinaire ────────────────────────
+  // Traduction réponse vétérinaire
   translateVetReply(a: AvisResponse): void {
     if (!a.reponseVet?.contenu?.trim()) return;
     this.vetReplyTranslatingId[a.id]     = true;
     this.vetReplyTranslationErrors[a.id] = '';
     delete this.vetReplyTranslations[a.id];
     delete this.vetReplyTranslationLang[a.id];
-    this.tryTranslateVetReply(a, a.reponseVet.contenu, 'en|fr', true);
+    this.tryTranslateVetReply(a, a.reponseVet.contenu, 'fr|en', true);
   }
 
   private tryTranslateVetReply(a: AvisResponse, text: string, langPair: string, allowFallback: boolean): void {
@@ -215,22 +234,37 @@ export class VetAvisComponent implements OnInit {
       next: res => {
         const translated: string = (res?.responseData?.translatedText || '').trim();
         const status: number     =  res?.responseStatus ?? 0;
+
         if (translated.toUpperCase().startsWith('QUERY LENGTH') || translated.toUpperCase().includes('MYMEMORY WARNING')) {
           this.vetReplyTranslatingId[a.id] = false;
           this.vetReplyTranslationErrors[a.id] = 'Limite de traduction atteinte.';
           return;
         }
+
         if (status === 200 && translated) {
           const same = translated.toLowerCase() === text.toLowerCase().trim();
-          if (same && allowFallback && langPair === 'en|fr') { this.tryTranslateVetReply(a, text, 'ar|fr', false); return; }
-          if (same && langPair === 'ar|fr')                  { this.tryTranslateVetReply(a, text, 'fr|en', false); return; }
+
+          if (same && allowFallback) {
+            if (langPair === 'fr|en') {
+              this.tryTranslateVetReply(a, text, 'fr|ar', false);
+            } else if (langPair === 'fr|ar') {
+              this.tryTranslateVetReply(a, text, 'fr|en', false);
+            }
+            return;
+          }
+
           this.vetReplyTranslatingId[a.id]   = false;
           this.vetReplyTranslations[a.id]    = translated;
           this.vetReplyTranslationLang[a.id] = langPair === 'fr|en' ? 'en' : 'fr';
         } else {
-          if (allowFallback && langPair === 'en|fr') this.tryTranslateVetReply(a, text, 'ar|fr', false);
-          else if (langPair === 'ar|fr')             this.tryTranslateVetReply(a, text, 'fr|en', false);
-          else { this.vetReplyTranslatingId[a.id] = false; this.vetReplyTranslationErrors[a.id] = 'Traduction non disponible.'; }
+          if (allowFallback && langPair === 'fr|en') {
+            this.tryTranslateVetReply(a, text, 'fr|ar', false);
+          } else if (allowFallback && langPair === 'fr|ar') {
+            this.tryTranslateVetReply(a, text, 'fr|en', false);
+          } else {
+            this.vetReplyTranslatingId[a.id] = false;
+            this.vetReplyTranslationErrors[a.id] = 'Traduction non disponible.';
+          }
         }
       },
       error: () => { this.vetReplyTranslatingId[a.id] = false; this.vetReplyTranslationErrors[a.id] = 'Erreur réseau.'; }
@@ -245,11 +279,11 @@ export class VetAvisComponent implements OnInit {
 
   vetReplyTranslationBadgeLabel(avisId: number): string {
     return this.vetReplyTranslationLang[avisId] === 'en'
-      ? '🇬🇧 Traduit en anglais · MyMemory'
-      : '🇫🇷 Traduit en français · MyMemory';
+        ? '🇬🇧 Traduit en anglais · MyMemory'
+        : '🇫🇷 Traduit en français · MyMemory';
   }
 
-  // ── Helpers ───────────────────────────────────────────────
+  // Helpers
   initials(nom: string, prenom: string): string {
     return ((prenom?.charAt(0) || '') + (nom?.charAt(0) || '')).toUpperCase();
   }

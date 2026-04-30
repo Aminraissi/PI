@@ -460,6 +460,7 @@ export default class World
         this.controls.actions.right = false
         this.controls.actions.brake = false
         this.controls.actions.boost = false
+        this.controls.actions.manual = false
 
         body.sleep()
         body.position.set(savedCar.position.x, savedCar.position.y, savedCar.position.z)
@@ -1037,7 +1038,8 @@ export default class World
         this.autopilot = new Autopilot({
             time:     this.time,
             car:      this.car,
-            controls: this.controls
+            controls: this.controls,
+            sections: this.sections
         })
     }
 }

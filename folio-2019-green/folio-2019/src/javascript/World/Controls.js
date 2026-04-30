@@ -45,6 +45,9 @@ export default class Controls extends EventEmitter {
         this.keyboard.events = {}
 
         this.keyboard.events.keyDown = (_event) => {
+            if (_event.code === 'Space') {
+                _event.preventDefault()
+            }
             switch (_event.code) {
                 case 'ArrowUp':
                 case 'KeyW':
@@ -76,6 +79,7 @@ export default class Controls extends EventEmitter {
                 case 'ControlRight':
                 case 'Space':
                     this.actions.brake = true
+                    this.actions.manual = true
                     break
 
                 case 'ShiftLeft':
@@ -86,9 +90,8 @@ export default class Controls extends EventEmitter {
                 // case ' ':
                 //     this.jump(true)
                 //     break
-            }
-        }
-
+                    }
+                }
         this.keyboard.events.keyUp = (_event) => {
             switch (_event.code) {
                 case 'ArrowUp':
@@ -127,7 +130,7 @@ export default class Controls extends EventEmitter {
                     break
             }
 
-            this.actions.manual = this.actions.up || this.actions.down || this.actions.left || this.actions.right
+            this.actions.manual = this.actions.up || this.actions.down || this.actions.left || this.actions.right || this.actions.brake
         }
 
         document.addEventListener('keydown', this.keyboard.events.keyDown)
@@ -617,8 +620,7 @@ export default class Controls extends EventEmitter {
             this.touch.backward.$element.style.opacity = 1
             this.touch.brake.$element.style.opacity = 1
             this.touch.forward.$element.style.opacity = 1
-            this.touch.boost.$element.style.opacity = 1
+                this.touch.boost.$element.style.opacity = 1
+                }
+            }
         }
-    }
-}
-}

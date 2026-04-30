@@ -68,6 +68,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     navLinks: NavLink[] = [
         { label: 'Home', route: '/' },
+
         { label: 'Marketplace', route: '/marketplace' },
         { label: 'Forum', route: '/forums' },
          {
@@ -80,6 +81,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
         route: 'events/organizer/events',
         roles: ['ORGANISATEUR_EVENEMENT']
     },
+        {
+            label: 'Deliveries',
+            route: '/delivery',
+            roles: ['ADMIN','AGRICULTEUR','TRANSPORTEUR']
+        },
      {label : 'profile', route: '/profile/edit', roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT', 'AGENT', 'VETERINAIRE']},
          { label: 'Reclamations', route: '/claims', roles: ['AGRICULTEUR', 'EXPERT_AGRICOLE', 'ORGANISATEUR_EVENEMENT', 'AGENT', 'VETERINAIRE'] },
     ];
@@ -92,6 +98,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
             route: '/farm/list',
             roles: ['AGRICULTEUR']
         },
+
         {
             label: 'Help Request',
             icon: 'fas fa-hands-helping',
@@ -101,8 +108,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         {
             label: 'Trainings',
             icon: 'fas fa-graduation-cap',
-            route: '/formations',
-            roles: ['AGRICULTEUR']
+            route: '/training',
+            roles: ['AGRICULTEUR','EXPERT_AGRICOLE']
         },
         {
             label: 'Loans',
@@ -134,12 +141,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
             route: '/appointments',
             roles: ['AGRICULTEUR']
         },
+        {
+            label: 'Inventory',
+            icon: 'fas fa-calendar-check',
+            route: '/inventory',
+            roles: ['AGRICULTEUR']
+        },
          {
             label: 'Appoinyments & Shop',
             icon: 'fas fa-calendar-check',
             route: '/appointments',
             roles: [ 'VETERINAIRE']
-        },
+        },{
+        label: 'Disease predictor ',
+    icon: 'fas fa-microscope',
+    route: '/disease-predictor',
+    roles: [ 'AGRICULTEUR','EXPERT_AGRICOLE']
+},
            
 
     ];

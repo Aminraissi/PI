@@ -23,10 +23,20 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
   editingGroupReference: string | null = null;
   feedbackMessage: string | null = null;
   feedbackType: 'success' | 'error' | 'info' | null = null;
+  totalGroups = 0;
+  completedGroups = 0;
+  totalSavings = 0;
+  statusEntries: [string, number][] = [];
 
   // Pour la création de groupe
   availableDeliveries: any[] = [];
   groupMapMessage: string | null = null;
+  private readonly priceFormatter = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'TND',
+    minimumFractionDigits: 2
+  });
+  private readonly numberFormatter = new Intl.NumberFormat('fr-FR');
 
   constructor(
     private deliveryService: DeliveryExtendedService,
@@ -55,6 +65,7 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
     this.deliveryService.getTransporterGroups(this.transporteurId).subscribe({
       next: (groups) => {
         this.groups = groups;
+        this.recomputeGroupSummary();
         if (selectedReference) {
           this.selectedGroup = groups.find(group => group.groupReference === selectedReference) || null;
         }
@@ -81,6 +92,7 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
     this.deliveryService.getGroupDetails(groupReference, this.transporteurId).subscribe({
       next: (details) => {
         this.groupDetails = details;
+        this.statusEntries = details?.statusCount ? Object.entries(details.statusCount) : [];
         this.groupMapMessage = null;
         this.queueRenderSelectedGroupMap();
       },
@@ -224,15 +236,11 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 2
-    }).format(price);
+    return this.priceFormatter.format(Number.isFinite(price) ? price : 0);
   }
 
   formatNumber(num: number): string {
-    return new Intl.NumberFormat('fr-FR').format(num);
+    return this.numberFormatter.format(Number.isFinite(num) ? num : 0);
   }
 
   formatDate(dateStr: string): string {
@@ -287,15 +295,15 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   getTotalSavings(): number {
-    return this.groups.reduce((total, group) => total + group.savings, 0);
+    return this.totalSavings;
   }
 
   getTotalGroups(): number {
-    return this.groups.length;
+    return this.totalGroups;
   }
 
   getCompletedGroups(): number {
-    return this.groups.filter(g => g.status === 'COMPLETED').length;
+    return this.completedGroups;
   }
 
   getInProgressGroups(): number {
@@ -310,14 +318,21 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   getStatusEntries(): [string, number][] {
-    return this.groupDetails?.statusCount ? Object.entries(this.groupDetails.statusCount) : [];
+    return this.statusEntries;
   }
 
   closeSelectedGroup(): void {
     this.selectedGroup = null;
     this.groupDetails = null;
+    this.statusEntries = [];
     this.groupMapMessage = null;
     this.mapService.destroy();
+  }
+
+  private recomputeGroupSummary(): void {
+    this.totalGroups = this.groups.length;
+    this.completedGroups = this.groups.filter((g) => g.status === 'COMPLETED').length;
+    this.totalSavings = this.groups.reduce((total, group) => total + (Number(group.savings) || 0), 0);
   }
 
   getModalTitle(): string {
@@ -354,10 +369,12 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
     }
 
     const firstPoint = routePoints[0];
-    if (!this.mapService.getMap()) {
+    const currentMap = this.mapService.getMap();
+    const mapContainer = currentMap?.getContainer();
+    if (!currentMap || mapContainer !== this.groupMap.nativeElement) {
       this.mapService.initMap(this.groupMap.nativeElement, firstPoint.lat, firstPoint.lng, 9);
     } else {
-      this.mapService.getMap()?.invalidateSize();
+      currentMap.invalidateSize();
     }
 
     this.mapService.clear();
@@ -376,10 +393,18 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
       }
     });
 
-    this.mapService.drawRouteOSRM(routePoints, '#0f766e', 5).then(() => {
+    this.mapService.drawRouteOSRM(routePoints, '#0f766e', 5).then((polyline) => {
+      if (!polyline) {
+        // Keep a visible route even if backend routing is temporarily unavailable.
+        this.mapService.drawRoute(routePoints, '#0f766e', 4);
+      }
       this.mapService.fitBounds(routePoints, 80);
       this.groupMapMessage = null;
       window.setTimeout(() => this.mapService.getMap()?.invalidateSize(), 150);
+    }).catch(() => {
+      this.mapService.drawRoute(routePoints, '#0f766e', 4);
+      this.mapService.fitBounds(routePoints, 80);
+      this.groupMapMessage = null;
     });
   }
 
@@ -424,11 +449,14 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
     const completed = new Set<number>();
     const points: GroupRoutePoint[] = [];
     const pickupClusterThresholdKm = 8;
+    const maxIterations = validDeliveries.length * 4 + 10;
+    let iterations = 0;
 
     let currentLat = Number(pendingPickups[0].latDepart);
     let currentLng = Number(pendingPickups[0].lngDepart);
 
-    while (completed.size < validDeliveries.length) {
+    while (completed.size < validDeliveries.length && iterations < maxIterations) {
+      iterations += 1;
       if (!picked.length) {
         const nextPickup = this.takeNearestPickup(pendingPickups, currentLat, currentLng);
         if (!nextPickup) break;
@@ -462,7 +490,7 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
 
       if (shouldPickup && nearestPickup) {
         const pickedDelivery = this.takeSpecificDelivery(pendingPickups, nearestPickup);
-        if (!pickedDelivery) continue;
+        if (!pickedDelivery) break;
         points.push({
           lat: Number(pickedDelivery.latDepart),
           lng: Number(pickedDelivery.lngDepart),
@@ -474,7 +502,7 @@ export class GroupsManagementComponent implements OnInit, AfterViewInit, OnDestr
         currentLng = Number(pickedDelivery.lngDepart);
       } else {
         const delivered = this.takeSpecificDelivery(picked, nearestDropoff.delivery);
-        if (!delivered) continue;
+        if (!delivered) break;
         points.push({
           lat: Number(delivered.latArrivee),
           lng: Number(delivered.lngArrivee),

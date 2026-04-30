@@ -1,0 +1,755 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.4)
+
+2026-04-28T18:54:01.038+01:00  INFO 21440 --- [ServicePret] [           main] o.e.servicepret.ServicePretApplication   : Starting ServicePretApplication using Java 17.0.18 with PID 21440 (/home/amine/Desktop/integration pi/pi-cloud222/Gestion-Pret/target/classes started by amine in /home/amine/Desktop/integration pi/pi-cloud222/Gestion-Pret)
+2026-04-28T18:54:01.040+01:00  INFO 21440 --- [ServicePret] [           main] o.e.servicepret.ServicePretApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-04-28T18:54:01.535+01:00  INFO 21440 --- [ServicePret] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-28T18:54:01.604+01:00  INFO 21440 --- [ServicePret] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 64 ms. Found 8 JPA repository interfaces.
+2026-04-28T18:54:01.804+01:00  INFO 21440 --- [ServicePret] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=a45d7fd3-bef5-32a6-9d32-c53496910a03
+2026-04-28T18:54:02.000+01:00  INFO 21440 --- [ServicePret] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8086 (http)
+2026-04-28T18:54:02.006+01:00  INFO 21440 --- [ServicePret] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-28T18:54:02.006+01:00  INFO 21440 --- [ServicePret] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-04-28T18:54:02.034+01:00  INFO 21440 --- [ServicePret] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 969 ms
+2026-04-28T18:54:02.134+01:00 DEBUG 21440 --- [ServicePret] [           main] o.s.w.f.ServerHttpObservationFilter      : Filter 'webMvcObservationFilter' configured for use
+2026-04-28T18:54:02.197+01:00  INFO 21440 --- [ServicePret] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-04-28T18:54:02.219+01:00  INFO 21440 --- [ServicePret] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.7.Final
+2026-04-28T18:54:02.426+01:00  INFO 21440 --- [ServicePret] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-28T18:54:02.442+01:00  INFO 21440 --- [ServicePret] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-28T18:54:02.523+01:00  INFO 21440 --- [ServicePret] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@341df373
+2026-04-28T18:54:02.524+01:00  INFO 21440 --- [ServicePret] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-28T18:54:02.544+01:00  WARN 21440 --- [ServicePret] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-04-28T18:54:02.546+01:00  WARN 21440 --- [ServicePret] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-28T18:54:02.554+01:00  INFO 21440 --- [ServicePret] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/gestionPret?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: gestionPret/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-04-28T18:54:03.069+01:00  INFO 21440 --- [ServicePret] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-28T18:54:03.129+01:00  INFO 21440 --- [ServicePret] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-28T18:54:03.173+01:00  INFO 21440 --- [ServicePret] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-28T18:54:03.543+01:00  WARN 21440 --- [ServicePret] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-28T18:54:03.669+01:00  INFO 21440 --- [ServicePret] [           main] o.s.c.openfeign.FeignClientFactoryBean   : For 'gestion-user' URL not provided. Will try picking an instance via load-balancing.
+2026-04-28T18:54:03.879+01:00  WARN 21440 --- [ServicePret] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 1d99508d-5b6a-4732-872b-9be589d1d461
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-04-28T18:54:03.883+01:00  INFO 21440 --- [ServicePret] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-04-28T18:54:04.034+01:00 DEBUG 21440 --- [ServicePret] [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : 62 mappings in 'requestMappingHandlerMapping'
+2026-04-28T18:54:04.049+01:00 DEBUG 21440 --- [ServicePret] [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2026-04-28T18:54:04.068+01:00 DEBUG 21440 --- [ServicePret] [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 2 RequestBodyAdvice, 1 ResponseBodyAdvice
+2026-04-28T18:54:04.093+01:00 DEBUG 21440 --- [ServicePret] [           main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2026-04-28T18:54:04.109+01:00 DEBUG 21440 --- [ServicePret] [           main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 1 @ExceptionHandler, 0 ResponseBodyAdvice
+2026-04-28T18:54:04.364+01:00  INFO 21440 --- [ServicePret] [           main] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestClient.
+2026-04-28T18:54:04.381+01:00  WARN 21440 --- [ServicePret] [           main] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-04-28T18:54:04.388+01:00  INFO 21440 --- [ServicePret] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-04-28T18:54:04.425+01:00  INFO 21440 --- [ServicePret] [           main] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-04-28T18:54:04.437+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-04-28T18:54:04.439+01:00  INFO 21440 --- [ServicePret] [           main] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-04-28T18:54:04.443+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-04-28T18:54:04.444+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-04-28T18:54:04.444+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-04-28T18:54:04.444+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-04-28T18:54:04.444+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-04-28T18:54:04.444+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-04-28T18:54:04.444+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-04-28T18:54:04.622+01:00 DEBUG 21440 --- [ServicePret] [           main] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:54:04.639+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-04-28T18:54:04.640+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2026-04-28T18:54:04.641+01:00  INFO 21440 --- [ServicePret] [           main] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-04-28T18:54:04.642+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1777398844641 with initial instances count: 3
+2026-04-28T18:54:04.643+01:00  INFO 21440 --- [ServicePret] [           main] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application SERVICEPRET with eureka with status UP
+2026-04-28T18:54:04.644+01:00  INFO 21440 --- [ServicePret] [           main] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1777398844644, current=UP, previous=STARTING]
+2026-04-28T18:54:04.645+01:00  INFO 21440 --- [ServicePret] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_SERVICEPRET/raissi:ServicePret:8086: registering service...
+2026-04-28T18:54:04.657+01:00 DEBUG 21440 --- [ServicePret] [foReplicator-%d] o.s.web.client.DefaultRestClient         : Writing [InstanceInfo [instanceId = raissi:ServicePret:8086, appName = SERVICEPRET, hostName = localhost, status = UP, ipAddr = 192.168.1.240, port = 8086, securePort = 443, dataCenterInfo = com.netflix.appinfo.MyDataCenterInfo@fe8344c] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+2026-04-28T18:54:04.661+01:00  INFO 21440 --- [ServicePret] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8086 (http) with context path '/'
+2026-04-28T18:54:04.661+01:00  INFO 21440 --- [ServicePret] [           main] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8086
+2026-04-28T18:54:04.667+01:00  INFO 21440 --- [ServicePret] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_SERVICEPRET/raissi:ServicePret:8086 - registration status: 204
+2026-04-28T18:54:04.701+01:00  INFO 21440 --- [ServicePret] [           main] o.e.servicepret.ServicePretApplication   : Started ServicePretApplication in 3.915 seconds (process running for 4.186)
+2026-04-28T18:54:34.644+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:54:46.109+01:00  INFO 21440 --- [ServicePret] [nio-8086-exec-1] o.apache.tomcat.util.http.parser.Cookie  : A cookie header was received [g_state={"i_l":0,"i_ll":1777398477011,"i_b":"1vWhqKnlhxqvUWnUDW4w0mE0eZb9Up8m83Xx6F58BSs","i_e":{"enable_itp_optimization":21},"i_et":1777397264214};] that contained an invalid cookie. That cookie will be ignored.
+ Note: further occurrences of this error will be logged at DEBUG level.
+2026-04-28T18:54:46.112+01:00  INFO 21440 --- [ServicePret] [nio-8086-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-28T18:54:46.112+01:00  INFO 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-28T18:54:46.112+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2026-04-28T18:54:46.112+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2026-04-28T18:54:46.114+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@52743ef2
+2026-04-28T18:54:46.114+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@5e56f24c
+2026-04-28T18:54:46.114+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2026-04-28T18:54:46.114+01:00  INFO 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-04-28T18:54:46.129+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/api/contrat/pending-validation", parameters={}
+2026-04-28T18:54:46.132+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#getPendingContracts()
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        d1_0.id,
+        d1_0.agriculteur_id,
+        d1_0.date_demande,
+        d1_0.decision,
+        d1_0.duree_mois,
+        d1_0.encrypted_data_key,
+        d1_0.fraud_analysis_result,
+        d1_0.fraud_confirmed,
+        d1_0.fraud_risk_level,
+        d1_0.fraud_score,
+        d1_0.montant_demande,
+        d1_0.motif_rejet,
+        d1_0.objet,
+        d1_0.score_solvabilite,
+        d1_0.service_id,
+        d1_0.statut,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    left join
+        demande_pret d1_0 
+            on d1_0.id=c1_0.demande_id 
+    where
+        c1_0.statut_contrat=? 
+        and c1_0.validation_admin=?
+Hibernate: 
+    select
+        sp1_0.id,
+        sp1_0.agent_id,
+        sp1_0.criteres_eligibilite,
+        sp1_0.delai_traitement,
+        sp1_0.description,
+        sp1_0.documents_requis,
+        sp1_0.duree_max_mois,
+        sp1_0.montant_max,
+        sp1_0.montant_min,
+        sp1_0.nom,
+        sp1_0.taux_interet,
+        sp1_0.taux_penalite 
+    from
+        service_pret sp1_0 
+    where
+        sp1_0.id=?
+✅ Token propagé: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbi50d29AZXhhbXBsZS5jb20iLCJ1c2VySWQiOjYsImlhdCI6MTc3NzM5ODg4MywiZXhwIjoxNzc3NDg1MjgzfQ.UUBFiZIV3Ip2YnO9qQeUucfMEAZXK6X9qYx7FtiAc_A
+2026-04-28T18:54:46.273+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.w.c.HttpMessageConverterExtractor    : Reading to [org.example.servicepret.DTO.User]
+2026-04-28T18:54:46.303+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:54:46.303+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [[org.example.servicepret.DTO.ContratResponseDTO@4e212707]]
+2026-04-28T18:54:46.331+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:54:58.329+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/api/contrat/validate/1", parameters={}
+2026-04-28T18:54:58.330+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#validateContract(Long, Map)
+2026-04-28T18:54:58.348+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [{valide=true, raison=}]
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        d1_0.id,
+        d1_0.agriculteur_id,
+        d1_0.date_demande,
+        d1_0.decision,
+        d1_0.duree_mois,
+        d1_0.encrypted_data_key,
+        d1_0.fraud_analysis_result,
+        d1_0.fraud_confirmed,
+        d1_0.fraud_risk_level,
+        d1_0.fraud_score,
+        d1_0.montant_demande,
+        d1_0.motif_rejet,
+        d1_0.objet,
+        d1_0.score_solvabilite,
+        s1_0.id,
+        s1_0.agent_id,
+        s1_0.criteres_eligibilite,
+        s1_0.delai_traitement,
+        s1_0.description,
+        s1_0.documents_requis,
+        s1_0.duree_max_mois,
+        s1_0.montant_max,
+        s1_0.montant_min,
+        s1_0.nom,
+        s1_0.taux_interet,
+        s1_0.taux_penalite,
+        d1_0.statut,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    left join
+        demande_pret d1_0 
+            on d1_0.id=c1_0.demande_id 
+    left join
+        service_pret s1_0 
+            on s1_0.id=d1_0.service_id 
+    where
+        c1_0.id=?
+Hibernate: 
+    update
+        contrat 
+    set
+        contenu_contrat=?,
+        date_creation=?,
+        demande_id=?,
+        montant=?,
+        signature_base64=?,
+        statut_contrat=?,
+        validation_admin=? 
+    where
+        id=?
+2026-04-28T18:54:58.382+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:54:58.382+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [org.example.servicepret.entities.Contrat@60d52c01]
+2026-04-28T18:54:58.384+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:54:59.805+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/api/contrat/pending-validation", parameters={}
+2026-04-28T18:54:59.806+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#getPendingContracts()
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        d1_0.id,
+        d1_0.agriculteur_id,
+        d1_0.date_demande,
+        d1_0.decision,
+        d1_0.duree_mois,
+        d1_0.encrypted_data_key,
+        d1_0.fraud_analysis_result,
+        d1_0.fraud_confirmed,
+        d1_0.fraud_risk_level,
+        d1_0.fraud_score,
+        d1_0.montant_demande,
+        d1_0.motif_rejet,
+        d1_0.objet,
+        d1_0.score_solvabilite,
+        d1_0.service_id,
+        d1_0.statut,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    left join
+        demande_pret d1_0 
+            on d1_0.id=c1_0.demande_id 
+    where
+        c1_0.statut_contrat=? 
+        and c1_0.validation_admin=?
+2026-04-28T18:54:59.810+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:54:59.810+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Writing [[]]
+2026-04-28T18:54:59.810+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:55:03.156+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/api/contrat/validated-contracts", parameters={}
+2026-04-28T18:55:03.156+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#getValidatedContracts()
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        d1_0.id,
+        d1_0.agriculteur_id,
+        d1_0.date_demande,
+        d1_0.decision,
+        d1_0.duree_mois,
+        d1_0.encrypted_data_key,
+        d1_0.fraud_analysis_result,
+        d1_0.fraud_confirmed,
+        d1_0.fraud_risk_level,
+        d1_0.fraud_score,
+        d1_0.montant_demande,
+        d1_0.motif_rejet,
+        d1_0.objet,
+        d1_0.score_solvabilite,
+        d1_0.service_id,
+        d1_0.statut,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    join
+        demande_pret d1_0 
+            on d1_0.id=c1_0.demande_id 
+    where
+        c1_0.validation_admin=?
+Hibernate: 
+    select
+        sp1_0.id,
+        sp1_0.agent_id,
+        sp1_0.criteres_eligibilite,
+        sp1_0.delai_traitement,
+        sp1_0.description,
+        sp1_0.documents_requis,
+        sp1_0.duree_max_mois,
+        sp1_0.montant_max,
+        sp1_0.montant_min,
+        sp1_0.nom,
+        sp1_0.taux_interet,
+        sp1_0.taux_penalite 
+    from
+        service_pret sp1_0 
+    where
+        sp1_0.id=?
+✅ Token propagé: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbi50d29AZXhhbXBsZS5jb20iLCJ1c2VySWQiOjYsImlhdCI6MTc3NzM5ODg4MywiZXhwIjoxNzc3NDg1MjgzfQ.UUBFiZIV3Ip2YnO9qQeUucfMEAZXK6X9qYx7FtiAc_A
+2026-04-28T18:55:03.168+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] o.s.w.c.HttpMessageConverterExtractor    : Reading to [org.example.servicepret.DTO.User]
+2026-04-28T18:55:03.169+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:03.169+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Writing [[org.example.servicepret.DTO.ContratResponseDTO@3aeac46b]]
+2026-04-28T18:55:03.172+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:55:04.298+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.web.servlet.DispatcherServlet        : GET "/api/contrat/rejected-contracts", parameters={}
+2026-04-28T18:55:04.298+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#getRejectedContracts()
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        d1_0.id,
+        d1_0.agriculteur_id,
+        d1_0.date_demande,
+        d1_0.decision,
+        d1_0.duree_mois,
+        d1_0.encrypted_data_key,
+        d1_0.fraud_analysis_result,
+        d1_0.fraud_confirmed,
+        d1_0.fraud_risk_level,
+        d1_0.fraud_score,
+        d1_0.montant_demande,
+        d1_0.motif_rejet,
+        d1_0.objet,
+        d1_0.score_solvabilite,
+        d1_0.service_id,
+        d1_0.statut,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    join
+        demande_pret d1_0 
+            on d1_0.id=c1_0.demande_id 
+    where
+        c1_0.validation_admin=?
+2026-04-28T18:55:04.301+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:04.301+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Writing [[]]
+2026-04-28T18:55:04.302+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:55:04.649+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:55:04.945+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-6] o.s.web.servlet.DispatcherServlet        : GET "/api/contrat/validated-contracts", parameters={}
+2026-04-28T18:55:04.946+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#getValidatedContracts()
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        d1_0.id,
+        d1_0.agriculteur_id,
+        d1_0.date_demande,
+        d1_0.decision,
+        d1_0.duree_mois,
+        d1_0.encrypted_data_key,
+        d1_0.fraud_analysis_result,
+        d1_0.fraud_confirmed,
+        d1_0.fraud_risk_level,
+        d1_0.fraud_score,
+        d1_0.montant_demande,
+        d1_0.motif_rejet,
+        d1_0.objet,
+        d1_0.score_solvabilite,
+        d1_0.service_id,
+        d1_0.statut,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    join
+        demande_pret d1_0 
+            on d1_0.id=c1_0.demande_id 
+    where
+        c1_0.validation_admin=?
+Hibernate: 
+    select
+        sp1_0.id,
+        sp1_0.agent_id,
+        sp1_0.criteres_eligibilite,
+        sp1_0.delai_traitement,
+        sp1_0.description,
+        sp1_0.documents_requis,
+        sp1_0.duree_max_mois,
+        sp1_0.montant_max,
+        sp1_0.montant_min,
+        sp1_0.nom,
+        sp1_0.taux_interet,
+        sp1_0.taux_penalite 
+    from
+        service_pret sp1_0 
+    where
+        sp1_0.id=?
+✅ Token propagé: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbi50d29AZXhhbXBsZS5jb20iLCJ1c2VySWQiOjYsImlhdCI6MTc3NzM5ODg4MywiZXhwIjoxNzc3NDg1MjgzfQ.UUBFiZIV3Ip2YnO9qQeUucfMEAZXK6X9qYx7FtiAc_A
+2026-04-28T18:55:04.958+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-6] o.s.w.c.HttpMessageConverterExtractor    : Reading to [org.example.servicepret.DTO.User]
+2026-04-28T18:55:04.959+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:04.959+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Writing [[org.example.servicepret.DTO.ContratResponseDTO@63077bb5]]
+2026-04-28T18:55:04.960+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:55:34.653+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:55:38.605+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-7] o.s.web.servlet.DispatcherServlet        : GET "/api/demandePret/service/1", parameters={}
+2026-04-28T18:55:38.607+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-7] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.DemandePretController#getByService(Long)
+Hibernate: 
+    select
+        dp1_0.id,
+        dp1_0.agriculteur_id,
+        dp1_0.date_demande,
+        dp1_0.decision,
+        dp1_0.duree_mois,
+        dp1_0.encrypted_data_key,
+        dp1_0.fraud_analysis_result,
+        dp1_0.fraud_confirmed,
+        dp1_0.fraud_risk_level,
+        dp1_0.fraud_score,
+        dp1_0.montant_demande,
+        dp1_0.motif_rejet,
+        dp1_0.objet,
+        dp1_0.score_solvabilite,
+        dp1_0.service_id,
+        dp1_0.statut 
+    from
+        demande_pret dp1_0 
+    where
+        dp1_0.service_id=?
+Hibernate: 
+    select
+        sp1_0.id,
+        sp1_0.agent_id,
+        sp1_0.criteres_eligibilite,
+        sp1_0.delai_traitement,
+        sp1_0.description,
+        sp1_0.documents_requis,
+        sp1_0.duree_max_mois,
+        sp1_0.montant_max,
+        sp1_0.montant_min,
+        sp1_0.nom,
+        sp1_0.taux_interet,
+        sp1_0.taux_penalite 
+    from
+        service_pret sp1_0 
+    where
+        sp1_0.id=?
+✅ Token propagé: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZ2VudC5vbmVAZXhhbXBsZS5jb20iLCJ1c2VySWQiOjgsImlhdCI6MTc3NzM5ODY1MywiZXhwIjoxNzc3NDg1MDUzfQ.swQWbemCZyR-jRKIJA8mW_uEM6M0dID1FCB2UT_rcpE
+2026-04-28T18:55:38.638+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-7] o.s.w.c.HttpMessageConverterExtractor    : Reading to [org.example.servicepret.DTO.User]
+✅ Token propagé: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZ2VudC5vbmVAZXhhbXBsZS5jb20iLCJ1c2VySWQiOjgsImlhdCI6MTc3NzM5ODY1MywiZXhwIjoxNzc3NDg1MDUzfQ.swQWbemCZyR-jRKIJA8mW_uEM6M0dID1FCB2UT_rcpE
+2026-04-28T18:55:38.645+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-7] o.s.w.c.HttpMessageConverterExtractor    : Reading to [org.example.servicepret.DTO.User]
+2026-04-28T18:55:38.646+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:38.646+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[org.example.servicepret.DTO.DemandePretDTO@15e410cd, org.example.servicepret.DTO.DemandePretDTO@7c3 (truncated)...]
+2026-04-28T18:55:38.650+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:55:38.663+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-9] o.s.web.servlet.DispatcherServlet        : GET "/api/contrat/by-demande/1", parameters={}
+2026-04-28T18:55:38.663+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-8] o.s.web.servlet.DispatcherServlet        : GET "/api/contrat/by-demande/2", parameters={}
+2026-04-28T18:55:38.664+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-9] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#getByDemande(Long)
+2026-04-28T18:55:38.664+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-8] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.ContratController#getByDemande(Long)
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        c1_0.demande_id,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    where
+        c1_0.demande_id=?
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.contenu_contrat,
+        c1_0.date_creation,
+        c1_0.demande_id,
+        c1_0.montant,
+        c1_0.signature_base64,
+        c1_0.statut_contrat,
+        c1_0.validation_admin 
+    from
+        contrat c1_0 
+    where
+        c1_0.demande_id=?
+Hibernate: 
+    select
+        dp1_0.id,
+        dp1_0.agriculteur_id,
+        dp1_0.date_demande,
+        dp1_0.decision,
+        dp1_0.duree_mois,
+        dp1_0.encrypted_data_key,
+        dp1_0.fraud_analysis_result,
+        dp1_0.fraud_confirmed,
+        dp1_0.fraud_risk_level,
+        dp1_0.fraud_score,
+        dp1_0.montant_demande,
+        dp1_0.motif_rejet,
+        dp1_0.objet,
+        dp1_0.score_solvabilite,
+        s1_0.id,
+        s1_0.agent_id,
+        s1_0.criteres_eligibilite,
+        s1_0.delai_traitement,
+        s1_0.description,
+        s1_0.documents_requis,
+        s1_0.duree_max_mois,
+        s1_0.montant_max,
+        s1_0.montant_min,
+        s1_0.nom,
+        s1_0.taux_interet,
+        s1_0.taux_penalite,
+        dp1_0.statut 
+    from
+        demande_pret dp1_0 
+    left join
+        service_pret s1_0 
+            on s1_0.id=dp1_0.service_id 
+    where
+        dp1_0.id=?
+2026-04-28T18:55:38.668+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:38.668+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Nothing to write: null body
+2026-04-28T18:55:38.669+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:55:38.670+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:38.670+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Writing [org.example.servicepret.entities.Contrat@55b36672]
+2026-04-28T18:55:38.671+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-8] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T18:55:38.683+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/api/pret/by-demande/2", parameters={}
+2026-04-28T18:55:38.683+01:00 DEBUG 21440 --- [ServicePret] [io-8086-exec-10] o.s.web.servlet.DispatcherServlet        : GET "/api/pret/by-demande/1", parameters={}
+2026-04-28T18:55:38.684+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.PretController#getByDemande(Long)
+2026-04-28T18:55:38.684+01:00 DEBUG 21440 --- [ServicePret] [io-8086-exec-10] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.PretController#getByDemande(Long)
+Searching pret for demandeId = 2
+Searching pret for demandeId = 1
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.agent_id,
+        p1_0.contrat_id,
+        p1_0.date_debut,
+        p1_0.date_fin,
+        p1_0.demande_id,
+        p1_0.montant_total,
+        p1_0.nb_echeances,
+        p1_0.statut_pret,
+        p1_0.taux_interet 
+    from
+        pret p1_0 
+    where
+        p1_0.demande_id=?
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.agent_id,
+        p1_0.contrat_id,
+        p1_0.date_debut,
+        p1_0.date_fin,
+        p1_0.demande_id,
+        p1_0.montant_total,
+        p1_0.nb_echeances,
+        p1_0.statut_pret,
+        p1_0.taux_interet 
+    from
+        pret p1_0 
+    where
+        p1_0.demande_id=?
+RESULT = null
+RESULT = null
+2026-04-28T18:55:38.688+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:38.688+01:00 DEBUG 21440 --- [ServicePret] [io-8086-exec-10] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:38.688+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Nothing to write: null body
+2026-04-28T18:55:38.688+01:00 DEBUG 21440 --- [ServicePret] [io-8086-exec-10] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Nothing to write: null body
+2026-04-28T18:55:38.688+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 404 NOT_FOUND
+2026-04-28T18:55:38.688+01:00 DEBUG 21440 --- [ServicePret] [io-8086-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 404 NOT_FOUND
+2026-04-28T18:55:42.732+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/api/paiement/create-bank-intent?montant=1021", parameters={montant:[1021]}
+2026-04-28T18:55:42.732+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.PaiementController#createBankIntent(long)
+2026-04-28T18:55:43.252+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-04-28T18:55:43.252+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{error=Invalid API Key provided: sk_test_*ummy}]
+2026-04-28T18:55:43.257+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+2026-04-28T18:56:04.660+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:56:34.667+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:57:04.674+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:57:34.680+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:58:04.686+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:58:34.691+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:59:04.445+01:00  INFO 21440 --- [ServicePret] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-04-28T18:59:04.695+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T18:59:34.699+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:00:04.702+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:00:34.708+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:01:04.712+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:01:34.717+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:01:43.564+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/api/demandePret/1/documents/1777397064799_projet_agricole_faible.pdf/signed-url?uid=1", parameters={uid:[1]}
+2026-04-28T19:01:43.565+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.DemandePretController#getSignedUrl(long, String, Long, long)
+2026-04-28T19:01:43.569+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'text/plain', given [*/*] and supported [text/plain, */*, application/json, application/*+json]
+2026-04-28T19:01:43.569+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing ["/api/demandePret/1/documents/1777397064799_projet_agricole_faible.pdf?uid=1&data=MToxOjE3NzczOTcwNjQ (truncated)..."]
+2026-04-28T19:01:43.570+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-04-28T19:02:03.400+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.web.servlet.DispatcherServlet        : GET "/api/demandePret/1/documents/1777397064799_projet_agricole_faible.pdf?uid=1&data=MToxOjE3NzczOTcwNjQ3OTlfcHJvamV0X2Fncmljb2xlX2ZhaWJsZS5wZGY6MTc3NzM5OTYwMzU2Nw&sig=s7G15ed0Jma5R1oUVmF1y6idMEVkhUl6WpJRf7jCrw4", parameters={uid:[1], data:[MToxOjE3NzczOTcwNjQ3OTlfcHJvamV0X2Fncmljb2xlX2ZhaWJsZS5wZGY6MTc3NzM5OTYwMzU2Nw], sig:[s7G15ed0Jma5R1oUVmF1y6idMEVkhUl6WpJRf7jCrw4]}
+2026-04-28T19:02:03.401+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.example.servicepret.controllers.DemandePretController#getDocument(long, String, Long, String, String)
+2026-04-28T19:02:03.403+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.web.servlet.DispatcherServlet        : Failed to complete request: java.lang.RuntimeException: READ ERROR
+2026-04-28T19:02:03.404+01:00 ERROR 21440 --- [ServicePret] [nio-8086-exec-5] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: READ ERROR] with root cause
+
+java.lang.RuntimeException: File not found
+	at org.example.servicepret.services.DemandePretServiceImpl.getDocument(DemandePretServiceImpl.java:207) ~[classes/:na]
+	at org.example.servicepret.controllers.DemandePretController.getDocument(DemandePretController.java:62) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569) ~[na:na]
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:252) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:184) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1000) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:633) ~[jakarta.servlet-api-6.1.0.jar:6.1.0]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:723) ~[jakarta.servlet-api-6.1.0.jar:6.1.0]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53) ~[tomcat-embed-websocket-11.0.18.jar:11.0.18]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:235) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:493) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:354) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:86) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:132) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:181) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:110) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:96) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:231) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:244) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:337) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:228) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:141) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:237) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:195) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:317) ~[spring-security-config-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:355) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:272) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:110) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:492) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1779) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57) ~[tomcat-embed-core-11.0.18.jar:11.0.18]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+
+2026-04-28T19:02:03.409+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.web.servlet.DispatcherServlet        : "ERROR" dispatch for GET "/error?uid=1&data=MToxOjE3NzczOTcwNjQ3OTlfcHJvamV0X2Fncmljb2xlX2ZhaWJsZS5wZGY6MTc3NzM5OTYwMzU2Nw&sig=s7G15ed0Jma5R1oUVmF1y6idMEVkhUl6WpJRf7jCrw4", parameters={uid:[1], data:[MToxOjE3NzczOTcwNjQ3OTlfcHJvamV0X2Fncmljb2xlX2ZhaWJsZS5wZGY6MTc3NzM5OTYwMzU2Nw], sig:[s7G15ed0Jma5R1oUVmF1y6idMEVkhUl6WpJRf7jCrw4]}
+2026-04-28T19:02:03.410+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.springframework.boot.webmvc.autoconfigure.error.BasicErrorController#error(HttpServletRequest)
+2026-04-28T19:02:03.411+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-04-28T19:02:03.411+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{timestamp=Tue Apr 28 19:02:03 CET 2026, status=500, error=Internal Server Error, path=/api/demandeP (truncated)...]
+2026-04-28T19:02:03.413+01:00 DEBUG 21440 --- [ServicePret] [nio-8086-exec-5] o.s.web.servlet.DispatcherServlet        : Exiting from "ERROR" dispatch, status 500
+2026-04-28T19:02:04.722+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:02:34.726+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:03:04.732+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:03:34.736+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:04:04.446+01:00  INFO 21440 --- [ServicePret] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-04-28T19:04:04.740+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:04:34.744+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:05:04.749+01:00 DEBUG 21440 --- [ServicePret] [reshExecutor-%d] o.s.web.client.DefaultRestClient         : Reading to [com.netflix.discovery.shared.Applications]
+2026-04-28T19:05:05.056+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] o.s.c.n.e.s.EurekaServiceRegistry        : Unregistering application SERVICEPRET with eureka with status DOWN
+2026-04-28T19:05:05.057+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1777399505057, current=DOWN, previous=UP]
+2026-04-28T19:05:05.057+01:00  INFO 21440 --- [ServicePret] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_SERVICEPRET/raissi:ServicePret:8086: registering service...
+2026-04-28T19:05:05.057+01:00 DEBUG 21440 --- [ServicePret] [foReplicator-%d] o.s.web.client.DefaultRestClient         : Writing [InstanceInfo [instanceId = raissi:ServicePret:8086, appName = SERVICEPRET, hostName = localhost, status = DOWN, ipAddr = 192.168.1.240, port = 8086, securePort = 443, dataCenterInfo = com.netflix.appinfo.MyDataCenterInfo@fe8344c] as "application/json" with org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
+2026-04-28T19:05:05.061+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-28T19:05:05.061+01:00  INFO 21440 --- [ServicePret] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_SERVICEPRET/raissi:ServicePret:8086 - registration status: 204
+2026-04-28T19:05:05.564+01:00  INFO 21440 --- [ServicePret] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-04-28T19:05:05.576+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-04-28T19:05:05.578+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-04-28T19:05:05.583+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-04-28T19:05:05.583+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Shutting down DiscoveryClient ...
+2026-04-28T19:05:08.584+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Unregistering ...
+2026-04-28T19:05:08.593+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_SERVICEPRET/raissi:ServicePret:8086 - deregister  status: 200
+2026-04-28T19:05:08.594+01:00  INFO 21440 --- [ServicePret] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Completed shut down of DiscoveryClient
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:4.0.4:run (default-cli) on project ServicePret: Process terminated with exit code: 143 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

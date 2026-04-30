@@ -280,13 +280,13 @@ export class AuthService {
         if (!role) return '/';
         switch (role) {
             case 'ADMIN': return '/dashboard';
-            case 'ACHETEUR': return '/marketplace';
-            case 'AGRICULTEUR': return '/delivery';
-            case 'EXPERT_AGRICOLE': return '/expert/home';
-            case 'TRANSPORTEUR': return '/transporter/home';
-            case 'VETERINAIRE': return '/appointments';
-            case 'AGENT': return '/agent/home';
-            case 'ORGANISATEUR_EVENEMENT': return '/organizer/home';
+            case 'ACHETEUR': return '';
+            case 'AGRICULTEUR': return '';
+            case 'EXPERT_AGRICOLE': return '';
+            case 'TRANSPORTEUR': return '';
+            case 'VETERINAIRE': return '';
+            case 'AGENT': return '';
+            case 'ORGANISATEUR_EVENEMENT': return '';
             default: return '/';
         }
     }

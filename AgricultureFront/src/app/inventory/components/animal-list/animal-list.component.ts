@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { InventoryApiService } from '../../services/inventory-api.service';
 import { Animal } from '../../models/inventory.models';
+import { CampaignListComponent } from '../campaign-list/campaign-list.component';
 
 @Component({
   selector: 'app-animal-list',
@@ -12,6 +13,9 @@ import { Animal } from '../../models/inventory.models';
 export class AnimalListComponent implements OnInit, OnChanges {
   @Input() initialView: 'list' | 'campaigns' = 'list';
   @Output() viewChanged = new EventEmitter<'list' | 'campaigns'>();
+
+  // ✅ Référence au composant calendrier pour pouvoir appeler load() dessus
+  @ViewChild(CampaignListComponent) campaignList!: CampaignListComponent;
 
   animals: Animal[] = [];
   loading = true;
@@ -25,7 +29,7 @@ export class AnimalListComponent implements OnInit, OnChanges {
   showAnimalForm      = false;
   showAnimalDetail    = false;
   showCampaignForm    = false;
-  showVaccModal       = false;   // vaccination individuelle
+  showVaccModal       = false;
   editingAnimal: Animal | null = null;
 
   constructor(private api: InventoryApiService, private router: Router) {}
@@ -72,6 +76,14 @@ export class AnimalListComponent implements OnInit, OnChanges {
 
   openCampaigns() { this.view = 'campaigns'; this.viewChanged.emit(this.view); }
   backToList()    { this.view = 'list'; this.viewChanged.emit(this.view); }
+
+  // ✅ Appelé quand campaign-form émet (saved) → ferme le formulaire ET recharge le calendrier
+  onCampaignSaved() {
+    this.showCampaignForm = false;
+    if (this.campaignList) {
+      this.campaignList.load();
+    }
+  }
 
   age(dateNaissance: string): number {
     const now  = new Date();

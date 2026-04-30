@@ -79,7 +79,6 @@ export default class InformationSection {
         }
 
         this.setTunisianFlag()
-        this.setAgricultureModels()
     }
 
     setTunisianFlag() {
@@ -674,20 +673,20 @@ export default class InformationSection {
         // Options
         this.links.options = [
             {
-                href: 'https://twitter.com/',
-                labelTexture: this.resources.items.informationContactTwitterLabelTexture
+                href: 'https://github.com/labidi-houssem/Gestion-User-Pi-Cloud',
+                labelTexture: this.createTextTexture('Repo User')
             },
             {
-                href: 'https://github.com/',
-                labelTexture: this.resources.items.informationContactGithubLabelTexture
+                href: 'https://github.com/Aminraissi/PI',
+                labelTexture: this.createTextTexture('PI Github')
             },
             {
-                href: 'https://www.linkedin.com/',
-                labelTexture: this.resources.items.informationContactLinkedinLabelTexture
+                href: 'https://github.com/labidi-houssem/pi-cloud',
+                labelTexture: this.createTextTexture('Repo Backend')
             },
             {
-                href: 'mailto:contact@greenroots.com',
-                labelTexture: this.resources.items.informationContactMailLabelTexture
+                href: 'https://github.com/ghadamaalej/AgricultureFront',
+                labelTexture: this.createTextTexture('Repo Frontend')
             }
         ]
 
@@ -707,6 +706,12 @@ export default class InformationSection {
             })
             item.area.on('interact', () => {
                 window.open(_option.href, '_blank')
+                // Deactivate this area briefly so the car-position tick
+                // cannot immediately re-trigger in() while the car is still on top of it
+                item.area.deactivate()
+                window.setTimeout(() => {
+                    item.area.activate()
+                }, 2000)
             })
 
             // Texture
@@ -727,6 +732,42 @@ export default class InformationSection {
 
             i++
         }
+    }
+
+    createTextTexture(_text) {
+        const canvas = document.createElement('canvas')
+        canvas.width = 1024
+        canvas.height = 256
+        const context = canvas.getContext('2d')
+
+        if(!context) {
+            return new THREE.CanvasTexture(canvas)
+        }
+
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        context.fillStyle = '#ffffff'
+        context.textAlign = 'center'
+        context.textBaseline = 'middle'
+        
+        let fontSize = 96
+        const textToDraw = _text.toUpperCase()
+        
+        do {
+            context.font = `bold ${fontSize}px "Arial Black", Arial, sans-serif`
+            if (context.measureText(textToDraw).width <= canvas.width * 0.9) {
+                break
+            }
+            fontSize -= 4
+        } while (fontSize > 20)
+
+        context.fillText(textToDraw, canvas.width / 2, canvas.height / 2)
+
+        const texture = new THREE.CanvasTexture(canvas)
+        texture.magFilter = THREE.LinearFilter
+        texture.minFilter = THREE.LinearFilter
+        texture.needsUpdate = true
+
+        return texture
     }
 
     setActivities() {
@@ -949,8 +990,17 @@ export default class InformationSection {
     }
 
     navigateToRoute(_route) {
-        if (window.application && window.application.world && typeof window.application.world.saveProgress === 'function') {
-            window.application.world.saveProgress({ force: true })
+        // Explicitly stop autopilot before saving, so the saved state
+        // always has active=false — prevents autopilot from interfering
+        // when the user returns from a module.
+        if (window.application && window.application.world) {
+            const world = window.application.world
+            if (world.autopilot && world.autopilot.active) {
+                world.autopilot.stop()
+            }
+            if (typeof world.saveProgress === 'function') {
+                world.saveProgress({ force: true })
+            }
         }
 
         if (window.parent && window.parent !== window) {

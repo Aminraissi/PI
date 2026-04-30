@@ -1,8 +1,11 @@
+import CANNON from 'cannon'
+
 export default class Autopilot {
     constructor(_options) {
         this.time = _options.time
         this.car = _options.car
         this.controls = _options.controls
+        this.sections = _options.sections
 
         this.active = false
         this.skipping = false   // skip-to-Explorer mode
@@ -15,11 +18,17 @@ export default class Autopilot {
             timer: 0,
             lastX: 0,
             lastY: 0,
+            threshold: 0.5,
+            checkInterval: 1.0,
             recovering: false,
             recoverTimer: 0,
-            checkInterval: 2.0,
-            threshold: 0.8,
-            recoverDuration: 1.4
+            recoverDuration: 1.2
+        }
+
+        this.cheat = {
+            active: false,
+            timer: 0,
+            strikeTriggered: false
         }
 
         // ── Timeline waypoints ─────────────────────────────────────────
@@ -41,20 +50,22 @@ export default class Autopilot {
             { x: 7, y: -28, pause: 0, label: '' },
             { x: 12, y: -30, pause: 0, label: '' },
             { x: 18, y: -30, pause: 0, label: '' },
-            { x: 24, y: -30, pause: 0, label: '' },
+            { x: 22, y: -30, pause: 0, label: '' },
 
             // ── Projects timeline – scene by scene ──────────────────
-            { x: 30.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 1 \u00b7 Origines de l\'agriculture' },
-            { x: 54.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 2 \u00b7 Irrigation et premieres cites' },
-            { x: 78.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 3 \u00b7 Outils et terrasses' },
-            { x: 102.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 4 \u00b7 Agriculture medievale' },
-            { x: 126.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 5 \u00b7 Revolution scientifique' },
-            { x: 150.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 6 \u00b7 Revolution industrielle' },
-            { x: 174.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 7 \u00b7 Chimie et conservation' },
-            { x: 198.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 8 \u00b7 Mecanisation moderne' },
-            { x: 222.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 9 \u00b7 Agriculture numerique' },
-            { x: 246.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene 10 \u00b7 L\'avenir' },
-            { x: 270.0, y: -30, pause: 3.0, threshold: 1.5, label: 'Scene finale \u00b7 Agri Film' },
+            // The car must fully reach the CENTER of each panel (threshold 1.0).
+            // pause:3 → 3-second stop; finalStop:true → permanent stop.
+            { x: 30.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 1 \u00b7 Origines de l\'agriculture' },
+            { x: 54.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 2 \u00b7 Irrigation et premieres cites' },
+            { x: 78.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 3 \u00b7 Outils et terrasses' },
+            { x: 102.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 4 \u00b7 Agriculture medievale' },
+            { x: 126.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 5 \u00b7 Revolution scientifique' },
+            { x: 150.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 6 \u00b7 Revolution industrielle' },
+            { x: 174.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 7 \u00b7 Chimie et conservation' },
+            { x: 198.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 8 \u00b7 Mecanisation moderne' },
+            { x: 222.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 9 \u00b7 Agriculture numerique' },
+            { x: 246.0, y: -30, pause: 3.0, threshold: 1.0, label: 'Scene 10 \u00b7 L\'avenir' },
+            { x: 270.0, y: -30, pause: 999, threshold: 1.0, finalStop: true, label: 'Scene finale \u00b7 Agri Film' },
             { x: 284.0, y: -30, pause: 0, threshold: 4.0, label: '' },
 
             // ── Explorer management panels ───────────────────────────
@@ -100,6 +111,7 @@ export default class Autopilot {
 
         this.createButton()
         this.createSkipButton()
+        this.createCheatButton()
         this.createSceneLabel()
         this.setupTick()
     }
@@ -147,7 +159,10 @@ export default class Autopilot {
                 ? 'rgba(20,90,20,0.85)'
                 : 'rgba(10,10,10,0.75)'
         })
-        this.button.addEventListener('click', () => this.toggle())
+        this.button.addEventListener('click', () => {
+            this.toggle()
+            this.button.blur()
+        })
 
         this.buttonWrapper.appendChild(this.button)
     }
@@ -180,6 +195,42 @@ export default class Autopilot {
         this.skipButton.addEventListener('click', () => this.skipToExplorer())
 
         this.buttonWrapper.appendChild(this.skipButton)
+    }
+
+    createCheatButton() {
+        this.cheatButton = document.createElement('button')
+        this.cheatButton.textContent = '🔥 CHEAT: STRIKE!'
+
+        Object.assign(this.cheatButton.style, {
+            padding: '9px 18px',
+            background: 'rgba(200,10,10,0.85)',
+            color: '#fff',
+            border: '1.5px solid rgba(255,255,255,0.5)',
+            borderRadius: '24px',
+            fontSize: '13px',
+            fontWeight: 'bold',
+            fontFamily: 'sans-serif',
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)',
+            transition: 'background 0.2s, transform 0.2s',
+            userSelect: 'none',
+            display: 'none'
+        })
+
+        this.cheatButton.addEventListener('pointerenter', () => {
+            this.cheatButton.style.background = 'rgba(255,0,0,1)'
+            this.cheatButton.style.transform = 'scale(1.05)'
+        })
+        this.cheatButton.addEventListener('pointerleave', () => {
+            this.cheatButton.style.background = 'rgba(200,10,10,0.85)'
+            this.cheatButton.style.transform = 'scale(1)'
+        })
+        this.cheatButton.addEventListener('click', () => {
+            this.triggerCheat()
+            this.cheatButton.blur()
+        })
+
+        this.buttonWrapper.appendChild(this.cheatButton)
     }
 
     createSceneLabel() {
@@ -234,6 +285,7 @@ export default class Autopilot {
 
     toggle() {
         if (this.active) { this.stop() } else { this.start() }
+        if (this.button) this.button.blur()
     }
 
     skipToExplorer() {
@@ -244,6 +296,7 @@ export default class Autopilot {
         // Enter skip mode: follow the same road but ignore pauses & use boost
         this.skipping = true
         this.skipTargetReached = false
+        if (this.skipButton) this.skipButton.blur()
         if (this.currentWaypointIndex > this.skipTargetIndex) {
             this.currentWaypointIndex = this.skipTargetIndex
         }
@@ -253,7 +306,7 @@ export default class Autopilot {
     }
 
     start() {
-        this.currentWaypointIndex = 0
+        // Removed this.currentWaypointIndex = 0 so it continues from current progress
         this.pauseTimer = 0
         this.pauseLabel = ''
         this.skipTargetReached = false
@@ -283,6 +336,9 @@ export default class Autopilot {
         this.controls.actions.right = false
         this.controls.actions.brake = false
         this.controls.actions.boost = false
+        // Also clear the manual flag so the car is never left in a frozen state
+        // (e.g. after returning from a module where the autopilot held the brake)
+        this.controls.actions.manual = false
     }
 
     getState() {
@@ -298,16 +354,16 @@ export default class Autopilot {
         const hasState = _state && typeof _state === 'object'
         const waypointCount = this.waypoints.length
 
+        // Restore the waypoint index so we don't restart from the beginning
         this.currentWaypointIndex = hasState && typeof _state.currentWaypointIndex === 'number'
             ? Math.min(Math.max(Math.round(_state.currentWaypointIndex), 0), Math.max(waypointCount - 1, 0))
             : 0
-        this.pauseTimer = hasState && typeof _state.pauseTimer === 'number'
-            ? Math.max(_state.pauseTimer, 0)
-            : 0
-        this.pauseLabel = hasState && typeof _state.pauseLabel === 'string'
-            ? _state.pauseLabel
-            : ''
+
+        this.pauseTimer = 0
+        this.pauseLabel = ''
         this.pendingWaypointAdvance = false
+        this.skipping = false
+        this.skipTargetReached = false
 
         this.stuck.timer = 0
         this.stuck.recovering = false
@@ -316,13 +372,7 @@ export default class Autopilot {
         this.stuck.lastY = this.car.position.y
 
         this.releaseControls()
-        this.setButtonActive(hasState && _state.active === true)
-
-        if (this.active && this.pauseTimer > 0 && this.pauseLabel) {
-            this.showSceneLabel(this.pauseLabel)
-            return
-        }
-
+        this.setButtonActive(false)
         this.showSceneLabel('')
     }
 
@@ -330,15 +380,27 @@ export default class Autopilot {
 
     setupTick() {
         this.time.on('tick', () => {
+            const dt = this.time.delta / 1000
+
+            this.updateCheatVisibility()
+
+            if (this.cheat.active) {
+                this.bowlingStrike(dt)
+                return
+            }
+
             if (!this.active) return
 
             // ── Manual takeover detection ─────────────────────────────
+            // If the user presses any driving key while autopilot is on,
+            // stop autopilot completely and hand full control back to the player.
+            // We do NOT set manual=true here; the key events handle that themselves.
             if (this.controls.actions.manual) {
                 this.stop()
                 return
             }
 
-            const dt = this.time.delta / 1000
+
 
             // ── Stuck recovery mode ───────────────────────────────────
             if (this.stuck.recovering) {
@@ -364,8 +426,8 @@ export default class Autopilot {
                 }
             }
 
-            // ── Stuck detection (only when driving forward) ───────────
-            if (this.pauseTimer <= 0 && this.controls.actions.up) {
+            // ── Stuck detection (only when driving forward, not approaching target) ─
+            if (this.pauseTimer <= 0 && !this.pendingWaypointAdvance && this.controls.actions.up) {
                 this.stuck.timer += dt
                 if (this.stuck.timer >= this.stuck.checkInterval) {
                     const sdx = this.car.position.x - this.stuck.lastX
@@ -422,9 +484,17 @@ export default class Autopilot {
             && this.currentWaypointIndex <= this.EXPLORER_LAST_WAYPOINT_INDEX
 
         // ── Pause at scene ────────────────────────────────────────────
-        // In skip mode, ignore pauses for timeline scenes but NOT for Explorer panels
-        if (this.pauseTimer > 0 && (!this.skipping || isExplorerWaypoint)) {
-            this.pauseTimer -= _dt
+        // Gate: `pendingWaypointAdvance` is set when we first arrive at a waypoint
+        // and only cleared after the index is advanced. This prevents the timer
+        // from being incorrectly reset when pauseTimer hits exactly 0 while the
+        // car is still within the arrival threshold.
+        if (this.pendingWaypointAdvance && (!this.skipping || isExplorerWaypoint)) {
+
+            // finalStop waypoint: hold the car stopped forever (until user acts)
+            const isFinalStop = waypoint.finalStop === true
+            if (!isFinalStop) {
+                this.pauseTimer -= _dt
+            }
 
             this.controls.actions.up = false
             this.controls.actions.down = false
@@ -433,15 +503,14 @@ export default class Autopilot {
             this.controls.actions.brake = true
             this.controls.actions.boost = false
 
-            if (this.pauseTimer <= 0) {
+            if (!isFinalStop && this.pauseTimer <= 0) {
                 this.pauseLabel = ''
                 this.showSceneLabel('')
-                if (this.pendingWaypointAdvance) {
-                    this.pendingWaypointAdvance = false
-                    this.currentWaypointIndex++
-                    if (this.currentWaypointIndex >= this.waypoints.length) {
-                        this.currentWaypointIndex = 0
-                    }
+                // Advance NOW so next tick uses the new waypoint (no re-trigger)
+                this.pendingWaypointAdvance = false
+                this.currentWaypointIndex++
+                if (this.currentWaypointIndex >= this.waypoints.length) {
+                    this.currentWaypointIndex = 0
                 }
             }
             return
@@ -464,10 +533,9 @@ export default class Autopilot {
                 this.showSceneLabel('')
             }
 
-            // Pause at every Explorer panel and at normal waypoints when not skipping.
-            // isExplorerWaypoint is re-evaluated here using the (unchanged) current index
-            // so Delivery is never skipped even right after exiting skip mode.
-            if (waypoint.pause > 0 && (!this.skipping || isExplorerWaypoint)) {
+            // Trigger a timed pause — sets pendingWaypointAdvance so the block
+            // above owns all subsequent ticks until the timer expires.
+            if (waypoint.pause > 0 && !this.pendingWaypointAdvance && (!this.skipping || isExplorerWaypoint)) {
                 this.pauseTimer = waypoint.pause
                 this.pauseLabel = waypoint.label || ''
                 this.showSceneLabel(this.pauseLabel)
@@ -475,9 +543,12 @@ export default class Autopilot {
                 return
             }
 
-            this.currentWaypointIndex++
-            if (this.currentWaypointIndex >= this.waypoints.length) {
-                this.currentWaypointIndex = 0
+            // No-pause waypoint: advance immediately
+            if (!this.pendingWaypointAdvance) {
+                this.currentWaypointIndex++
+                if (this.currentWaypointIndex >= this.waypoints.length) {
+                    this.currentWaypointIndex = 0
+                }
             }
             return
         }
@@ -498,28 +569,38 @@ export default class Autopilot {
         this.controls.actions.right = cross < -STEER_DEAD
 
         // ── Throttle / brake ──────────────────────────────────────────
-        // Same logic as scenes — Explorer uses a shorter brake window (5 units)
-        // because panels are only ~10.5 units apart.
-        const slowDown = isExplorerWaypoint ? 5 : 12
+        // 3-tier approach: the car needs to reliably reach the waypoint center.
+        //   Far  (dist > 5): cruise at normal throttle
+        //   Mid  (2.5 < dist ≤ 5): brake only if going fast, otherwise coast/gentle throttle
+        //   Near (dist ≤ 2.5): crawl forward gently to reach threshold
+        const slowDown = isExplorerWaypoint ? 5 : 6
         const approaching = waypoint.pause > 0
             && (!this.skipping || isExplorerWaypoint)
             && dist < slowDown
 
         if (approaching) {
             const forwardSpeed = Math.abs(this.car.movement.localSpeed.x)
-            const crawlNearTarget = dist < Math.max(threshold + 0.6, 3.6) && forwardSpeed < 0.7
+            const nearZone = threshold + 2.0 // Start crawling a bit earlier
 
-            // Prevent brake-lock before threshold: crawl the last meters.
-            if (crawlNearTarget) {
+            if (dist < nearZone) {
+                // NEAR: crawl forward. Increase throttle if nearly stuck.
                 this.controls.actions.up = true
                 this.controls.actions.down = false
                 this.controls.actions.brake = false
-                this.controls.actions.boost = false
+                this.controls.actions.boost = (forwardSpeed < 0.2) // Tiny boost if struggling to reach center
             }
-            else {
+            else if (forwardSpeed > 2.0) {
+                // MID with speed: brake to slow down
                 this.controls.actions.up = false
                 this.controls.actions.down = false
                 this.controls.actions.brake = true
+                this.controls.actions.boost = false
+            }
+            else {
+                // MID but slow/stopped: move forward to reach the nearZone
+                this.controls.actions.up = true
+                this.controls.actions.down = false
+                this.controls.actions.brake = false
                 this.controls.actions.boost = false
             }
         }
@@ -537,6 +618,83 @@ export default class Autopilot {
             this.controls.actions.down = false
             this.controls.actions.brake = false
             this.controls.actions.boost = false
+        }
+    }
+    updateCheatVisibility() {
+        if (!this.sections || !this.sections.playground) return
+
+        // Show cheat button ONLY when specifically in the Playground/Bowling area
+        const pos = this.car.position
+        const nearPlayground = pos.x < -15 && pos.x > -70 && pos.y < -15 && pos.y > -55
+
+        const show = !this.active && !this.cheat.active && nearPlayground
+        this.cheatButton.style.display = show ? 'block' : 'none'
+    }
+
+    triggerCheat() {
+        if (this.active) this.stop()
+        this.cheat.active = true
+        this.cheat.timer = 0
+        this.cheat.strikeTriggered = false
+        this.showSceneLabel('✨ PREPARING PERFECT STRIKE... ✨')
+
+        // Teleport car to the starting line: x=-25, y=-34, facing West (rotation Math.PI)
+        if (this.car && this.car.physics && this.car.physics.car) {
+            const body = this.car.physics.car.chassis.body
+            body.sleep()
+            body.position.set(-25, -30.2, 0.5)
+            // Quat for facing rotation Math.PI (West)
+            body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.PI)
+            body.velocity.set(0, 0, 0)
+            body.angularVelocity.set(0, 0, 0)
+            body.wakeUp()
+        }
+    }
+
+    bowlingStrike(_dt) {
+        this.cheat.timer += _dt
+
+        // Absolute Pin Target: x=-65, y=-30.2 (hitting the exact center pin)
+        const targetX = -65
+        const targetY = -30.2
+        const dx = targetX - this.car.position.x
+        const dy = targetY - this.car.position.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+
+        const fwd = this.getForward()
+        const toWpX = dx / dist
+        const toWpY = dy / dist
+        const cross = fwd.x * toWpY - fwd.y * toWpX
+        const dot = fwd.x * toWpX + fwd.y * toWpY
+
+        if (this.cheat.timer < 6.0 && dist > 1.5) {
+            // ULTRA POWER CHARGE
+            this.controls.actions.up = true
+            this.controls.actions.down = false
+            this.controls.actions.brake = false
+            this.controls.actions.boost = true
+
+            // Straight charge: No steering needed after teleport
+            this.controls.actions.left = false
+            this.controls.actions.right = false
+
+            if (this.car.position.x < -48 && !this.cheat.strikeTriggered) {
+                this.cheat.strikeTriggered = true
+                this.showSceneLabel('✨ STRIKE! ✨')
+            }
+        }
+        else {
+            // Done
+            this.cheat.active = false
+            this.cheat.timer = 0
+            this.releaseControls()
+            this.showSceneLabel('')
+
+            // Slam the brakes
+            this.controls.actions.brake = true
+            window.setTimeout(() => {
+                this.controls.actions.brake = false
+            }, 1500)
         }
     }
 }

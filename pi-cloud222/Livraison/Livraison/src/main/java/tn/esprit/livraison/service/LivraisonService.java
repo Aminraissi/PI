@@ -614,7 +614,7 @@ public class LivraisonService {
         statusCount.put("ANNULEE", groupDeliveries.stream().filter(l -> l.getStatus() == StatusLivraison.ANNULEE).count());
         
         double totalWeight = groupDeliveries.stream().mapToDouble(Livraison::getPoids).sum();
-        double totalVolume = groupDeliveries.stream().mapToDouble(l -> l.getDistanceKm()).sum(); 
+        double totalVolume = groupDeliveries.stream().mapToDouble(Livraison::getVolume).sum();
         double totalDistance = groupDeliveries.stream().mapToDouble(Livraison::getDistanceKm).sum();
         
         Map<String, Object> detailsData = new HashMap<>();

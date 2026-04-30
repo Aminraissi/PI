@@ -35,6 +35,7 @@ export default class Area extends EventEmitter
 
         this.initialTestCar = this.testCar
         this.isIn = false
+        this.carIsIn = false
 
         this.setFloorBorder()
         this.setFence()
@@ -282,6 +283,7 @@ export default class Area extends EventEmitter
             if(this.testCar)
             {
                 const isIn = Math.abs(this.car.position.x - this.position.x) < Math.abs(this.halfExtents.x) && Math.abs(this.car.position.y - this.position.y) < Math.abs(this.halfExtents.y)
+                this.carIsIn = isIn
 
                 if(isIn !== this.isIn)
                 {

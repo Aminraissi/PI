@@ -95,6 +95,32 @@ public class DemandePretServiceImpl implements IDemandePretService {
         return new String(decrypted);
     }
 
+    private Path resolveDemandFolder(long demandeId) {
+        Path cwd = Paths.get("").toAbsolutePath().normalize();
+
+        for (Path current = cwd; current != null; current = current.getParent()) {
+            Path candidate = current.resolve("uploads").resolve("demandes").resolve(String.valueOf(demandeId));
+            if (Files.isDirectory(candidate)) {
+                return candidate.normalize();
+            }
+        }
+
+        return Paths.get(UPLOAD_DIR, String.valueOf(demandeId)).toAbsolutePath().normalize();
+    }
+
+    private Path resolveDocumentPath(long demandeId, String filename) {
+        Path cwd = Paths.get("").toAbsolutePath().normalize();
+
+        for (Path current = cwd; current != null; current = current.getParent()) {
+            Path candidate = current.resolve("uploads").resolve("demandes").resolve(String.valueOf(demandeId)).resolve(filename);
+            if (Files.exists(candidate)) {
+                return candidate.normalize();
+            }
+        }
+
+        return resolveDemandFolder(demandeId).resolve(filename).normalize();
+    }
+
 
     @Override
     public List<DemandePret> retrieveAllDemandes() {
@@ -144,7 +170,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
 
     @Override
     public DemandePret addDocuments(long id, List<MultipartFile> files) {
-        System.out.println("🚨🚨🚨 [FRAUD] addDocuments CALLED for id=" + id + " with " + files.size() + " files 🚨🚨🚨");
+        System.out.println(" [FRAUD] addDocuments CALLED for id=" + id + " with " + files.size() + " files ");
         DemandePret demande = demandePretRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Demande not found"));
 
@@ -155,7 +181,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
 
             String dataKey = decryptDataKey(demande.getEncryptedDataKey());
 
-            Path uploadPath = Paths.get(UPLOAD_DIR, String.valueOf(id));
+            Path uploadPath = resolveDemandFolder(id);
             Files.createDirectories(uploadPath);
 
             for (MultipartFile file : files) {
@@ -183,7 +209,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
                 documentRepo.save(doc);
             }
             DemandePret scored = scorerDemande(id);
-            System.out.println("🚨 [FRAUD] About to call analyzeAndUpdateFraudStatus");
+            System.out.println(" [FRAUD] About to call analyzeAndUpdateFraudStatus");
             analyzeAndUpdateFraudStatus(scored);
             return scored;
 
@@ -201,7 +227,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
                 throw new RuntimeException("Access denied");
             }
 
-            Path filePath = Paths.get(UPLOAD_DIR, String.valueOf(demandeId), filename);
+            Path filePath = resolveDocumentPath(demandeId, filename);
 
             if (!Files.exists(filePath)) {
                 throw new RuntimeException("File not found");
@@ -221,7 +247,12 @@ public class DemandePretServiceImpl implements IDemandePretService {
             log.setAction("READ");
             log.setTimestamp(LocalDateTime.now());
 
-            logRepo.save(log);
+            try {
+                logRepo.save(log);
+            } catch (Exception logError) {
+                System.err.println("[WARN] Document access log could not be saved for demandeId=" + demandeId
+                        + ", file=" + filename + ": " + logError.getMessage());
+            }
 
 
             return decrypted;
@@ -326,7 +357,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
             List<String> fileNames      = new ArrayList<>();
 
             for (DemandePretDocument doc : docs) {
-                Path path = Paths.get("uploads/demandes/" + id + "/" + doc.getNomFichier());
+                Path path = resolveDocumentPath(id, doc.getNomFichier());
                 byte[] encrypted = Files.readAllBytes(path);
                 byte[] decrypted = CryptoService.decrypt(encrypted, dataKey);
 
@@ -429,7 +460,7 @@ public class DemandePretServiceImpl implements IDemandePretService {
             List<String> fileNames = new ArrayList<>();
 
             for (DemandePretDocument doc : docs) {
-                Path path = Paths.get("uploads/demandes/" + demande.getId() + "/" + doc.getNomFichier());
+                Path path = resolveDocumentPath(demande.getId(), doc.getNomFichier());
                 byte[] encrypted = Files.readAllBytes(path);
                 byte[] decrypted = CryptoService.decrypt(encrypted, dataKey);
                 decryptedFiles.add(decrypted);

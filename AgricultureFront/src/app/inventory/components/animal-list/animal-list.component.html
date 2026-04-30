@@ -1,93 +1,91 @@
 <!-- ── Campaigns view ─────────────────────────────────────────── -->
 <ng-container *ngIf="view === 'campaigns'">
-  <app-campaign-list
-    (back)="backToList()"
-    (planCampaign)="showCampaignForm = true">
-  </app-campaign-list>
+    <app-campaign-list
+            (back)="backToList()"
+            (planCampaign)="showCampaignForm = true">
+    </app-campaign-list>
 </ng-container>
 
 <!-- ── Animals List view ──────────────────────────────────────── -->
 <ng-container *ngIf="view === 'list'">
 
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">Animals</h1>
-      <p class="page-sub">Manage your livestock</p>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Animals</h1>
+            <p class="page-sub">Manage your livestock</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" (click)="openAdd()">
+                <i class="fas fa-plus"></i> Add Animal
+            </button>
+        </div>
     </div>
-    <div class="header-actions">
-    
-      <button class="btn btn-primary" (click)="openAdd()">
-        <i class="fas fa-plus"></i> Add Animal
-      </button>
-     
+
+    <div *ngIf="loading" class="state-msg"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    <div *ngIf="error"   class="state-msg error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
     </div>
-  </div>
 
-  <div *ngIf="loading" class="state-msg"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
-  <div *ngIf="error"   class="state-msg error">
-    <i class="fas fa-exclamation-circle"></i> {{ error }}
-  </div>
+    <div class="empty-state" *ngIf="!loading && animals.length === 0 && !error">
+        <i class="fas fa-horse"></i>
+        <p>No animals registered. Add your first animal!</p>
+    </div>
 
-  <div class="empty-state" *ngIf="!loading && animals.length === 0 && !error">
-    <i class="fas fa-horse"></i>
-    <p>No animals registered. Add your first animal!</p>
-  </div>
-
-  <table class="data-table" *ngIf="!loading && animals.length > 0">
-    <thead>
-      <tr>
-        <th>RReference</th>
-        <th>Species</th>
-        <th>Weight (kg)</th>
-        <th>Age</th>
-        <th>Date of Birth</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let a of animals">
-        <td><span class="ref-badge">{{ a.reference }}</span></td>
-        <td>{{ a.espece }}</td>
-        <td>{{ a.poids }}</td>
-        <td>{{ age(a.dateNaissance) }} years</td>
-        <td>{{ a.dateNaissance | date:'dd/MM/yyyy' }}</td>
-        <td>
-          <div class="row-actions">
-            <button class="ra-btn ra-detail"  (click)="openDetail(a)"  title="DDetail"><i class="fas fa-eye"></i></button>
-
-            <button class="ra-btn ra-edit"    (click)="openEdit(a)"    title="Edit"><i class="fas fa-pen"></i></button>
-            <button class="ra-btn ra-delete"  (click)="delete(a)"      title="Delete"><i class="fas fa-trash"></i></button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <table class="data-table" *ngIf="!loading && animals.length > 0">
+        <thead>
+        <tr>
+            <th>Reference</th>
+            <th>Species</th>
+            <th>Weight (kg)</th>
+            <th>Age</th>
+            <th>Date of Birth</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let a of animals">
+            <td><span class="ref-badge">{{ a.reference }}</span></td>
+            <td>{{ a.espece }}</td>
+            <td>{{ a.poids }}</td>
+            <td>{{ age(a.dateNaissance) }} years</td>
+            <td>{{ a.dateNaissance | date:'dd/MM/yyyy' }}</td>
+            <td>
+                <div class="row-actions">
+                    <button class="ra-btn ra-detail"  (click)="openDetail(a)"  title="Detail"><i class="fas fa-eye"></i></button>
+                    <button class="ra-btn ra-edit"    (click)="openEdit(a)"    title="Edit"><i class="fas fa-pen"></i></button>
+                    <button class="ra-btn ra-delete"  (click)="delete(a)"      title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 
 </ng-container>
 
 <!-- ── Modals ───────────────────────────────────────────────────── -->
 <app-animal-form
-  *ngIf="showAnimalForm"
-  [animal]="editingAnimal"
-  (saved)="onSaved()"
-  (cancelled)="showAnimalForm = false">
+        *ngIf="showAnimalForm"
+        [animal]="editingAnimal"
+        (saved)="onSaved()"
+        (cancelled)="showAnimalForm = false">
 </app-animal-form>
 
 <app-animal-detail
-  *ngIf="showAnimalDetail && selectedAnimal"
-  [animalId]="selectedAnimal.id"
-  (closed)="showAnimalDetail = false">
+        *ngIf="showAnimalDetail && selectedAnimal"
+        [animalId]="selectedAnimal.id"
+        (closed)="showAnimalDetail = false">
 </app-animal-detail>
 
+<!-- ✅ (saved) appelle maintenant onCampaignSaved() au lieu de juste fermer le formulaire -->
 <app-campaign-form
-  *ngIf="showCampaignForm"
-  (saved)="showCampaignForm = false"
-  (cancelled)="showCampaignForm = false">
+        *ngIf="showCampaignForm"
+        (saved)="onCampaignSaved()"
+        (cancelled)="showCampaignForm = false">
 </app-campaign-form>
 
 <app-vaccination-modal
-  *ngIf="showVaccModal && selectedAnimal"
-  [animal]="selectedAnimal"
-  (saved)="showVaccModal = false"
-  (cancelled)="showVaccModal = false">
+        *ngIf="showVaccModal && selectedAnimal"
+        [animal]="selectedAnimal"
+        (saved)="showVaccModal = false"
+        (cancelled)="showVaccModal = false">
 </app-vaccination-modal>

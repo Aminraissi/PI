@@ -29,7 +29,8 @@ const routes: Routes = [
   {
     path: 'delivery',
     loadChildren: () => import('./delivery/delivery.module').then(m => m.DeliveryModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: { roles: ['ADMIN','TRANSPORTEUR','AGRICULTEUR'] }
   },
   {
     path: 'dashboard',
@@ -39,13 +40,15 @@ const routes: Routes = [
   },
   {
     path: 'marketplace',
-    loadChildren: () => import('./marketplace/marketplace.module').then(m => m.MarketplaceModule)
+    loadChildren: () => import('./marketplace/marketplace.module').then(m => m.MarketplaceModule),
+    canActivate: [AuthGuard],
+
   },
   {
     path: 'loans',
     loadChildren: () => import('./loans/loans.module').then(m => m.LoansModule),
     canActivate: [AuthGuard],
-    data: { roles: ['AGENT', 'AGRICULTEUR'] }   // ← merged from second file
+    data: { roles: ['AGENT', 'AGRICULTEUR'] }
   },
   {
     path: 'claims',
@@ -54,40 +57,57 @@ const routes: Routes = [
   },
   {
     path: 'events',
-    loadChildren: () => import('./events/events.module').then(m => m.EventsModule)
+    loadChildren: () => import('./events/events.module').then(m => m.EventsModule),
+    data: { roles: ['ORGANISATEUR_EVENEMENT','EXPERT_AGRICOLE','AGRICULTEUR'] }
   },
   {
     path: 'training',
-    loadChildren: () => import('./training/training.module').then(m => m.TrainingModule)
+    loadChildren: () => import('./training/training.module').then(m => m.TrainingModule),
+    canActivate: [AuthGuard],
+    data: { roles: ['EXPERT_AGRICOLE', 'AGRICULTEUR'] }
   },
   {
     path: 'farm',
     loadChildren: () => import('./features/farm/farm.module').then(m => m.FarmModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: { roles: ['AGRICULTEUR'] }
+
+
   },
   {
     path: 'inventory',
     loadChildren: () => import('./inventory/inventory.module').then(m => m.InventoryModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: { roles: ['VETERINAIRE', 'AGRICULTEUR'] }
+
+
   },
   {
     path: 'appointments',
     loadChildren: () => import('./appointments/appointments.module').then(m => m.AppointmentsModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: { roles: ['VETERINAIRE', 'AGRICULTEUR'] }
+
   },
   {
     path: 'animals',
     loadChildren: () => import('./animals/animals.module').then(m => m.AnimalsModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: { roles: ['AGRICULTEUR'] }
+
   },
   { path: 'profile/edit',               component: ProfileEditComponent,               canActivate: [AuthGuard] },
 
   // Standalone page components declared in AppModule
-  { path: 'disease-predictor',          component: DiseasePredictorComponent,         canActivate: [AuthGuard] },
-  { path: 'help-request',               component: HelpRequestComponent,               canActivate: [AuthGuard] },
-  { path: 'expert/assistance-requests', component: ExpertAssistanceRequestsComponent,  canActivate: [AuthGuard] },
+  { path: 'disease-predictor',          component: DiseasePredictorComponent,         canActivate: [AuthGuard] ,    data: { roles: ['EXPERT_AGRICOLE', 'AGRICULTEUR'] }
+  },
+  { path: 'help-request',               component: HelpRequestComponent,               canActivate: [AuthGuard],    data: { roles: ['AGRICULTEUR'] }
+  },
+  { path: 'expert/assistance-requests', component: ExpertAssistanceRequestsComponent,  canActivate: [AuthGuard],    data: { roles: ['EXPERT_AGRICOLE'] }
+  },
 
   // Role-home placeholders
+    /*
   { path: 'buyer/home',        component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['ACHETEUR'],               homeLabel: 'buyer home'               } },
   { path: 'farmer/home',       component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['AGRICULTEUR'],            homeLabel: 'farmer home'              } },
   { path: 'expert/home',       component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['EXPERT_AGRICOLE'],        homeLabel: 'agricultural expert home' } },
@@ -95,7 +115,19 @@ const routes: Routes = [
   { path: 'veterinarian/home', component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['VETERINAIRE'],            homeLabel: 'veterinarian home'        } },
   { path: 'agent/home',        component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['AGENT'],                  homeLabel: 'agent home'               } },
   { path: 'organizer/home',    component: RoleHomePlaceholderComponent, canActivate: [AuthGuard], data: { roles: ['ORGANISATEUR_EVENEMENT'], homeLabel: 'event organizer home'     } },
+*/
 
+
+    /*
+    | 'AGRICULTEUR'
+    | 'EXPERT_AGRICOLE'
+    | 'ORGANISATEUR_EVENEMENT'
+    | 'TRANSPORTEUR'
+    | 'VETERINAIRE'
+    | 'ADMIN'
+    | 'ACHETEUR'
+    | 'AGENT';
+    */
 
   { path: 'verify-email', component: VerifyEmailComponent },
   { path: 'register-extra', component: RegisterExtraComponent },
