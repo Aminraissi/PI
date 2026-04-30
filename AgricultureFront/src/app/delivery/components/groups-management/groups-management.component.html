@@ -4,9 +4,9 @@
     <h2>Group Management</h2>
     <div class="header-actions">
       <div class="stats-summary">
-        <span class="stat-item">{{ totalGroups }} groups</span>
-        <span class="stat-item">{{ completedGroups }} completed</span>
-        <span class="stat-item">{{ formatPrice(totalSavings) }} saved</span>
+        <span class="stat-item">{{ getTotalGroups() }} groups</span>
+        <span class="stat-item">{{ getCompletedGroups() }} completed</span>
+        <span class="stat-item">{{ formatPrice(getTotalSavings()) }} saved</span>
       </div>
       <button class="btn-create-group" (click)="openCreateGroupModal()">
         <i class="fas fa-plus"></i>
@@ -67,7 +67,7 @@
 
           <div class="progress-bar">
             <div class="progress-fill"
-                 [style.width.%]="group.completionRate || 0"
+                 [style.width.%]="(group.completionRate || 0) | number: '1.1-1'"
                  [style.background]="(group.completionRate || 0) >= 100 ? '#10b981' : '#3b82f6'">
             </div>
             <span class="progress-text">{{ (group.completionRate || 0) | number: '1.1-1' }}%</span>
@@ -103,7 +103,7 @@
           </div>
           <div class="detail-item">
             <i class="fas fa-users"></i>
-            <span>{{ group.agriculteurs.length }} farmers</span>
+            <span>{{ (group.agriculteurs?.length || 0) }} farmers</span>
           </div>
         </div>
 
@@ -166,7 +166,7 @@
           <div class="stat-label">Total distance</div>
         </div>
           <div class="stat-card">
-            <div class="stat-value">{{ formatPrice(selectedGroup.priceAfter || 0) }}</div>
+            <div class="stat-value">{{ formatPrice(selectedGroup?.priceAfter || 0) }}</div>
             <div class="stat-label">Transporter earnings</div>
           </div>
       </div>
@@ -188,14 +188,14 @@
         <h4>Status breakdown</h4>
         <div class="status-items">
            <div class="status-item"
-                *ngFor="let status of statusEntries"
+                *ngFor="let status of getStatusEntries()"
                 [style.background]="getStatusColor(status[0]) + '20'">
              <div class="status-info">
                <div class="status-name">{{ getStatusText(status[0]) }}</div>
                <div class="status-count">{{ status[1] }} delivery(ies)</div>
              </div>
              <div class="status-percentage">
-               {{ (groupDetails.deliveriesCount > 0 ? ((status[1] / groupDetails.deliveriesCount) * 100) : 0) | number: '1.1-1' }}%
+               {{ (groupDetails?.deliveriesCount > 0 ? ((status[1] / groupDetails.deliveriesCount) * 100) : 0) | number: '1.1-1' }}%
              </div>
            </div>
         </div>

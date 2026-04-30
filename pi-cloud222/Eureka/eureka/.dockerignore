@@ -1,0 +1,12 @@
+target/
+**/target/
+.git/
+.idea/
+*.iml
+*.log
+src/test/
+application-local.properties
+application-local.yml
+uploads/
+chat-uploads/
+post-uploads/

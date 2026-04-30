@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.angular/
+coverage/
+.git/
+.idea/
+*.iml
+*.log
+npm-debug.log*
+Dockerfile
+.dockerignore

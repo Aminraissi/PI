@@ -2,6 +2,7 @@ package org.example.gestionvente.Services;
 
 import org.example.gestionvente.Entities.Panier;
 import org.example.gestionvente.Repositories.PanierRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,9 +20,9 @@ import java.util.List;
 @Service
 public class PanierServiceImpl implements IPanierService {
 
-    private final PanierRepo repository;
-    private final LignePanierProduitRepo ligneRepo;
-    private final ProduitAgricoleRepo produitRepo;
+    private PanierRepo repository;
+    private LignePanierProduitRepo ligneRepo;
+    private ProduitAgricoleRepo produitRepo;
     public PanierServiceImpl(PanierRepo repository,LignePanierProduitRepo ligneRepo,
                              ProduitAgricoleRepo produitRepo) {
         this.repository = repository;
@@ -32,17 +33,15 @@ public class PanierServiceImpl implements IPanierService {
     @Override
     public Panier getOrCreatePanier(Long idUser) {
 
-        Panier panier = repository.findFirstByIdUserAndStatutOrderByDateCreationDescIdDesc(idUser, "ACTIF");
-        if (panier != null) {
-            return panier;
-        }
-
-        Panier p = new Panier();
-        p.setIdUser(idUser);
-        p.setDateCreation(LocalDateTime.now());
-        p.setStatut("ACTIF");
-        p.setMontantEstime(0.0);
-        return repository.save(p);
+        return repository.findByIdUserAndStatut(idUser, "ACTIF")
+                .orElseGet(() -> {
+                    Panier p = new Panier();
+                    p.setIdUser(idUser);
+                    p.setDateCreation(LocalDateTime.now());
+                    p.setStatut("ACTIF");
+                    p.setMontantEstime(0.0);
+                    return repository.save(p);
+                });
     }
 
     @Override
