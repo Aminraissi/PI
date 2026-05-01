@@ -128,7 +128,7 @@
   </div>
 
   <!-- Selected group details -->
-  <div class="group-details-panel" *ngIf="selectedGroup && groupDetails">
+  <div class="group-details-panel" *ngIf="selectedGroup && groupDetails as details">
     <div class="details-header">
       <h3>Group details {{ selectedGroup.groupReference }}</h3>
       <div class="details-header-actions">
@@ -150,19 +150,19 @@
       <!-- Detailed statistics -->
       <div class="detailed-stats">
         <div class="stat-card">
-          <div class="stat-value">{{ groupDetails.deliveriesCount }}</div>
+            <div class="stat-value">{{ details.deliveriesCount }}</div>
           <div class="stat-label">Total deliveries</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">{{ formatNumber(groupDetails.totalWeightKg) }} kg</div>
+            <div class="stat-value">{{ formatNumber(details.totalWeightKg) }} kg</div>
           <div class="stat-label">Total weight</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">{{ formatNumber(groupDetails.totalVolumeM3) }} m³</div>
+            <div class="stat-value">{{ formatNumber(details.totalVolumeM3) }} m³</div>
           <div class="stat-label">Total volume</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">{{ formatNumber(groupDetails.totalDistanceKm) }} km</div>
+            <div class="stat-value">{{ formatNumber(details.totalDistanceKm) }} km</div>
           <div class="stat-label">Total distance</div>
         </div>
           <div class="stat-card">
@@ -184,7 +184,7 @@
       </div>
 
       <!-- Status breakdown -->
-      <div class="status-breakdown" *ngIf="groupDetails.statusCount">
+        <div class="status-breakdown" *ngIf="details.statusCount">
         <h4>Status breakdown</h4>
         <div class="status-items">
            <div class="status-item"
@@ -195,7 +195,7 @@
                <div class="status-count">{{ status[1] }} delivery(ies)</div>
              </div>
               <div class="status-percentage">
-                {{ ((groupDetails?.deliveriesCount ?? 0) > 0 ? ((status[1] / (groupDetails?.deliveriesCount ?? 1)) * 100) : 0) | number: '1.1-1' }}%
+                {{ ((details.deliveriesCount ?? 0) > 0 ? ((status[1] / (details.deliveriesCount ?? 1)) * 100) : 0) | number: '1.1-1' }}%
               </div>
            </div>
         </div>
@@ -205,7 +205,7 @@
       <div class="deliveries-list">
         <h4>Group deliveries</h4>
         <div class="delivery-item"
-             *ngFor="let delivery of groupDetails.deliveries"
+             *ngFor="let delivery of details.deliveries"
              (click)="selectDelivery(delivery)">
 
           <!-- Status -->
