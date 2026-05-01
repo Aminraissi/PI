@@ -194,9 +194,9 @@
                <div class="status-name">{{ getStatusText(status[0]) }}</div>
                <div class="status-count">{{ status[1] }} delivery(ies)</div>
              </div>
-             <div class="status-percentage">
-               {{ (groupDetails?.deliveriesCount > 0 ? ((status[1] / groupDetails.deliveriesCount) * 100) : 0) | number: '1.1-1' }}%
-             </div>
+              <div class="status-percentage">
+                {{ ((groupDetails?.deliveriesCount ?? 0) > 0 ? ((status[1] / (groupDetails?.deliveriesCount ?? 1)) * 100) : 0) | number: '1.1-1' }}%
+              </div>
            </div>
         </div>
       </div>
