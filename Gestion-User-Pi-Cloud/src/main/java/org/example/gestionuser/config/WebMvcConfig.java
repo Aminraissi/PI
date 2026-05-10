@@ -16,12 +16,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(jwtAuthInterceptor)
-                .excludePathPatterns(
-                        "/user/api/auth/**",
-                        "/uploads/**",
-                        "/error"
-                );
+registry.addInterceptor(jwtAuthInterceptor)
+        .excludePathPatterns(
+            "/api/auth/**"
+        );
     }
 
     @Override
