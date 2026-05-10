@@ -17,9 +17,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtAuthInterceptor)
-        .excludePathPatterns(
-            "/api/**"
-        );
+                .excludePathPatterns(
+                        "/user/api/auth/**",
+                        "/uploads/**",
+                        "/error"
+                );
     }
 
     @Override
@@ -27,14 +29,4 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(localUserFileStorageService.getUploadRootLocation());
     }
-
-//    @Override
-//    public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
-//        registry.addMapping("/api/**")
-//                .allowedOrigins("http://localhost:4200")
-//                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-//                .allowedHeaders("*")
-//                .allowCredentials(true)
-//                .maxAge(3600);
-//    }
 }
