@@ -10,62 +10,51 @@ import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthTokenInterceptor implements HttpInterceptor {
+
   constructor(private authService: AuthService) {}
 
-  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    let finalUrl = req.url;
-    let isApiRequest = false;
+  private isApiRequest(url: string): boolean {
+    return (
+      url.startsWith('/forums/') ||
+      url.startsWith('/user/') ||
+      url.startsWith('/livraison/') ||
+      url.startsWith('/osrm/') ||
+      url.startsWith('/Vente/') ||
+      url.startsWith('/formation/') ||
+      url.startsWith('/explorer/') ||
+      url.startsWith('/evenement/') ||
+      url.startsWith('/support/') ||
+      url.startsWith('/reclamations/') ||
+      url.startsWith('/pret/') ||
+      url.startsWith('/inventaires/') ||
+      url.startsWith('/assistance/') ||
+      url.startsWith('/paiement/')
+    );
+  }
 
-    if (finalUrl.startsWith('http://localhost:8089')) {
-      finalUrl = finalUrl.replace('http://localhost:8089', '');
-      isApiRequest = true;
-    } else if (finalUrl.startsWith('http://localhost:8095')) {
-      finalUrl = finalUrl.replace('http://localhost:8095', '');
-      isApiRequest = true;
-    } else if (
-      finalUrl.startsWith('/forums/') ||
-      finalUrl.startsWith('/user/') ||
-      finalUrl.startsWith('/livraison/') ||
-      finalUrl.startsWith('/osrm/') ||
-      finalUrl.startsWith('/Vente/') ||
-      finalUrl.startsWith('/formation/') ||
-      finalUrl.startsWith('/explorer/') ||
-      finalUrl.startsWith('/evenement/') ||
-      finalUrl.startsWith('/support/') ||
-      finalUrl.startsWith('/reclamations/') ||
-      finalUrl.startsWith('/pret/') ||
-      finalUrl.startsWith('/inventaires/') ||
-      finalUrl.startsWith('/assistance/') ||
-      finalUrl.startsWith('/paiement/')
-    ) {
-      isApiRequest = true;
-    }
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 
     const token = this.authService.getToken();
-    
-    if (!isApiRequest) {
-      if (finalUrl !== req.url) {
-        return next.handle(req.clone({ url: finalUrl }));
-      }
-      return next.handle(req);
+    let request = req;
+
+    // 1️⃣ Ajouter token seulement si API
+    if (this.isApiRequest(req.url) && token) {
+      request = req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
     }
 
-    let authReqInfo: any = {};
-    if (token) {
-      authReqInfo.setHeaders = {
-        Authorization: `Bearer ${token}`
-      };
-    }
-    
-    if (finalUrl !== req.url) {
-      authReqInfo.url = finalUrl;
+    // 2️⃣ Normaliser URL Gateway (optionnel mais propre)
+    const cleanedUrl = request.url
+      .replace('http://localhost:8089', '')
+      .replace('http://localhost:8095', '');
+
+    if (cleanedUrl !== request.url) {
+      request = request.clone({ url: cleanedUrl });
     }
 
-    if (Object.keys(authReqInfo).length > 0) {
-      const authReq = req.clone(authReqInfo);
-      return next.handle(authReq);
-    }
-
-    return next.handle(req);
+    return next.handle(request);
   }
 }
