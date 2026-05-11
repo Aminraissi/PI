@@ -14,12 +14,20 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final JwtAuthInterceptor jwtAuthInterceptor;
     private final LocalUserFileStorageService localUserFileStorageService;
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-registry.addInterceptor(jwtAuthInterceptor)
-        .excludePathPatterns(
-            "/api/auth/**"
-        );
+@Override
+public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(jwtAuthInterceptor)
+            .excludePathPatterns(
+                    "/api/auth/login",
+                    "/api/auth/signup/**",
+                    "/api/auth/google/**",
+                    "/api/auth/facebook/**",
+                    "/api/auth/verify-email",
+                    "/api/auth/forgot-password/**",
+                    "/actuator/**",
+                    "/error"
+            );
+
     }
 
     @Override
