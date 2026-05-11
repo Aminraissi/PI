@@ -20,12 +20,12 @@ public class GatewayJwtFilter extends OncePerRequestFilter {
 
     private static final String USER_VALIDATE_URL = "http://GESTION-USER/api/auth/validate";
 
-    private static final Set<String> PUBLIC_AUTH_PREFIXES = Set.of(
-            "/user/api/auth/login",
-            "/user/api/auth/signup",
-            "/user/api/auth/verify-email",
-            "/user/api/auth/validate"
-    );
+private static final Set<String> PUBLIC_AUTH_PREFIXES = Set.of(
+        "/api/auth/login",
+        "/api/auth/signup",
+        "/api/auth/verify-email",
+        "/api/auth/validate"
+);
 
     private final RestTemplate restTemplate;
 
