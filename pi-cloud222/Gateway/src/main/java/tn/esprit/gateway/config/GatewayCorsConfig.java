@@ -32,7 +32,8 @@ public CorsFilter corsFilter() {
             "http://localhost:4200",
             "https://localhost:4200",
             "http://192.168.*.*:4200",
-            "https://192.168.*.*:4200"
+            "https://192.168.*.*:4200" ,
+             "https://*.ngrok-free.dev"
     ));
 
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
