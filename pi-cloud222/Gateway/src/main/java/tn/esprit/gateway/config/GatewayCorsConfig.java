@@ -28,13 +28,14 @@ public CorsFilter corsFilter() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowCredentials(true);
 
-    config.setAllowedOriginPatterns(List.of(
-            "http://localhost:4200",
-            "https://localhost:4200",
-            "http://192.168.*.*:4200",
-            "https://192.168.*.*:4200" ,
-             "https://*.ngrok-free.dev"
-    ));
+config.setAllowedOriginPatterns(List.of(
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+        "http://192.168.*.*:4200",
+        "http://172.16.*.*:4200",
+        "http://172.16.1.81:31251",
+        "https://*.ngrok-free.dev"
+));
 
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
