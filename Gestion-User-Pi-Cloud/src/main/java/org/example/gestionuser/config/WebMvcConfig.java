@@ -17,16 +17,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
 @Override
 public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(jwtAuthInterceptor)
-            .excludePathPatterns(
-                    "/api/auth/login",
-                    "/api/auth/signup/**",
-                    "/api/auth/google/**",
-                    "/api/auth/facebook/**",
-                    "/api/auth/verify-email",
-                    "/api/auth/forgot-password/**",
-                    "/actuator/**",
-                    "/error"
-            );
+.excludePathPatterns(
+        "/api/auth/**",
+        "/user/api/auth/**",
+        "/actuator/**",
+        "/error"
+);
 
     }
 
